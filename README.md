@@ -1,2 +1,2 @@
 # LightGame
-LightSky's Gaming API
+The gaming framework for all client project developed using LightSky.
