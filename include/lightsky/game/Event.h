@@ -16,17 +16,17 @@ namespace game {
 /**----------------------------------------------------------------------------
  * Forward declarations
 -----------------------------------------------------------------------------*/
-class subscriber;
-class dispatcher;
+class Subscriber;
+class Dispatcher;
 
 /**----------------------------------------------------------------------------
  * Basic event structure.
 -----------------------------------------------------------------------------*/
-struct event {
+struct Event {
     /**
      * @brief pSource contains a pointer to the source of a event.
      */
-    dispatcher* pSource;
+    Dispatcher* pSource;
     
     /**
      * @brief A event's baseId should contain enough information about a

@@ -13,11 +13,10 @@ set(OUTPUT_NAME lsgame)
 include_directories("include")
 
 set(LS_GAME_SOURCES
+    "src/game/Dispatcher.cpp"
     "src/game/GameState.cpp"
     "src/game/GameSystem.cpp"
-    "src/game/Manager.cpp"
     "src/game/Subscriber.cpp"
-    "src/game/Dispatcher.cpp"
 )
 
 
@@ -45,6 +44,6 @@ install(DIRECTORY include/lightsky/game DESTINATION include/lightsky)
 # -------------------------------------
 set(LS_BUILD_GAME_TESTS TRUE CACHE BOOL "Build tests for the LightGame library.")
 
-#if(LS_BUILD_GAME_TESTS)
-#    add_subdirectory("tests")
-#endif(LS_BUILD_GAME_TESTS)
+if(LS_BUILD_GAME_TESTS)
+    add_subdirectory("tests")
+endif(LS_BUILD_GAME_TESTS)

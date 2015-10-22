@@ -1,13 +1,13 @@
-/* 
+/*
  * File:   game/subscriber.cpp
  * Author: miles
- * 
+ *
  * Created on November 20, 2014, 10:24 PM
  */
 
-#include "lightsky/game/event.h"
-#include "lightsky/game/subscriber.h"
-#include "lightsky/game/dispatcher.h"
+#include "lightsky/game/Event.h"
+#include "lightsky/game/Subscriber.h"
+#include "lightsky/game/Dispatcher.h"
 
 namespace ls {
 namespace game {
@@ -15,27 +15,27 @@ namespace game {
 /*-------------------------------------
  * Destructor
 -------------------------------------*/
-subscriber::~subscriber() {
+Subscriber::~Subscriber() {
     setDispatcher(nullptr);
 }
 
 /*-------------------------------------
  * Constructor
 -------------------------------------*/
-subscriber::subscriber() {
+Subscriber::Subscriber() {
 }
 
 /*-------------------------------------
  * Copy Constructor
 -------------------------------------*/
-subscriber::subscriber(const subscriber& s) {
+Subscriber::Subscriber(const Subscriber& s) {
     setDispatcher(s.pParent);
 }
 
 /*-------------------------------------
  * Move Constructor
 -------------------------------------*/
-subscriber::subscriber(subscriber&& s) {
+Subscriber::Subscriber(Subscriber&& s) {
     setDispatcher(s.pParent);
     s.setDispatcher(nullptr);
 }
@@ -43,7 +43,7 @@ subscriber::subscriber(subscriber&& s) {
 /*-------------------------------------
  * Copy Operator
 -------------------------------------*/
-subscriber& subscriber::operator=(const subscriber& s) {
+Subscriber& Subscriber::operator=(const Subscriber& s) {
     setDispatcher(s.pParent);
     return *this;
 }
@@ -51,7 +51,7 @@ subscriber& subscriber::operator=(const subscriber& s) {
 /*-------------------------------------
  * Move Operator
 -------------------------------------*/
-subscriber& subscriber::operator=(subscriber&& s) {
+Subscriber& Subscriber::operator=(Subscriber&& s) {
     setDispatcher(s.pParent);
     s.setDispatcher(nullptr);
     return *this;
@@ -60,15 +60,15 @@ subscriber& subscriber::operator=(subscriber&& s) {
 /*-------------------------------------
  * Set the parent dispatcher
 -------------------------------------*/
-void subscriber::setDispatcher(dispatcher* const pDispatcher) {
+void Subscriber::setDispatcher(Dispatcher* const pDispatcher) {
     if (pParent == pDispatcher) {
         return;
     }
-    
+
     if (pParent != nullptr) {
         pParent->unassignSubscriber(*this);
     }
-    
+
     pParent = pDispatcher;
     if (pParent != nullptr) {
         pParent->assignSubscriber(*this);
@@ -78,7 +78,7 @@ void subscriber::setDispatcher(dispatcher* const pDispatcher) {
 /*-------------------------------------
  * Confirm a parent dispatcher
 -------------------------------------*/
-bool subscriber::isSubscribed(const dispatcher& d) const {
+bool Subscriber::isSubscribed(const Dispatcher& d) const {
     return pParent == &d;
 }
 

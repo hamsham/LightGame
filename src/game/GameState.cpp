@@ -1,11 +1,11 @@
-/* 
+/*
  * File:   game/gameState.cpp
  * Author: Miles Lacey
- * 
+ *
  * Created on November 15, 2013, 8:45 PM
  */
 
-#include "lightsky/game/gameState.h"
+#include "lightsky/game/GameState.h"
 
 namespace ls {
 namespace game {
@@ -13,19 +13,19 @@ namespace game {
 /*-------------------------------------
     Destructor
 -------------------------------------*/
-gameState::~gameState() {
+GameState::~GameState() {
 }
 
 /*-------------------------------------
     Constructor
 -------------------------------------*/
-gameState::gameState() {
+GameState::GameState() {
 }
 
 /*-------------------------------------
     Move Constructor
 -------------------------------------*/
-gameState::gameState(gameState&& gs) :
+GameState::GameState(GameState&& gs) :
     currentState{gs.currentState},
     pSystem{gs.pSystem}
 {
@@ -35,46 +35,46 @@ gameState::gameState(gameState&& gs) :
 /*-------------------------------------
     Move Operator
 -------------------------------------*/
-gameState& gameState::operator=(gameState&& gs) {
-    
+GameState& GameState::operator=(GameState&& gs) {
+
     currentState = gs.currentState;
     gs.currentState = game_state_t::STOPPED;
-    
+
     pSystem = gs.pSystem;
-    
+
     return *this;
 }
 
 /*-------------------------------------
     Parent Sub-System Assignment.
 -------------------------------------*/
-void gameState::setParentSystem(gameSystem& pSys) {
+void GameState::setParentSystem(GameSystem& pSys) {
     pSystem = &pSys;
 }
 
 /*-------------------------------------
     Start the current system's running state.
 -------------------------------------*/
-bool gameState::onStart() {
+bool GameState::onStart() {
     return true;
 }
 
 /*-------------------------------------
     Engage the current system's running state.
 -------------------------------------*/
-void gameState::onRun() {
+void GameState::onRun() {
 }
 
 /*-------------------------------------
     Pause the current system's running state.
 -------------------------------------*/
-void gameState::onPause() {
+void GameState::onPause() {
 }
 
 /*-------------------------------------
     Stop the current system's running state.
 -------------------------------------*/
-void gameState::onStop() {
+void GameState::onStop() {
 }
 
 } // end game namespace
