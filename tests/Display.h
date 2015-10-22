@@ -45,7 +45,7 @@ enum fullscreen_t : int {
  * context (a window within the OS). It contains the object responsible for
  * rendering or drawing in OpenGL.
 -----------------------------------------------------------------------------*/
-class display {
+class Display {
     private:
         /**
          * Internal handle to the device context created by SDL.
@@ -68,12 +68,12 @@ class display {
         /**
          * @brief Constructor
          */
-        display();
+        Display();
 
         /**
          * Copy Constructor - DELETED
          */
-        display(const display&) = delete;
+        Display(const Display&) = delete;
 
         /**
          * @brief Move operator
@@ -85,19 +85,19 @@ class display {
          * An r-value reference to another display object that *this will take
          * ownership of.
          */
-        display(display&& d);
+        Display(Display&& d);
 
         /**
          * @brief Destructor
          *
          * Closes the window and frees all resources used by *this.
          */
-        ~display();
+        ~Display();
 
         /**
          * Copy Operator - DELETED
          */
-        display& operator=(const display& d) = delete;
+        Display& operator=(const Display& d) = delete;
 
         /**
          * @brief Move operator
@@ -109,7 +109,7 @@ class display {
          * An r-value reference to another display object that *this will take
          * ownership of.
          */
-        display& operator=(display&& d);
+        Display& operator=(Display&& d);
 
         /**
          * Create an display object from a native OS hardware handle.
@@ -149,7 +149,7 @@ class display {
          *
          * @return math::vec2i
          */
-        const math::vec2i getResolution() const;
+        const math::vec2i get_resolution() const;
 
         /**
          * Set the resolution, in pixels, that this display should be.
@@ -158,7 +158,7 @@ class display {
          * A new resolution, contained within a 2d integral vector, represented
          * in pixels.
          */
-        void setResolution(const math::vec2i inResolution);
+        void set_resolution(const math::vec2i inResolution);
 
         /**
          * Set whether or not this display should be made fullscreen.
@@ -167,14 +167,14 @@ class display {
          * TRUE to enable a fullscreen window, FALSE to reduce the display down
          * to a simple window.
          */
-        void setFullScreenState(bool fs);
+        void set_fullscreen(bool fs);
 
         /**
          * Determine if the current display is in fullscreen mode.
          *
          * @return TRUE if the display is in fullscreen mode, FALSE if not.
          */
-        bool getFullScreenState() const;
+        bool is_fullscreen() const;
 
         /**
          * Set how the window should handle the full resolution of the current
@@ -185,21 +185,21 @@ class display {
          * mode, or use FULLSCREEN_WINDOW in order to make the window become
          * borderless and use the entire available resolution.
          */
-        void setFullScreenMode(fullscreen_t fs = FULLSCREEN_DEFAULT);
+        void set_fullscreen_mode(fullscreen_t fs = FULLSCREEN_DEFAULT);
 
         /**
          * Get the current fullscreen-handling method.
          *
          * @return fullscreen_t
          */
-        fullscreen_t getFullScreenMode() const;
+        fullscreen_t get_fullscreen_mode() const;
 
         /**
          * Determine if this object holds a handle to an open window.
          *
          * @return TRUE if a window is open, FALSE if not.
          */
-        bool isRunning() const;
+        bool is_running() const;
 
         /**
          * Get a handle to the SDL_Window responsible for the window that this
@@ -207,7 +207,7 @@ class display {
          *
          * @return SDL_Window.
          */
-        SDL_Window* getWindow() const;
+        SDL_Window* get_window() const;
 
         /**
          * Determine if the current display is using a native window handle.
@@ -217,20 +217,20 @@ class display {
          * window handle, or FALSE if the display was created using an internal
          * method.
          */
-        bool usingNativeWindow() const;
+        bool using_native_window() const;
 };
 
 /*-------------------------------------
     Determine if this object holds a handle to an open window.
 -------------------------------------*/
-inline bool display::isRunning() const {
+inline bool Display::is_running() const {
     return pWindow != nullptr;
 }
 
 /*-------------------------------------
     Determine if the current display is using a native window handle.
 -------------------------------------*/
-inline bool display::usingNativeWindow() const {
+inline bool Display::using_native_window() const {
     return windowIsNative;
 }
 

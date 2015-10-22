@@ -16,7 +16,7 @@ namespace game {
  * Destructor
 -------------------------------------*/
 Dispatcher::~Dispatcher() {
-    clearSubscribers();
+    clear_subscribers();
 }
 
 /*-------------------------------------
@@ -61,7 +61,7 @@ Dispatcher& Dispatcher::operator=(Dispatcher&& d) {
 /*-------------------------------------
  * Assign a subscriber
 -------------------------------------*/
-void Dispatcher::assignSubscriber(Subscriber& s) {
+void Dispatcher::add_subscriber(Subscriber& s) {
     Subscriber* const pSubscriber = &s;
     pSubscriber->pParent = this;
     subscribers[pSubscriber] = pSubscriber;
@@ -70,7 +70,7 @@ void Dispatcher::assignSubscriber(Subscriber& s) {
 /*-------------------------------------
  * Remove a subscriber
 -------------------------------------*/
-void Dispatcher::unassignSubscriber(Subscriber& s) {
+void Dispatcher::remove_subscriber(Subscriber& s) {
     if (subscribers.erase(&s) != 0) { // insurance
         s.pParent = nullptr;
     }
@@ -79,14 +79,14 @@ void Dispatcher::unassignSubscriber(Subscriber& s) {
 /*-------------------------------------
  * Check if dispatching to a subscriber
 -------------------------------------*/
-bool Dispatcher::hasSubscriber(const Subscriber& s) const {
+bool Dispatcher::has_subscriber(const Subscriber& s) const {
     return s.pParent == this;
 }
 
 /*-------------------------------------
  * remove all subscribers from the distribution list
 -------------------------------------*/
-void Dispatcher::clearSubscribers() {
+void Dispatcher::clear_subscribers() {
     typename subscriberMap_t::iterator iter = subscribers.begin();
 
     while (iter != subscribers.end()) {
@@ -100,7 +100,7 @@ void Dispatcher::clearSubscribers() {
 /*-------------------------------------
  * dispatch events to subscribers
 -------------------------------------*/
-void Dispatcher::dispatchEvents() {
+void Dispatcher::dispatch_events() {
     const unsigned sentinel = events.size();
 
     for (unsigned i = 0; i < sentinel; ++i) {
@@ -117,7 +117,7 @@ void Dispatcher::dispatchEvents() {
 /*-------------------------------------
  * push an event to the event queue
 -------------------------------------*/
-void Dispatcher::pushEvent(const Event& t) {
+void Dispatcher::push_event(const Event& t) {
     events.push_back(t);
 }
 
@@ -125,14 +125,14 @@ void Dispatcher::pushEvent(const Event& t) {
 /*-------------------------------------
  * get the number of queued events
 -------------------------------------*/
-unsigned Dispatcher::getNumEventsQueued() const {
+unsigned Dispatcher::get_num_queued_events() const {
     return events.size();
 }
 
 /*-------------------------------------
  * get the number of subscribers
 -------------------------------------*/
-unsigned Dispatcher::getNumSubscribers() const {
+unsigned Dispatcher::get_num_subscribers() const {
     return subscribers.size();
 }
 

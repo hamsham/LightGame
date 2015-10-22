@@ -47,7 +47,7 @@ class GameSystem {
          * @brief Update the amount of milliseconds which have passed since the
          * last update.
          */
-        void updateTickTime();
+        void update_tick_time();
 
         /**
          * @brief Update all internal game states.
@@ -56,7 +56,7 @@ class GameSystem {
          * The time, in milliseconds, which have passed since the last call to
          * "onUpdate()".
          */
-        void updateGameStates();
+        void update_game_states();
 
     public:
         /**
@@ -158,13 +158,13 @@ class GameSystem {
          * @param pState
          * A pointer to a gameState object allocated with "new."
          */
-        bool pushGameState(GameState* const pState);
+        bool push_game_state(GameState* const pState);
 
         /**
          * Pop the last game state from the list. If there are no states left
          * in the list, the system will stop.
          */
-        void popGameState();
+        void pop_game_state();
 
         /**
          * Search for a game state in the list and remove it if it exists.
@@ -172,7 +172,7 @@ class GameSystem {
          * @param pState
          * A pointer to the desired game state.
          */
-        void popGameState(GameState* const pState);
+        void pop_game_state(GameState* const pState);
 
         /**
          * Search for a game state in the list and remove it if it exists.
@@ -180,12 +180,12 @@ class GameSystem {
          * @param index
          * An index of the desired game state.
          */
-        void popGameState(unsigned index);
+        void pop_game_state(unsigned index);
 
         /**
          * @brief Remove all game states within *this.
          */
-        void clearGameStates();
+        void clear_game_states();
 
         /**
          * Get a game state using an index.
@@ -196,7 +196,7 @@ class GameSystem {
          * @return a pointer to the desired game state. Null if the index was
          * out of bounds.
          */
-        GameState const* getGameState(unsigned index) const;
+        GameState const* get_game_state(unsigned index) const;
 
         /**
          * Get a game state using an index.
@@ -207,7 +207,7 @@ class GameSystem {
          * @return a pointer to the desired game state. Null if the index was
          * out of bounds.
          */
-        GameState* getGameState(unsigned index);
+        GameState* get_game_state(unsigned index);
 
         /**
          * @brief Get the index of a game state.
@@ -218,14 +218,14 @@ class GameSystem {
          * @return The index of the game state held within the game list.
          * UINT_MAX if the state was not found.
          */
-        unsigned getGameStateIndex(GameState* const pState) const;
+        unsigned get_game_state_index(GameState* const pState) const;
 
         /**
          * Get the number of game states contained within *this.
          *
          * @return The number of states managed by this system.
          */
-        unsigned getNumGameStates() const;
+        unsigned get_num_game_states() const;
 
         /**
          * @brief Get the time, in milliseconds, which have passed since the
@@ -234,7 +234,7 @@ class GameSystem {
          * @return A 64-bit unsigned integral type which represents the time in
          * milliseconds which have passed since the last system update.
          */
-        uint64_t getTickTime() const;
+        uint64_t get_tick_time() const;
 
         /**
          * @brief Get the time, in milliseconds, of the last call to either
@@ -243,7 +243,7 @@ class GameSystem {
          * @return A 64-bit unsigned integral type which represents the time in
          * milliseconds of the last update.
          */
-        uint64_t getUpdateTime() const;
+        uint64_t get_update_time() const;
 
         /**
          * @brief Determine if *this system still has states to run.
@@ -254,7 +254,7 @@ class GameSystem {
          * @return TRUE if the game list has something pushed onto it, FALSE
          * if otherwise.
          */
-        virtual bool isRunnable() const;
+        virtual bool is_runnable() const;
 };
 
 /*-------------------------------------
@@ -268,50 +268,50 @@ inline bool GameSystem::start() {
     SubSystem Running
 -------------------------------------*/
 inline void GameSystem::run() {
-    updateTickTime();
-    updateGameStates();
+    update_tick_time();
+    update_game_states();
 }
 
 /*-------------------------------------
     SubSystem Running
 -------------------------------------*/
 inline void GameSystem::pause() {
-    updateTickTime();
+    update_tick_time();
 }
 
 /*-------------------------------------
     SubSystem Termination
 -------------------------------------*/
 inline void GameSystem::stop() {
-    clearGameStates();
+    clear_game_states();
     prevTime = tickTime = 0;
 }
 
 /*-------------------------------------
     Return The number of states managed by this system.
 -------------------------------------*/
-inline unsigned GameSystem::getNumGameStates() const {
+inline unsigned GameSystem::get_num_game_states() const {
     return gameList.size();
 }
 
 /*-------------------------------------
     Return The number of milliseconds since the last update.
 -------------------------------------*/
-inline uint64_t GameSystem::getTickTime() const {
+inline uint64_t GameSystem::get_tick_time() const {
     return tickTime;
 }
 
 /*-------------------------------------
     Return the time of the last update.
 -------------------------------------*/
-inline uint64_t GameSystem::getUpdateTime() const {
+inline uint64_t GameSystem::get_update_time() const {
     return prevTime;
 }
 
 /*-------------------------------------
     Determine if *this is still running
 -------------------------------------*/
-inline bool GameSystem::isRunnable() const {
+inline bool GameSystem::is_runnable() const {
     return gameList.size() > 0;
 }
 

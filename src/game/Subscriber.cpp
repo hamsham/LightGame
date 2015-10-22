@@ -16,7 +16,7 @@ namespace game {
  * Destructor
 -------------------------------------*/
 Subscriber::~Subscriber() {
-    setDispatcher(nullptr);
+    set_dispatcher(nullptr);
 }
 
 /*-------------------------------------
@@ -29,22 +29,22 @@ Subscriber::Subscriber() {
  * Copy Constructor
 -------------------------------------*/
 Subscriber::Subscriber(const Subscriber& s) {
-    setDispatcher(s.pParent);
+    set_dispatcher(s.pParent);
 }
 
 /*-------------------------------------
  * Move Constructor
 -------------------------------------*/
 Subscriber::Subscriber(Subscriber&& s) {
-    setDispatcher(s.pParent);
-    s.setDispatcher(nullptr);
+    set_dispatcher(s.pParent);
+    s.set_dispatcher(nullptr);
 }
 
 /*-------------------------------------
  * Copy Operator
 -------------------------------------*/
 Subscriber& Subscriber::operator=(const Subscriber& s) {
-    setDispatcher(s.pParent);
+    set_dispatcher(s.pParent);
     return *this;
 }
 
@@ -52,33 +52,33 @@ Subscriber& Subscriber::operator=(const Subscriber& s) {
  * Move Operator
 -------------------------------------*/
 Subscriber& Subscriber::operator=(Subscriber&& s) {
-    setDispatcher(s.pParent);
-    s.setDispatcher(nullptr);
+    set_dispatcher(s.pParent);
+    s.set_dispatcher(nullptr);
     return *this;
 }
 
 /*-------------------------------------
  * Set the parent dispatcher
 -------------------------------------*/
-void Subscriber::setDispatcher(Dispatcher* const pDispatcher) {
+void Subscriber::set_dispatcher(Dispatcher* const pDispatcher) {
     if (pParent == pDispatcher) {
         return;
     }
 
     if (pParent != nullptr) {
-        pParent->unassignSubscriber(*this);
+        pParent->remove_subscriber(*this);
     }
 
     pParent = pDispatcher;
     if (pParent != nullptr) {
-        pParent->assignSubscriber(*this);
+        pParent->add_subscriber(*this);
     }
 }
 
 /*-------------------------------------
  * Confirm a parent dispatcher
 -------------------------------------*/
-bool Subscriber::isSubscribed(const Dispatcher& d) const {
+bool Subscriber::is_subscribed(const Dispatcher& d) const {
     return pParent == &d;
 }
 

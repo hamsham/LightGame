@@ -10,66 +10,66 @@
 #include "lightsky/game/Game.h"
 namespace math = ls::math;
 
-#include "context.h"
-#include "display.h"
+#include "Context.h"
+#include "Display.h"
 
 /*-----------------------------------------------------------------------------
  * Example System Object
 -----------------------------------------------------------------------------*/
-class mainState final : virtual public ls::game::GameState {
+class MainState final : virtual public ls::game::GameState {
     private:
-        display* pDisplay = nullptr;
-        context renderContext;
+        Display* pDisplay = nullptr;
+        Context renderContext;
 
     public:
-        mainState();
+        MainState();
 
-        mainState(const mainState&) = delete;
+        MainState(const MainState&) = delete;
 
-        mainState(mainState&&);
+        MainState(MainState&&);
 
-        virtual ~mainState();
+        virtual ~MainState();
 
-        mainState& operator=(const mainState&) = delete;
+        MainState& operator=(const MainState&) = delete;
 
-        mainState& operator=(mainState&&);
+        MainState& operator=(MainState&&);
 
     protected:
-        virtual bool onStart() override;
+        virtual bool on_start() override;
 
-        virtual void onRun() override;
+        virtual void on_run() override;
 
-        virtual void onStop() override;
+        virtual void on_stop() override;
 
     private:
-        void onKeyboardUpEvent(const SDL_KeyboardEvent& e);
+        void on_key_up_event(const SDL_KeyboardEvent& e);
 
-        void onWindowEvent(const SDL_WindowEvent& e);
+        void on_window_event(const SDL_WindowEvent& e);
 };
 
 /*-------------------------------------
  * Destructor
 -------------------------------------*/
-mainState::~mainState() {
+MainState::~MainState() {
 }
 
 /*-------------------------------------
  * Contstructor
 -------------------------------------*/
-mainState::mainState() {
+MainState::MainState() {
 }
 
 /*-------------------------------------
  * Move Constructor
 -------------------------------------*/
-mainState::mainState(mainState&& ms) :
+MainState::MainState(MainState&& ms) :
     GameState{std::move(ms)}
 {}
 
 /*-------------------------------------
  * Move Operator
 -------------------------------------*/
-mainState& mainState::operator=(mainState&& ms) {
+MainState& MainState::operator=(MainState&& ms) {
     GameState::operator=(std::move(ms));
 
     return *this;
@@ -78,14 +78,14 @@ mainState& mainState::operator=(mainState&& ms) {
 /*-------------------------------------
  * System Startup
 -------------------------------------*/
-bool mainState::onStart() {
-    pDisplay = new(std::nothrow) display{};
+bool MainState::on_start() {
+    pDisplay = new(std::nothrow) Display{};
     if (!pDisplay || !pDisplay->init(math::vec2i{800, 600})) {
         std::cerr << "Unable to create a display." << std::endl;
         return false;
     }
 
-    pDisplay->setFullScreenMode(FULLSCREEN_WINDOW);
+    pDisplay->set_fullscreen_mode(FULLSCREEN_WINDOW);
 
     if (!renderContext.init(*pDisplay)) {
         std::cerr << "Unable to create a render context." << std::endl;
@@ -98,17 +98,24 @@ bool mainState::onStart() {
 /*-------------------------------------
  * System Runtime
 -------------------------------------*/
-void mainState::onRun() {
-    renderContext.makeCurrent(*pDisplay);
+void MainState::on_run() {
+    renderContext.make_current(*pDisplay);
     renderContext.flip(*pDisplay);
 
     SDL_Event e;
 
     while (SDL_PollEvent(&e)) {
         switch (e.type) {
-            case SDL_WINDOWEVENT:       this->onWindowEvent(e.window);          break;
-            case SDL_KEYUP:             this->onKeyboardUpEvent(e.key);         break;
-            default: break;
+            case SDL_WINDOWEVENT:
+                this->on_window_event(e.window);
+                break;
+
+            case SDL_KEYUP:
+                this->on_key_up_event(e.key);
+                break;
+
+            default:
+                break;
         }
     }
 
@@ -118,14 +125,14 @@ void mainState::onRun() {
 /*-------------------------------------
  * Keyboard Event
 -------------------------------------*/
-void mainState::onKeyboardUpEvent(const SDL_KeyboardEvent& e) {
+void MainState::on_key_up_event(const SDL_KeyboardEvent& e) {
     const SDL_Keycode key = e.keysym.scancode;
 
     if (key == SDL_SCANCODE_ESCAPE) {
-        ls::game::GameSystem& parentSys = getParentSystem();
-        for (unsigned i = 0; i < parentSys.getNumGameStates(); ++i) {
-            ls::game::GameState* const pState = parentSys.getGameState(i);
-            pState->setStateStatus(ls::game::game_state_t::STOPPED);
+        ls::game::GameSystem& parentSys = get_parent_system();
+        for (unsigned i = 0; i < parentSys.get_num_game_states(); ++i) {
+            ls::game::GameState* const pState = parentSys.get_game_state(i);
+            pState->set_state(ls::game::game_state_t::STOPPED);
         }
     }
 }
@@ -133,16 +140,16 @@ void mainState::onKeyboardUpEvent(const SDL_KeyboardEvent& e) {
 /*-------------------------------------
  * Window Event
 -------------------------------------*/
-void mainState::onWindowEvent(const SDL_WindowEvent& e) {
+void MainState::on_window_event(const SDL_WindowEvent& e) {
     if (e.event == SDL_WINDOWEVENT_CLOSE) {
-        getParentSystem().stop();
+        get_parent_system().stop();
     }
 }
 
 /*-------------------------------------
  * System Stop
 -------------------------------------*/
-void mainState::onStop() {
+void MainState::on_stop() {
     renderContext.terminate();
     delete pDisplay;
     pDisplay = nullptr;
@@ -154,8 +161,8 @@ void mainState::onStop() {
 /*-------------------------------------
  * Forward declarations
 -------------------------------------*/
-bool initSubsystems();
-void terminateSubsystems();
+bool init_subsystems();
+void terminate_subsystems();
 
 /*-------------------------------------
  * main()
@@ -163,25 +170,25 @@ void terminateSubsystems();
 int main() {
     ls::game::GameSystem sys{};
 
-    if (!initSubsystems()) {
+    if (!init_subsystems()) {
         std::cerr << "Unable to initialize SDL." << std::endl;
         goto quitTest;
     }
     std::cout << "LightSky Successfully initialized.\n" << std::endl;
 
-    if (!sys.start() || !sys.pushGameState(new(std::nothrow) mainState{})) {
+    if (!sys.start() || !sys.push_game_state(new(std::nothrow) MainState{})) {
         std::cerr << "Unable to create the main program.\n" << std::endl;
         goto quitTest;
     }
     std::cout << "Successfully created the main program.\n" << std::endl;
 
-    while (sys.isRunnable()) {
+    while (sys.is_runnable()) {
         sys.run();
     }
 
     quitTest:
     sys.stop();
-    terminateSubsystems();
+    terminate_subsystems();
     std::cout << "LightSky successfully terminated.\n" << std::endl;
 
     return 0;
@@ -190,7 +197,7 @@ int main() {
 /*-------------------------------------
     initialization.
 -------------------------------------*/
-bool initSubsystems() {
+bool init_subsystems() {
     if (SDL_WasInit(0) == SDL_INIT_EVERYTHING) {
         return true;
     }
@@ -241,7 +248,7 @@ bool initSubsystems() {
 /*-------------------------------------
     termination
 -------------------------------------*/
-void terminateSubsystems() {
+void terminate_subsystems() {
     if (SDL_WasInit(0)) {
         SDL_QuitSubSystem(SDL_INIT_EVERYTHING);
         SDL_Quit();

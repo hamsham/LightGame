@@ -44,8 +44,8 @@ include_directories(".")
 # Source Paths
 # -------------------------------------
 set(LS_GAME_PROTO_COMMON_SOURCES
-    "context.cpp"
-    "display.cpp"
+    "Context.cpp"
+    "Display.cpp"
 )
 
 set(

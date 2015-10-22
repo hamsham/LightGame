@@ -168,7 +168,7 @@ class Manager {
          *
          * @return A pointer to an object managed by *this.
          */
-        data_t* elementAt(unsigned index);
+        data_t* element_at(unsigned index);
 
         /**
          * Release the memory of all objects managed by *this.
@@ -189,7 +189,7 @@ class Manager {
          *
          * @return A reference to the internal std::unordered_map used by *this.
          */
-        const map_t& getDataMap() const;
+        const map_t& get_data_map() const;
 
         /**
          * Retrieve the implementing hash table that is used internally by this
@@ -197,7 +197,7 @@ class Manager {
          *
          * @return A reference to the internal std::unordered_map used by *this.
          */
-        map_t& getDataMap();
+        map_t& get_data_map();
 };
 
 /*-------------------------------------
@@ -302,7 +302,7 @@ inline data_t* Manager<hash_t, data_t>::get(const hash_t& id) {
     Get a managed object using an index offset, rather tan an ID.
 -------------------------------------*/
 template <typename hash_t, typename data_t>
-data_t* Manager<hash_t, data_t>::elementAt(unsigned index) {
+data_t* Manager<hash_t, data_t>::element_at(unsigned index) {
     if (index >= dataMap.size()) {
         return nullptr;
     }
@@ -339,7 +339,7 @@ inline unsigned Manager<hash_t, data_t>::size() const {
 -------------------------------------*/
 template <typename hash_t, typename data_t>
 inline const typename Manager<hash_t, data_t>::map_t&
-Manager<hash_t, data_t>::getDataMap() const {
+Manager<hash_t, data_t>::get_data_map() const {
     return dataMap;
 }
 
@@ -349,7 +349,7 @@ Manager<hash_t, data_t>::getDataMap() const {
 -------------------------------------*/
 template <typename hash_t, typename data_t>
 inline typename Manager<hash_t, data_t>::map_t&
-Manager<hash_t, data_t>::getDataMap() {
+Manager<hash_t, data_t>::get_data_map() {
     return dataMap;
 }
 

@@ -8,7 +8,7 @@
 #ifndef CONTEXT_H
 #define	CONTEXT_H
 
-class display;
+class Display;
 
 /**
  * The render context is a wrapper class for an SDL_GLContext structure. This
@@ -16,7 +16,7 @@ class display;
  * If is also useful in providing information about the currently loaded OpenGL
  * resource handle.
  */
-class context final {
+class Context final {
     private:
         /**
          * pContext is a void pointer to an SDL_GLContext structure.
@@ -27,12 +27,12 @@ class context final {
         /**
          * @brief Constructor
          */
-        context();
+        Context();
 
         /**
          * Copy Constructor -- DELETED
          */
-        context(const context&) = delete;
+        Context(const Context&) = delete;
 
         /**
          * @brief Move Constructor
@@ -43,7 +43,7 @@ class context final {
          * @param ctx
          * An R-Value reference to a render context.
          */
-        context(context&& ctx);
+        Context(Context&& ctx);
 
         /**
          * @brief Destructor
@@ -53,12 +53,12 @@ class context final {
          * Make sure the display object that this was created with has not yet
          * been destroyed.
          */
-        ~context();
+        ~Context();
 
         /**
          * Copy Operator -- DELETED
          */
-        context& operator=(const context&ctx) = delete;
+        Context& operator=(const Context&ctx) = delete;
 
         /**
          * @brief Move Operator
@@ -69,7 +69,7 @@ class context final {
          * @param context&&
          * An R-Value reference to a render context.
          */
-        context& operator=(context&& ctx);
+        Context& operator=(Context&& ctx);
 
         /**
          * @brief Initializer method for *this.
@@ -83,7 +83,7 @@ class context final {
          * TRUE if a context was able to be created from the input display
          * object, FALSE if not.
          */
-        bool init(const display& disp, bool useVsync = true);
+        bool init(const Display& disp, bool useVsync = true);
 
         /**
          * @brief Destructor
@@ -103,7 +103,7 @@ class context final {
          * A constant reference to the dsplay object that *this context has
          * been initialized with.
          */
-        void makeCurrent(const display& disp) const;
+        void make_current(const Display& disp) const;
 
         /**
          * Get a pointer to the SDL_GLContext that is used by the active
@@ -112,7 +112,7 @@ class context final {
          *
          * @return A void pointer that can be safely casted to a SDL_GLContext.
          */
-        void* getContext() const;
+        void* get_context() const;
 
         /**
          * @brief Enable/Disable VSync
@@ -121,7 +121,7 @@ class context final {
          *
          * @param TRUE if vsync is desired, FALSE to disable it.
          */
-        void setVsync(bool vsync);
+        void set_vsync(bool vsync);
 
         /**
          * Determine if VSync is enabled or disabled within the current window.
@@ -129,7 +129,7 @@ class context final {
          *
          * @return TRUE if VSync is enabled, FALSE if not.
          */
-        bool getVsync() const;
+        bool get_vsync() const;
 
         /**
          * Swap the current display's front and back buffers. This method
@@ -143,14 +143,14 @@ class context final {
          * A constant reference to the dsplay object that *this context has
          * been initialized with.
          */
-        void flip(const display& disp) const;
+        void flip(const Display& disp) const;
 };
 
 /*-------------------------------------
     Get a pointer to the SDL_GLContext that is used by the active
     renderer.
 -------------------------------------*/
-inline void* context::getContext() const {
+inline void* Context::get_context() const {
     return pContext;
 }
 

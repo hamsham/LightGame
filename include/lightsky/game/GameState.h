@@ -57,7 +57,7 @@ class GameState {
          * @param sys
          * A reference to the parent subsystem.
          */
-        void setParentSystem(GameSystem& sys);
+        void set_parent_system(GameSystem& sys);
 
     protected:
         /*---------------------------------------------------------------------
@@ -71,25 +71,25 @@ class GameState {
          * TRUE to indicate that *this has successfully initialized, FALSE if
          * otherwise.
          */
-        virtual bool onStart();
+        virtual bool on_start();
 
         /**
          * The onStop method is used by the parent subsystem to indicate that
          * *this game state should terminate. Place all memory cleanup here.
          */
-        virtual void onStop();
+        virtual void on_stop();
 
         /**
          * This method is used to tell the current game state that it should
          * update its child components/variables/state.
          */
-        virtual void onRun();
+        virtual void on_run();
 
         /**
          * This method is used by the parent subsystem to tell *this game state
          * that it's paused.
          */
-        virtual void onPause();
+        virtual void on_pause();
 
     public:
         /**
@@ -153,7 +153,7 @@ class GameState {
          *
          * @return game_state_t
          */
-        game_state_t getStateStatus() const;
+        game_state_t get_state() const;
 
         /**
          * @brief Set the operational state of *this.
@@ -162,21 +162,21 @@ class GameState {
          * A game_state_t which will be used to set the current runtime state
          * of *this.
          */
-        void setStateStatus(game_state_t s);
+        void set_state(game_state_t s);
 
         /*
          * @brief Get the parent subsystem that manages *this (const).
          *
          * @return A reference to *this object's managing lsSubsystem.
          */
-        const GameSystem& getParentSystem() const;
+        const GameSystem& get_parent_system() const;
 
         /*
          * @brief Get the parent subsystem that manages *this.
          *
          * @return A reference to *this object's managing lsSubsystem.
          */
-        GameSystem& getParentSystem();
+        GameSystem& get_parent_system();
 
         /**
          * @brief Check if the current state is running.
@@ -184,7 +184,7 @@ class GameState {
          * @return True if this object's current state is set to
          * game_state_t::RUNNING, return false if not.
          */
-        virtual bool isRunning() const;
+        virtual bool is_running() const;
 
         /**
          * @brief Check if the current state is paused.
@@ -192,7 +192,7 @@ class GameState {
          * @return True if this object's current state is set to
          * game_state_t::PAUSED, return false if not.
          */
-        virtual bool isPaused() const;
+        virtual bool is_paused() const;
 
         /**
          * @brief Check if the current state is initializing.
@@ -200,7 +200,7 @@ class GameState {
          * @return True if this object's current state is set to
          * game_state_t::STARTING, return false if not.
          */
-        virtual bool isStarting() const;
+        virtual bool is_starting() const;
 
         /**
          * @brief Check if the current state is stopped.
@@ -208,62 +208,62 @@ class GameState {
          * @return True if this object's current state is set to
          * game_state_t::STOPPED, return false if not.
          */
-        virtual bool isStopped() const;
+        virtual bool is_stopped() const;
 };
 
 /*-------------------------------------
     Get the current state of *this object.
 -------------------------------------*/
-inline game_state_t GameState::getStateStatus() const {
+inline game_state_t GameState::get_state() const {
     return currentState;
 }
 
 /*-------------------------------------
     Set the operational state of *this.
 -------------------------------------*/
-inline void GameState::setStateStatus(game_state_t s) {
+inline void GameState::set_state(game_state_t s) {
     currentState = s;
 }
 
 /*-------------------------------------
     Get the parent subsystem that manages *this (const).
 -------------------------------------*/
-inline const GameSystem& GameState::getParentSystem() const {
+inline const GameSystem& GameState::get_parent_system() const {
     return *pSystem;
 }
 
 /*-------------------------------------
     Get the parent subsystem that manages *this.
 -------------------------------------*/
-inline GameSystem& GameState::getParentSystem() {
+inline GameSystem& GameState::get_parent_system() {
     return *pSystem;
 }
 
 /*-------------------------------------
     Check if the current state is running.
 -------------------------------------*/
-inline bool GameState::isRunning() const {
+inline bool GameState::is_running() const {
     return currentState == game_state_t::RUNNING;
 }
 
 /*-------------------------------------
     Check if the current state is paused.
 -------------------------------------*/
-inline bool GameState::isPaused() const {
+inline bool GameState::is_paused() const {
     return currentState == game_state_t::PAUSED;
 }
 
 /*-------------------------------------
     Check if the current state is initializing.
 -------------------------------------*/
-inline bool GameState::isStarting() const {
+inline bool GameState::is_starting() const {
     return currentState == game_state_t::STARTING;
 }
 
 /*-------------------------------------
     Check if the current state is stopped.
 -------------------------------------*/
-inline bool GameState::isStopped() const {
+inline bool GameState::is_stopped() const {
     return currentState == game_state_t::STOPPED;
 }
 

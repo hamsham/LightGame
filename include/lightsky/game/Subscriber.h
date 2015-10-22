@@ -130,7 +130,7 @@ class Subscriber {
          * calls "dispatchEvents()." Pass NULL as a parameter in order to
          * sever the connection with the parent object.
          */
-        void setDispatcher(Dispatcher* const pDispatcher = nullptr);
+        void set_dispatcher(Dispatcher* const pDispatcher = nullptr);
 
         /**
          * @brief Determine if *this is subscribed to a dispatcher.
@@ -141,7 +141,7 @@ class Subscriber {
          * @return TRUE if *this is subscribed to the input dispatcher, FALSE
          * if otherwise.
          */
-        bool isSubscribed(const Dispatcher& d) const;
+        bool is_subscribed(const Dispatcher& d) const;
 };
 
 } // end game namespace

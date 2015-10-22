@@ -20,7 +20,7 @@
 #include "lightsky/game/Game.h"
 namespace math = ls::math;
 
-#include "display.h"
+#include "Display.h"
 
 /**
  * Print SDL window flags to the console.
@@ -53,14 +53,14 @@ void printWindowFlags(uint32_t flags) {
 /*-------------------------------------
     Display constructor
 -------------------------------------*/
-display::display() {
+Display::Display() {
     fullScreenMode = SDL_WINDOW_FULLSCREEN;
 }
 
 /*-------------------------------------
     Display move constructor
 -------------------------------------*/
-display::display(display&& d) :
+Display::Display(Display&& d) :
     pWindow{d.pWindow},
     windowIsNative{d.windowIsNative}
 {
@@ -71,7 +71,7 @@ display::display(display&& d) :
 /*-------------------------------------
     Display move operator
 -------------------------------------*/
-display& display::operator=(display&& d) {
+Display& Display::operator=(Display&& d) {
     pWindow = d.pWindow;
     d.pWindow = nullptr;
 
@@ -84,14 +84,14 @@ display& display::operator=(display&& d) {
 /*-------------------------------------
     Display destructor
 -------------------------------------*/
-display::~display() {
+Display::~Display() {
     terminate();
 }
 
 /*-------------------------------------
     Display Initialization using a native window handle
 -------------------------------------*/
-bool display::init(void* const hwnd) {
+bool Display::init(void* const hwnd) {
     LS_LOG_MSG("Attempting to link with a preexisting display.");
 
     if (hwnd == nullptr) {
@@ -102,19 +102,19 @@ bool display::init(void* const hwnd) {
     LS_LOG_MSG("\tLoading internal flags for a native window.");
 
 
-    display tempDisp{};
+    Display tempDisp{};
 
     if (!tempDisp.init(math::vec2i{0})) {
         LS_LOG_ERR("\tUnable to create a shared context for a native window.\n");
         return false;
     }
     else {
-        printWindowFlags(SDL_GetWindowFlags(tempDisp.getWindow()));
+        printWindowFlags(SDL_GetWindowFlags(tempDisp.get_window()));
 
         // SDL requires a string, containing the SDL_Window* pointer, to be
         // formatted with "%p". using std::to_string() does not work.
         char nativeHandleStr[sizeof(void*)*2]; // <--- only big enough to stringify a pointer
-        sprintf(nativeHandleStr, "%p", (void*)tempDisp.getWindow());
+        sprintf(nativeHandleStr, "%p", (void*)tempDisp.get_window());
 
         LS_LOG_MSG("\tCopying window flags from ", nativeHandleStr, " to ", hwnd, '.');
 
@@ -151,7 +151,7 @@ bool display::init(void* const hwnd) {
 /*-------------------------------------
     Display Initialization With no default window handle
 -------------------------------------*/
-bool display::init(const math::vec2i inResolution, bool isFullScreen) {
+bool Display::init(const math::vec2i inResolution, bool isFullScreen) {
     LS_LOG_MSG("Attempting to create an OpenGL 3.3-compatible display through SDL.");
 
     Uint32 windowFlags =
@@ -193,7 +193,7 @@ bool display::init(const math::vec2i inResolution, bool isFullScreen) {
 /*-------------------------------------
     Display Termination
 -------------------------------------*/
-void display::terminate() {
+void Display::terminate() {
     if (pWindow != nullptr && windowIsNative == false) {
         SDL_DestroyWindow(pWindow);
     }
@@ -205,7 +205,7 @@ void display::terminate() {
 /*-------------------------------------
     Display Resolution Handling
 -------------------------------------*/
-const math::vec2i display::getResolution() const {
+const math::vec2i Display::get_resolution() const {
     int x, y;
     SDL_GetWindowSize(pWindow, &x, &y);
     return math::vec2i{x, y};
@@ -214,14 +214,14 @@ const math::vec2i display::getResolution() const {
 /*-------------------------------------
     Set the current display's resolution, in pixels.
 -------------------------------------*/
-void display::setResolution(const math::vec2i inResolution) {
+void Display::set_resolution(const math::vec2i inResolution) {
     SDL_SetWindowSize(pWindow, inResolution[0], inResolution[1]);
 }
 
 /*-------------------------------------
     Fullscreen management
 -------------------------------------*/
-void display::setFullScreenState(bool fs) {
+void Display::set_fullscreen(bool fs) {
     if (fs == true) {
         SDL_SetWindowFullscreen(pWindow, fullScreenMode);
         SDL_DisableScreenSaver();
@@ -235,7 +235,7 @@ void display::setFullScreenState(bool fs) {
 /*-------------------------------------
     Query Fullscreen
 -------------------------------------*/
-bool display::getFullScreenState() const {
+bool Display::is_fullscreen() const {
     return pWindow != nullptr
     && (SDL_GetWindowFlags(pWindow) & SDL_WINDOW_FULLSCREEN) != 0;
 }
@@ -244,7 +244,7 @@ bool display::getFullScreenState() const {
     Set how the window should handle the full resolution of the current
     display.
 -------------------------------------*/
-void display::setFullScreenMode(fullscreen_t fsType) {
+void Display::set_fullscreen_mode(fullscreen_t fsType) {
     LS_DEBUG_ASSERT(fsType == FULLSCREEN_DISPLAY || fsType == FULLSCREEN_WINDOW);
 
     fullScreenMode = fsType;
@@ -257,15 +257,15 @@ void display::setFullScreenMode(fullscreen_t fsType) {
     }
 
     // apply the current fullscreen mode if requested
-    if (getFullScreenState() == true) {
-        setFullScreenState(true);
+    if (is_fullscreen() == true) {
+        set_fullscreen(true);
     }
 }
 
 /*-------------------------------------
     Get the current fullscreen-handling method.
 -------------------------------------*/
-fullscreen_t display::getFullScreenMode() const {
+fullscreen_t Display::get_fullscreen_mode() const {
     return fullScreenMode == SDL_WINDOW_FULLSCREEN
         ? FULLSCREEN_DISPLAY
         : FULLSCREEN_WINDOW;
@@ -276,6 +276,6 @@ fullscreen_t display::getFullScreenMode() const {
     Get a handle to the SDL_Window responsible for the window that this
     object references.
 -------------------------------------*/
-SDL_Window* display::getWindow() const {
+SDL_Window* Display::get_window() const {
     return pWindow;
 }

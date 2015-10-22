@@ -133,7 +133,7 @@ class Dispatcher {
          * A reference to the subscriber object which is to handle events
          * passed by *this.
          */
-        void assignSubscriber(Subscriber& s);
+        void add_subscriber(Subscriber& s);
 
         /**
          * @brief Unassign a subscriber from being passed events by *this.
@@ -142,7 +142,7 @@ class Dispatcher {
          * A reference to the subscriber object which is to be removed from
          * *this objects event list.
          */
-        void unassignSubscriber(Subscriber& s);
+        void remove_subscriber(Subscriber& s);
 
         /**
          * @brief Determine if a subscriber is being passed events from *this.
@@ -153,7 +153,7 @@ class Dispatcher {
          * @return TRUE if *this is passing events to the input parameter,
          * FALSE if otherwise.
          */
-        bool hasSubscriber(const Subscriber& s) const;
+        bool has_subscriber(const Subscriber& s) const;
 
         /**
          * @brief Remove all subscribers from *this object's distribution list.
@@ -161,7 +161,7 @@ class Dispatcher {
          * Calling this method will sever the connection between *this and all
          * subscribers referenced by *this.
          */
-        void clearSubscribers();
+        void clear_subscribers();
 
         /**
          * @brief dispatch all events contained within *this objects event
@@ -173,7 +173,7 @@ class Dispatcher {
          * This method should be called frequently in order to avoid memory
          * leaks.
          */
-        void dispatchEvents();
+        void dispatch_events();
 
         /**
          * @brief Push an event into *this object's event queue.
@@ -182,7 +182,7 @@ class Dispatcher {
          * A constant reference to an event object which will be added to the
          * event queue in *this.
          */
-        void pushEvent(const Event& e);
+        void push_event(const Event& e);
 
         /**
          * @brief Retrieve the number of events that are queued in *this.
@@ -190,7 +190,7 @@ class Dispatcher {
          * @return an unsigned integral type, representing the number of events
          * that *this object can distribute to its subscribers.
          */
-        unsigned getNumEventsQueued() const;
+        unsigned get_num_queued_events() const;
 
         /**
          * Get the number of subscribers that are receiving events from *this.
@@ -198,7 +198,7 @@ class Dispatcher {
          * @return an unsigned integral type, representing the number of
          * subscriber objects that are receiving events from *this.
          */
-        unsigned getNumSubscribers() const;
+        unsigned get_num_subscribers() const;
 };
 
 } // end game namespace

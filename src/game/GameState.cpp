@@ -48,33 +48,33 @@ GameState& GameState::operator=(GameState&& gs) {
 /*-------------------------------------
     Parent Sub-System Assignment.
 -------------------------------------*/
-void GameState::setParentSystem(GameSystem& pSys) {
+void GameState::set_parent_system(GameSystem& pSys) {
     pSystem = &pSys;
 }
 
 /*-------------------------------------
     Start the current system's running state.
 -------------------------------------*/
-bool GameState::onStart() {
+bool GameState::on_start() {
     return true;
 }
 
 /*-------------------------------------
     Engage the current system's running state.
 -------------------------------------*/
-void GameState::onRun() {
+void GameState::on_run() {
 }
 
 /*-------------------------------------
     Pause the current system's running state.
 -------------------------------------*/
-void GameState::onPause() {
+void GameState::on_pause() {
 }
 
 /*-------------------------------------
     Stop the current system's running state.
 -------------------------------------*/
-void GameState::onStop() {
+void GameState::on_stop() {
 }
 
 } // end game namespace
