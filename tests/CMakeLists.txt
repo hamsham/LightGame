@@ -25,11 +25,23 @@ set(
     lsgame
 )
 
-set(
-    LS_GAME_EXTERNAL_DEPS
-    SDL2
-    GL
-)
+
+if(WIN32)
+    set(
+        LS_GAME_EXTERNAL_DEPS
+        SDL2main
+        SDL2
+        opengl32
+        mingw32
+    )
+else()
+    set(
+        LS_GAME_EXTERNAL_DEPS
+        SDL2main
+        SDL2
+        GL
+    )
+endif(WIN32)
 
 
 

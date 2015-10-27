@@ -2,6 +2,7 @@
 #include <new> // std::nothrow
 #include <iostream>
 
+#define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 
 #include "lightsky/utils/Log.h"
