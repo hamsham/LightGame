@@ -31,6 +31,7 @@ if(WIN32)
         LS_GAME_EXTERNAL_DEPS
         SDL2main
         SDL2
+        freetype
         opengl32
         mingw32
     )
@@ -39,6 +40,7 @@ else()
         LS_GAME_EXTERNAL_DEPS
         SDL2main
         SDL2
+        freetype
         GL
     )
 endif(WIN32)
@@ -58,6 +60,8 @@ include_directories(".")
 set(LS_GAME_PROTO_COMMON_SOURCES
     "Context.cpp"
     "Display.cpp"
+    "HelloTextState.cpp"
+    "TextGeometryLoader.cpp"
 )
 
 set(

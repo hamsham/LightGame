@@ -93,6 +93,11 @@ bool MainState::on_start() {
         return false;
     }
 
+    if (!ls::draw::init_ls_draw()) {
+        std::cerr << "Unable to initialize LS Draw." << std::endl;
+        return false;
+    }
+
     return true;
 }
 
@@ -124,6 +129,15 @@ void MainState::on_run() {
 }
 
 /*-------------------------------------
+ * System Stop
+-------------------------------------*/
+void MainState::on_stop() {
+    renderContext.terminate();
+    delete pDisplay;
+    pDisplay = nullptr;
+}
+
+/*-------------------------------------
  * Keyboard Event
 -------------------------------------*/
 void MainState::on_key_up_event(const SDL_KeyboardEvent& e) {
@@ -145,15 +159,6 @@ void MainState::on_window_event(const SDL_WindowEvent& e) {
     if (e.event == SDL_WINDOWEVENT_CLOSE) {
         get_parent_system().stop();
     }
-}
-
-/*-------------------------------------
- * System Stop
--------------------------------------*/
-void MainState::on_stop() {
-    renderContext.terminate();
-    delete pDisplay;
-    pDisplay = nullptr;
 }
 
 /*-----------------------------------------------------------------------------
