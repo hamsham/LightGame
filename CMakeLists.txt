@@ -2,7 +2,7 @@
 # -------------------------------------
 # Project Setup
 # -------------------------------------
-project(LightMath CXX)
+project(LightGame CXX)
 set(OUTPUT_NAME lsgame)
 
 

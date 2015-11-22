@@ -354,7 +354,7 @@ unsigned get_num_drawable_chars(const std::string& str) {
  * buffer of textual glyphs.
 -------------------------------------*/
 void calc_text_geometry_size(
-    const char* const str,
+    const std::string& str,
     const common_vertex_t vertexTypes,
     unsigned& outNumVertices,
     unsigned& outNumVertexBytes,
