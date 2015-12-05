@@ -32,6 +32,7 @@ if(WIN32)
         SDL2main
         SDL2
         freetype
+        FreeImage
         opengl32
         mingw32
     )
@@ -41,6 +42,7 @@ else()
         SDL2main
         SDL2
         freetype
+        freeimage
         GL
     )
 endif(WIN32)
