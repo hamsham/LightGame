@@ -21,9 +21,9 @@ namespace ls {
 namespace draw {
 
 enum common_vertex_t : unsigned;
-class BufferObject;
-class Atlas;
-class AtlasEntry;
+struct BufferObject;
+struct Atlas;
+struct AtlasEntry;
 class VertexArray;
 
 /**------------------------------------
