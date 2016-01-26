@@ -216,15 +216,19 @@ unsigned gen_text_geometry(
     using ls::draw::map_buffer_data;
     using ls::draw::get_required_index_type;
     
+    const AtlasEntry* const pGlyphs = atlas.pEntries; // Get pointers to the buffer data that will be filled with quads
     const unsigned numDrawable      = get_num_drawable_chars(str);
+    
     const unsigned vertStride       = get_vertex_byte_size(vertexTypes);
     const unsigned totalVerts       = numDrawable*geometry_property_t::MESH_VERTS_PER_GLYPH;
-    char* pVerts                    = (char*)map_buffer_data(vbo, 0, totalVerts, DEFAULT_TEXT_MAPPING_FLAGS);
+    char* pVerts                    = (char*)map_buffer_data(vbo, 0, totalVerts*vertStride, DEFAULT_TEXT_MAPPING_FLAGS);
+    
     const index_element_t indexType = get_required_index_type(totalVerts);
     const unsigned indexStride      = (indexType == INDEX_TYPE_UINT) ? sizeof(unsigned int) : sizeof(unsigned short);
-    unsigned totalIndices           = 0;
-    char* pIndices                  = (char*)map_buffer_data(ibo, 0, numDrawable*indexStride, DEFAULT_TEXT_MAPPING_FLAGS);
-    const AtlasEntry* const pGlyphs = atlas.pEntries; // Get pointers to the buffer data that will be filled with quads
+    unsigned totalIndices           = numDrawable*geometry_property_t::MESH_VERTS_PER_GLYPH;
+    char* pIndices                  = (char*)map_buffer_data(ibo, 0, totalIndices*indexStride, DEFAULT_TEXT_MAPPING_FLAGS);
+    
+    LS_LOG_GL_ERR();
     
     // The y-origin was found using a lot of testing. This was for resolution independence
     constexpr unsigned nl = (unsigned)'\n';
@@ -308,21 +312,25 @@ unsigned load_text_geometry(
         terminate_text_buffers();
         return 0;
     }
+    else {
+        vbo.bufferType = draw::VBO_BUFFER_ARRAY;
+        ibo.bufferType = draw::VBO_BUFFER_ELEMENT;
+    }
     
     bind_buffer(vbo);
     set_buffer_data(vbo, numVertexBytes, nullptr, buffer_access_t::VBO_STREAM_DRAW);
-    LOG_GL_ERR();
+    LS_LOG_GL_ERR();
 
     bind_buffer(ibo);
     set_buffer_data(ibo, numIndexBytes, nullptr, buffer_access_t::VBO_STREAM_DRAW);
-    LOG_GL_ERR();
+    LS_LOG_GL_ERR();
     
     gen_text_geometry(str, vertexTypes, vbo, ibo, atlas);
-    LOG_GL_ERR();
+    LS_LOG_GL_ERR();
     
     unbind_buffer(vbo);
     unbind_buffer(ibo);
-    LOG_GL_ERR();
+    LS_LOG_GL_ERR();
     
     LS_LOG_MSG(
         "\tSuccessfully sent a string to the GPU.",

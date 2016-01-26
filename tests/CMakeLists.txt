@@ -14,6 +14,16 @@ include_directories(".")
 
 
 # -------------------------------------
+# Definitions
+# -------------------------------------
+if (CMAKE_BUILD_TYPE MATCHES "DEBUG" OR CMAKE_BUILD_TYPE MATCHES "RELWITHDEBINFO")
+    message("Building LightSky tests with debug info.")
+    add_definitions(-DLS_DEBUG)
+endif()
+
+
+
+# -------------------------------------
 # Dependency Setup
 # -------------------------------------
 set(
@@ -62,8 +72,8 @@ include_directories(".")
 set(LS_GAME_PROTO_COMMON_SOURCES
     "Context.cpp"
     "Display.cpp"
-    #"HelloTextState.cpp"
-    #"TextGeometryLoader.cpp"
+    "HelloTextState.cpp"
+    "TextGeometryLoader.cpp"
 )
 
 set(
@@ -71,6 +81,13 @@ set(
     "hello_lsgame.cpp"
     ${LS_GAME_PROTO_COMMON_SOURCES}
 )
+
+
+
+# -------------------------------------
+# Misc Files
+# -------------------------------------
+configure_file(testfont.ttf testfont.ttf COPYONLY)
 
 
 

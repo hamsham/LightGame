@@ -13,6 +13,7 @@ namespace math = ls::math;
 
 #include "Context.h"
 #include "Display.h"
+#include "HelloTextState.h"
 
 /*-----------------------------------------------------------------------------
  * Example System Object
@@ -162,7 +163,7 @@ void MainState::on_window_event(const SDL_WindowEvent& e) {
 }
 
 /*-----------------------------------------------------------------------------
- * Main() Methids
+ * Main() Methods
 -----------------------------------------------------------------------------*/
 /*-------------------------------------
  * Forward declarations
@@ -173,8 +174,13 @@ void terminate_subsystems();
 /*-------------------------------------
  * main()
 -------------------------------------*/
-int main() {
+int main(int argc, char* argv[]) {
     ls::game::GameSystem sys{};
+    
+    for (int i = 0; i < argc; ++i) {
+        std::cout << "Argument " << i << ": " << argv[i] << '\n';
+    }
+    std::cout << std::endl;
 
     if (!init_subsystems()) {
         std::cerr << "Unable to initialize SDL." << std::endl;
@@ -182,11 +188,15 @@ int main() {
     }
     std::cout << "LightSky Successfully initialized.\n" << std::endl;
 
-    if (!sys.start() || !sys.push_game_state(new(std::nothrow) MainState{})) {
+    if (!sys.start()
+    || !sys.push_game_state(new(std::nothrow) MainState{})
+    || !sys.push_game_state(new(std::nothrow) HelloTextState{})
+    ) {
         std::cerr << "Unable to create the main program.\n" << std::endl;
         goto quitTest;
     }
     std::cout << "Successfully created the main program.\n" << std::endl;
+    std::cout << __FILE__ << ": " << __LINE__ << std::endl;
 
     while (sys.is_runnable()) {
         sys.run();

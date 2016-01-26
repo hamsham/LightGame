@@ -20,6 +20,8 @@
 
 class HelloTextState final : public ls::game::GameState {
     private:
+        unsigned numTextIndices = 0;
+        
         ls::draw::ShaderProgram shader;
         
         ls::draw::Atlas atlas;
@@ -37,13 +39,13 @@ class HelloTextState final : public ls::game::GameState {
         
         HelloTextState();
         
-        HelloTextState(const HelloTextState&);
+        HelloTextState(const HelloTextState&) = delete;
         
-        HelloTextState(HelloTextState&&);
+        HelloTextState(HelloTextState&&) = default;
         
-        HelloTextState& operator=(const HelloTextState&);
+        HelloTextState& operator=(const HelloTextState&) = delete;
         
-        HelloTextState& operator=(HelloTextState&&);
+        HelloTextState& operator=(HelloTextState&&) = default;
         
     private:
         void setup_camera();
