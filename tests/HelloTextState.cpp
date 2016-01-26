@@ -8,7 +8,7 @@
 #include <cassert>
 #include <iostream>
 
-#include "lightsky/setup/macros.h"
+#include "lightsky/setup/Macros.h"
 
 #include "lightsky/utils/Pointer.h"
 

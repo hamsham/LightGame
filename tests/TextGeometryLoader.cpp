@@ -7,9 +7,9 @@
 
 #include <cctype> // isgraph(...)
 
-#include "lightsky/setup/macros.h"
+#include "lightsky/setup/Macros.h"
 
-#include "lightsky/utils/assertions.h"
+#include "lightsky/utils/Assertions.h"
 
 #include "lightsky/math/vec2.h"
 #include "lightsky/math/vec3.h"
