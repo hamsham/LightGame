@@ -18,8 +18,17 @@
 
 
 
+class ControlState;
+
+
+
 class HelloTextState final : public ls::game::GameState {
+    
+    friend class ControlState;
+    
     private:
+        ControlState* pControlState = nullptr;
+        
         unsigned numTextIndices = 0;
         
         ls::draw::ShaderProgram shader;
@@ -33,6 +42,8 @@ class HelloTextState final : public ls::game::GameState {
         ls::draw::VertexArray vao;
         
         ls::draw::Camera camera;
+        
+        void set_text(const std::string& text);
 
     public:
         virtual ~HelloTextState();
@@ -41,11 +52,11 @@ class HelloTextState final : public ls::game::GameState {
         
         HelloTextState(const HelloTextState&) = delete;
         
-        HelloTextState(HelloTextState&&) = default;
+        HelloTextState(HelloTextState&&);
         
         HelloTextState& operator=(const HelloTextState&) = delete;
         
-        HelloTextState& operator=(HelloTextState&&) = default;
+        HelloTextState& operator=(HelloTextState&&);
         
     private:
         void setup_camera();

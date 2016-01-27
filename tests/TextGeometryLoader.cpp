@@ -10,6 +10,7 @@
 #include "lightsky/setup/Macros.h"
 
 #include "lightsky/utils/Assertions.h"
+#include "lightsky/utils/Log.h"
 
 #include "lightsky/math/vec2.h"
 #include "lightsky/math/vec3.h"
@@ -266,6 +267,9 @@ unsigned gen_text_geometry(
             totalIndices += MESH_INDICES_PER_GLYPH;
         }
     }
+    
+    unmap_buffer_data(vbo);
+    unmap_buffer_data(ibo);
     
     return totalIndices;
 }
