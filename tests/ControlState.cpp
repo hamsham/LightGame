@@ -13,7 +13,7 @@
 #include "lightsky/game/GameSystem.h"
 
 #include "ControlState.h"
-#include "HelloTextState.h"
+#include "HelloPrimState.h"
 
 namespace math = ls::math;
 
@@ -68,7 +68,7 @@ ControlState& ControlState::operator=(ControlState&& state) {
 /*-------------------------------------
  * Parent renderer state management
 -------------------------------------*/
-void ControlState::set_render_state(HelloTextState* const pState) {
+void ControlState::set_render_state(HelloPrimState* const pState) {
     pRenderState = pState;
 }
 
@@ -139,6 +139,9 @@ void ControlState::on_run() {
     }
     if (pKeyStates[SDL_SCANCODE_2]) {
         mainCam.set_view_mode(ls::draw::camera_mode_t::FIRST_PERSON);
+    }
+    if (pKeyStates[SDL_SCANCODE_ESCAPE]) {
+        get_parent_system().stop();
     }
     
     mainCam.move(pos);

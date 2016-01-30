@@ -1,14 +1,16 @@
 /* 
- * File:   HelloTextState.h
+ * File:   HelloPrimState.h
  * Author: miles
  *
  * Created on October 27, 2015, 10:44 PM
  */
 
-#ifndef HELLOTEXTSTATE_H
-#define HELLOTEXTSTATE_H
+#ifndef HELLOPRIMSTATE
+#define HELLOPRIMSTATE
 
 
+
+#include <memory>
 
 #include "lightsky/draw/Atlas.h"
 #include "lightsky/draw/BufferObject.h"
@@ -22,52 +24,46 @@ class ControlState;
 
 
 
-class HelloTextState final : public ls::game::GameState {
+class HelloPrimState final : public ls::game::GameState {
     
     friend class ControlState;
     
     private:
         ControlState* pControlState = nullptr;
         
-        unsigned numTextIndices = 0;
-        
         ls::draw::ShaderProgram shader;
-        
-        ls::draw::Atlas atlas;
         
         ls::draw::BufferObject vbo;
         
-        ls::draw::BufferObject ibo;
+        //ls::draw::BufferObject ibo;
         
         ls::draw::VertexArray vao;
         
         ls::draw::Camera camera;
         
-        void set_text(const std::string& text);
-        
         void update_camera();
+        
+        std::unique_ptr<char[]> gen_vertex_data();
 
     public:
-        virtual ~HelloTextState();
+        virtual ~HelloPrimState();
         
-        HelloTextState();
+        HelloPrimState();
         
-        HelloTextState(const HelloTextState&) = delete;
+        HelloPrimState(const HelloPrimState&) = delete;
         
-        HelloTextState(HelloTextState&&);
+        HelloPrimState(HelloPrimState&&);
         
-        HelloTextState& operator=(const HelloTextState&) = delete;
+        HelloPrimState& operator=(const HelloPrimState&) = delete;
         
-        HelloTextState& operator=(HelloTextState&&);
+        HelloPrimState& operator=(HelloPrimState&&);
         
     private:
         void setup_camera();
         
         void setup_shaders();
         
-        void setup_atlas();
-        
-        void setup_text();
+        void setup_prims();
 
     protected:
         virtual bool on_start() override;
@@ -79,4 +75,4 @@ class HelloTextState final : public ls::game::GameState {
 
 
 
-#endif	/* HELLOTEXTSTATE_H */
+#endif	/* HELLOPRIMSTATE */

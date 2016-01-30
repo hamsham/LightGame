@@ -1,12 +1,13 @@
 /* 
- * File:   HelloTextState.cpp
+ * File:   HelloPrimState.cpp
  * Author: miles
  * 
- * Created on October 27, 2015, 10:44 PM
+ * Created on January 29, 2015
  */
 
 #include <cassert>
 #include <ctime>
+#include <memory>
 #include <string>
 
 #include "lightsky/setup/Macros.h"
@@ -25,15 +26,10 @@
 #include "lightsky/draw/VertexAttrib.h"
 #include "lightsky/draw/VertexUtils.h"
 
-#include "HelloTextState.h"
-#include "TextGeometryLoader.h"
+#include "HelloPrimState.h"
 #include "ControlState.h"
 
 namespace math = ls::math;
-
-#ifndef LS_GAME_TEST_FONT
-    #define LS_GAME_TEST_FONT "testfont.ttf"
-#endif
     
 ///////////////////////////////////////////////////////////////////////////////
 //  Private Variables
@@ -52,7 +48,7 @@ namespace {
 /*-------------------------------------
  * Camera/VP Matrix Uniform Name
 -------------------------------------*/
-//const char* TEXT_COLOR_UNIFORM = "textColor";
+//const char* TEXT_COLOR_UNIFORM = "primColor";
 
 /*-------------------------------------
  * Text Vertex Shader
@@ -89,16 +85,14 @@ u8R"***(
 
 precision mediump float;
 
+uniform vec4 primColor;
+
 in vec2 uvCoords;
 
 out vec4 outFragCol;
 
-uniform sampler2D texSampler;
-uniform vec4 textColor;
-
 void main() {
-    float mask = texture(texSampler, uvCoords).r;
-    outFragCol = textColor*step(0.5, mask);
+    outFragCol = primColor;
 }
 )***"
 };
@@ -107,19 +101,19 @@ void main() {
 /*-------------------------------------
  * Destructor
 -------------------------------------*/
-HelloTextState::~HelloTextState() {
+HelloPrimState::~HelloPrimState() {
 }
 
 /*-------------------------------------
  * Constructor
 -------------------------------------*/
-HelloTextState::HelloTextState() {
+HelloPrimState::HelloPrimState() {
 }
 
 /*-------------------------------------
  * Move Constructor
 -------------------------------------*/
-HelloTextState::HelloTextState(HelloTextState&& state) :
+HelloPrimState::HelloPrimState(HelloPrimState&& state) :
     GameState{}
 {
     *this = std::move(state);
@@ -128,7 +122,7 @@ HelloTextState::HelloTextState(HelloTextState&& state) :
 /*-------------------------------------
  * Move Operator
 -------------------------------------*/
-HelloTextState& HelloTextState::operator=(HelloTextState&& state) {
+HelloPrimState& HelloPrimState::operator=(HelloPrimState&& state) {
     GameState::operator=(std::move(state));
     
     pControlState = state.pControlState;
@@ -140,32 +134,31 @@ HelloTextState& HelloTextState::operator=(HelloTextState&& state) {
 
 /*-------------------------------------
 -------------------------------------*/
-void HelloTextState::setup_camera() {
-    camera.set_projection_params(60.f, 800.f, 600.f, 0.1f, 1000.f);
-    camera.look_at(ls::math::vec3{5.0}, ls::math::vec3{0.1f});
+void HelloPrimState::setup_camera() {
+    camera.set_projection_params(LS_DEG2RAD(60.f), 800.f, 600.f, 0.1f, 1000.f);
+    camera.look_at(ls::math::vec3{20.0}, ls::math::vec3{LS_EPSILON});
     camera.make_perspective();
     camera.lock_y_axis(true);
-    //camera.set_view_mode(ls::draw::camera_mode_t::ARCBALL);
-    camera.set_view_mode(ls::draw::camera_mode_t::FIRST_PERSON);
+    camera.set_view_mode(ls::draw::camera_mode_t::ARCBALL);
     
     update_camera();
 }
 
 /*-------------------------------------
 -------------------------------------*/
-void HelloTextState::update_camera() {
+void HelloPrimState::update_camera() {
     camera.update();
     
     shader.bind();
     ls::draw::set_shader_uniform(0, math::scale(math::mat4{1.f}, math::vec3{10.f}));
-    ls::draw::set_shader_uniform(3, camera.get_vp_matrix());
-    ls::draw::set_shader_uniform(2, ls::math::vec4{0.f, 1.f, 0.f, 1.f});
+    ls::draw::set_shader_uniform(1, ls::math::vec4{0.f, 1.f, 0.f, 1.f});
+    ls::draw::set_shader_uniform(2, camera.get_vp_matrix());
     shader.unbind();
 }
 
 /*-------------------------------------
 -------------------------------------*/
-void HelloTextState::setup_shaders() {
+void HelloPrimState::setup_shaders() {
     ls::draw::vertexShader vShader;
     ls::draw::fragmentShader fShader;
     
@@ -192,30 +185,46 @@ void HelloTextState::setup_shaders() {
 
 /*-------------------------------------
 -------------------------------------*/
-void HelloTextState::setup_atlas() {
-    ls::utils::Pointer<ls::draw::FontResource> pFont;
-
-    pFont.reset(new ls::draw::FontResource{});
-
-    assert(pFont->load_file(LS_GAME_TEST_FONT, 72));
-    assert(atlas.init(*pFont));
+std::unique_ptr<char[]> HelloPrimState::gen_vertex_data() {
+    static constexpr math::vec3 positions[3] = {
+        math::vec3{-1.f, -1.f, 0.f},
+        math::vec3{1.f, -1.f, 0.f},
+        math::vec3{0.f, 1.f, 0.f},
+    };
+    
+    
+    static constexpr math::vec2 textures[3] = {
+        math::vec2{0.f, 0.f},
+        math::vec2{1.f, 0.f},
+        math::vec2{0.5f, 1.f}
+    };
+    
+    static constexpr math::vec3 normals[3] = {
+        math::vec3{0.f, 0.f, -1.f},
+        math::vec3{0.f, 0.f, -1.f},
+        math::vec3{0.f, 0.f, -1.f}
+    };
+    
+    static constexpr unsigned stride = sizeof(math::vec3) + sizeof(math::vec2) + sizeof(math::vec3);
+    std::unique_ptr<char[]> pData{new char[stride * 3]};
+    
+    
+    for (unsigned i = 0; i < 3; ++i) {
+        static constexpr unsigned posOffset = 0;
+        static constexpr unsigned texOffset = sizeof(math::vec3);
+        static constexpr unsigned nrmOffset = texOffset + sizeof(math::vec2);
+        
+        *reinterpret_cast<math::vec3*>(pData.get() + (i*stride) + posOffset) = positions[i];
+        *reinterpret_cast<math::vec2*>(pData.get() + (i*stride) + texOffset) = textures[i];
+        *reinterpret_cast<math::vec3*>(pData.get() + (i*stride) + nrmOffset) = normals[i];
+    }
+    
+    return pData;
 }
 
 /*-------------------------------------
 -------------------------------------*/
-void HelloTextState::set_text(const std::string& text) {
-    using ls::draw::common_vertex_t;
-    using ls::draw::STANDARD_VERTEX;
-    
-    static constexpr common_vertex_t vertTypes = (common_vertex_t)STANDARD_VERTEX;
-    
-    numTextIndices = ls::draw::load_text_geometry(text, vertTypes, this->vbo, this->ibo, this->atlas);
-    assert(numTextIndices > 0);
-}
-
-/*-------------------------------------
--------------------------------------*/
-void HelloTextState::setup_text() {
+void HelloPrimState::setup_prims() {
     using ls::draw::common_vertex_t;
     using ls::draw::vertex_data_t;
     using ls::draw::STANDARD_VERTEX;
@@ -230,27 +239,26 @@ void HelloTextState::setup_text() {
     };
     const unsigned numVboAttribs = LS_ARRAY_SIZE(vboAttribs);
     
-    ls::draw::bind_buffer(vbo);
-    set_text("Hello World!\nHello World!\nHello World!\nHello World!\nHello World!\n");
+    assert(ls::draw::init_buffer(this->vbo));
+    ls::draw::bind_buffer(this->vbo);
+    const std::unique_ptr<char[]>&& pData = gen_vertex_data();
+    ls::draw::set_buffer_data(vbo, 3 * ls::draw::get_vertex_byte_size((common_vertex_t)STANDARD_VERTEX), pData.get(), ls::draw::buffer_access_t::VBO_STATIC_DRAW);
     this->vao.set_attrib_offsets(vboAttribs, numVboAttribs, ls::draw::get_vertex_byte_size((common_vertex_t)STANDARD_VERTEX));
-    ls::draw::bind_buffer(ibo);
     
     this->vao.unbind();
     
     ls::draw::unbind_buffer(vbo);
-    ls::draw::unbind_buffer(ibo);
 }
 
 /*-------------------------------------
  * System Startup
 -------------------------------------*/
-bool HelloTextState::on_start() {
+bool HelloPrimState::on_start() {
     using ls::draw::ShaderUniform;
     using ls::draw::VertexAttrib;
     
-    setup_atlas();
     setup_shaders();
-    setup_text();
+    setup_prims();
     setup_camera();
     
     glDisable(GL_CULL_FACE);
@@ -303,24 +311,18 @@ bool HelloTextState::on_start() {
 /*-------------------------------------
  * System Runtime
 -------------------------------------*/
-void HelloTextState::on_run() {
-    
-    set_text(std::to_string(clock()));
+void HelloPrimState::on_run() {
     
     this->shader.bind();
     LS_LOG_GL_ERR();
     
     camera.update();
-    ls::draw::set_shader_uniform(3, camera.get_vp_matrix());
+    ls::draw::set_shader_uniform(2, camera.get_vp_matrix());
     LS_LOG_GL_ERR();
     
     this->vao.bind();
     LS_LOG_GL_ERR();
-    this->atlas.atlasTex.bind();
-    LS_LOG_GL_ERR();
-    glDrawElements(GL_TRIANGLES, numTextIndices, GL_UNSIGNED_SHORT, (void*)0);
-    LS_LOG_GL_ERR();
-    this->atlas.atlasTex.unbind();
+    glDrawArrays(GL_TRIANGLES, 0, 3);
     LS_LOG_GL_ERR();
     this->vao.unbind();
     LS_LOG_GL_ERR();
@@ -331,7 +333,7 @@ void HelloTextState::on_run() {
 /*-------------------------------------
  * System Stop
 -------------------------------------*/
-void HelloTextState::on_stop() {
+void HelloPrimState::on_stop() {
     shader.terminate();
     vao.terminate();
     

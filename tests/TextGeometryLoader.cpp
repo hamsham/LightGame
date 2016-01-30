@@ -292,7 +292,7 @@ unsigned load_text_geometry(
     BufferObject& ibo,
     const Atlas& atlas
 ) {
-    LS_LOG_MSG("Attempting to load text geometry.");
+    //LS_LOG_MSG("Attempting to load text geometry.");
     
     // determine the number of non-whitespace characters
     unsigned numVertices = 0;
@@ -320,29 +320,25 @@ unsigned load_text_geometry(
         vbo.bufferType = draw::VBO_BUFFER_ARRAY;
         ibo.bufferType = draw::VBO_BUFFER_ELEMENT;
     }
-    
-    bind_buffer(vbo);
-    set_buffer_data(vbo, numVertexBytes, nullptr, buffer_access_t::VBO_STREAM_DRAW);
-    LS_LOG_GL_ERR();
 
     bind_buffer(ibo);
     set_buffer_data(ibo, numIndexBytes, nullptr, buffer_access_t::VBO_STREAM_DRAW);
     LS_LOG_GL_ERR();
     
+    bind_buffer(vbo);
+    set_buffer_data(vbo, numVertexBytes, nullptr, buffer_access_t::VBO_STREAM_DRAW);
+    LS_LOG_GL_ERR();
+    
     gen_text_geometry(str, vertexTypes, vbo, ibo, atlas);
     LS_LOG_GL_ERR();
-    
-    unbind_buffer(vbo);
-    unbind_buffer(ibo);
-    LS_LOG_GL_ERR();
-    
+    /*
     LS_LOG_MSG(
         "\tSuccessfully sent a string to the GPU.",
         "\n\t\tVertices:    ", numVertices,
         "\n\t\tIndices:     ", numIndices,
         '\n'
     );
-    
+    */
     return numIndices;
 }
 
