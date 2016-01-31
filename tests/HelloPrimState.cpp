@@ -92,7 +92,7 @@ in vec2 uvCoords;
 out vec4 outFragCol;
 
 void main() {
-    outFragCol = primColor;
+    outFragCol = vec4(uvCoords.xy, primColor.zw);
 }
 )***"
 };
@@ -100,74 +100,98 @@ void main() {
 /*-------------------------------------
  * Primitive vertex data
 -------------------------------------*/
-static constexpr math::vec3 positions[3] = {
+static constexpr math::vec3 testPositions[3] = {
     math::vec3{-1.f, -1.f, 0.f},
     math::vec3{1.f, -1.f, 0.f},
     math::vec3{0.f, 1.f, 0.f},
 };
 
 
-static constexpr math::vec2 textures[3] = {
+static constexpr math::vec2 testTextures[3] = {
     math::vec2{0.f, 0.f},
     math::vec2{1.f, 0.f},
     math::vec2{0.5f, 1.f}
 };
 
-static constexpr math::vec3 normals[3] = {
+static constexpr math::vec3 testNormals[3] = {
     math::vec3{0.f, 0.f, -1.f},
     math::vec3{0.f, 0.f, -1.f},
     math::vec3{0.f, 0.f, -1.f}
 };
 
-static constexpr unsigned stride = sizeof(math::vec3) + sizeof(math::vec2) + sizeof(math::vec3);
+static constexpr unsigned testPosStride = 0;
+static constexpr unsigned testTexStride = sizeof(math::vec3);
+static constexpr unsigned testNormStride = testTexStride + sizeof(math::vec2);
+static constexpr unsigned testVertStride = testNormStride + sizeof(math::vec3);
 
 static constexpr math::mat4 modelMatrix = math::scale(math::mat4{1.f}, math::vec3{10.f});
 
+class VertexArray {
+    private:
+        std::unique_ptr<char[]> mData;
+        unsigned mNumVerts;
+        unsigned mStride;
+        
+    public:
+        ~VertexArray();
+        VertexArray();
+        VertexArray(const VertexArray&);
+        VertexArray(VertexArray&&);
+        
+        bool set_vertex_data(
+            const ls::draw::common_vertex_t attribs,
+            const unsigned numVerts,
+            char* const pVertices,
+            unsigned stride,
+            bool canMove = true
+        );
+        
+        const char* operator[] (const unsigned index) const;
+        char* operator[] (const unsigned index);
+};
+
 /*-------------------------------------
- * Test function for FOV culling.
+ * Test function for FOV-based culling.
+ * 
+ * TODO: Should the model-view matrix "mvMat" be cached?
 -------------------------------------*/
-/*
-ls::math::vec3 eye_vec_from_vp_mat(const math::mat4& vpMat) {
-    const ls::math::mat3&&  rotationMat = ls::math::mat3{vpMat};
-    return -rotationMat[2] * ls::math::transpose(rotationMat);
-}
-*/
-
-bool is_pont_in_fov(const ls::draw::Camera& cam, math::vec3 point) {
-    /*
-    const math::vec3&   eyePos      = cam.get_position();
-    //const math::vec3&   absPos      = cam.get_abs_position();
-    const math::vec3&   absPos      = cam.get_up_direction();
-    math::vec3          eyeDir      = cam.get_eye_direction();
+bool is_point_in_fov(const ls::draw::Camera& cam, math::vec3 point, const float coneReduction = 0.75f) {
+    // Get the local camera's absolute position and direction in world-space
+    const math::vec3&& eyePos   = cam.get_abs_position();
+    const math::vec3&& eyeDir   = math::normalize(cam.get_eye_direction());
     
-    eyeDir = math::normalize(eyeDir);
-    point = eyePos - point;
-    point = math::normalize(point);
+    // translate the input point using a model-view matrix (no projection
+    // matrix should be used).
+    const math::mat4&& mvMat    = modelMatrix * cam.get_view_matrix();
+    const math::vec4&& temp     = math::vec4{-point[0], -point[1], -point[2], 0.f} * mvMat;
     
-    // FOV is an angle from 0-90 degrees (the angle between the camera's
-    // forward vector to its right vector).
+    // Move the translated point into the camera's local space
+    point = {temp[0], temp[1], temp[2]};
+    point = math::normalize(eyePos - point);
+    
+    // Get the cosine of the angle at which the point is oriented from the
+    // camera's view direction
+    const float pointAngle = math::dot(point, eyeDir);
     const float fov = cam.get_fov();
-    const float dot = math::dot(eyeDir, point);
     
-    LS_LOG_MSG(
-        "\n\tREL: ", eyePos[0], ", ", eyePos[1], ", ", eyePos[2],
-        "\n\tABS: ", absPos[0], ", ", absPos[1], ", ", absPos[2]
-    );
+    /* FOV is in radians, pointAngle is from -1 to 1. FOV defines the angle of
+     * a cone by which objects can be clipped within. Through extensive
+     * testing, it appears the difference in units between these two values
+     * doesn't matter :D
+     * 
+     * A variable, coneReduction, has been provided to help grow or shrink the
+     * FOV to account for the camera's viewport dimensions not fitting
+     * perfectly within the clipping cone.
+     *         ______
+     *       /clipping\
+     *      /__________\
+     *     || viewport ||
+     *     ||__________||
+     *      \   cone   /
+     *       \ ______ /
+     */
     
-    return dot > (LS_PI_OVER_2 - fov);
-    */
-    const math::vec3&& eyeDir = math::normalize(cam.get_eye_direction());
-    const math::vec3& eyePos = cam.get_abs_position();
-    
-    const float pointAngle = math::dot(math::normalize(eyePos - point), eyeDir);
-    
-    return LS_COS(cam.get_fov()) < pointAngle;
-}
-
-math::vec3 transform_point(const math::mat4& modelMat, const math::vec3& point) {
-    const math::vec4 newPos{point[0], point[1], point[2], 1.f};
-    const math::vec4 transPos = modelMat * newPos;
-    return math::vec3{transPos[0], transPos[1], transPos[2]};
+    return pointAngle >= (fov*coneReduction);
 }
 
 } // end anonymous namespace
@@ -209,7 +233,7 @@ HelloPrimState& HelloPrimState::operator=(HelloPrimState&& state) {
 /*-------------------------------------
 -------------------------------------*/
 void HelloPrimState::setup_camera() {
-    camera.set_projection_params(LS_DEG2RAD(75.f), 800.f, 600.f, 0.1f, 1000.f);
+    camera.set_projection_params(LS_DEG2RAD(60.f), 800.f, 600.f, 0.1f, 1000.f);
     camera.look_at(ls::math::vec3{1.0}, math::vec3{LS_EPSILON});
     camera.make_perspective();
     camera.lock_y_axis(true);
@@ -261,17 +285,13 @@ void HelloPrimState::setup_shaders() {
 /*-------------------------------------
 -------------------------------------*/
 std::unique_ptr<char[]> HelloPrimState::gen_vertex_data() {
-    std::unique_ptr<char[]> pData{new char[stride * 3]};
+    std::unique_ptr<char[]> pData{new char[testVertStride * 3]};
     
     // interleave all vertex data
     for (unsigned i = 0; i < 3; ++i) {
-        static constexpr unsigned posOffset = 0;
-        static constexpr unsigned texOffset = sizeof(math::vec3);
-        static constexpr unsigned nrmOffset = texOffset + sizeof(math::vec2);
-        
-        *reinterpret_cast<math::vec3*>(pData.get() + (i*stride) + posOffset) = positions[i];
-        *reinterpret_cast<math::vec2*>(pData.get() + (i*stride) + texOffset) = textures[i];
-        *reinterpret_cast<math::vec3*>(pData.get() + (i*stride) + nrmOffset) = normals[i];
+        *reinterpret_cast<math::vec3*>(pData.get() + (i*testVertStride) + testPosStride) = testPositions[i];
+        *reinterpret_cast<math::vec2*>(pData.get() + (i*testVertStride) + testTexStride) = testTextures[i];
+        *reinterpret_cast<math::vec3*>(pData.get() + (i*testVertStride) + testNormStride) = testNormals[i];
     }
     
     return pData;
@@ -300,6 +320,26 @@ void HelloPrimState::setup_prims() {
     this->vao.bind();
     this->vao.set_attrib_offsets(vboAttribs, numVboAttribs, ls::draw::get_vertex_byte_size((common_vertex_t)STANDARD_VERTEX));
     this->vao.unbind();
+    
+    ls::draw::unbind_buffer(vbo);
+}
+
+void HelloPrimState::update_vert_color(const unsigned vertIndex, const bool isVisible) {
+    math::vec2 colors = {1.f, 0.f};
+    
+    if (!isVisible) {
+        colors[0] = 0.f;
+        colors[1] = 1.f;
+    }
+    
+    ls::draw::bind_buffer(vbo);
+    
+    ls::draw::set_buffer_sub_data(
+        this->vbo,
+        (vertIndex * testVertStride) + testTexStride,
+        sizeof(colors),
+        &colors
+    );
     
     ls::draw::unbind_buffer(vbo);
 }
@@ -366,19 +406,21 @@ bool HelloPrimState::on_start() {
  * System Runtime
 -------------------------------------*/
 void HelloPrimState::on_run() {
-    
-    for (unsigned i = 0; i < LS_ARRAY_SIZE(positions); ++i) {
-        if (!is_pont_in_fov(camera, transform_point(modelMatrix, positions[i]))) {
-            LS_LOG_MSG(clock(), " CULLED POINT ", i, '!');
-        }
-    }
-    
     this->shader.bind();
     LS_LOG_GL_ERR();
     
     camera.update();
     ls::draw::set_shader_uniform(2, camera.get_vp_matrix());
     LS_LOG_GL_ERR();
+    
+    for (unsigned i = 0; i < LS_ARRAY_SIZE(testPositions); ++i) {
+        const bool isVisible = !is_point_in_fov(camera, testPositions[i]);
+        if (isVisible) {
+            LS_LOG_MSG(clock(), " CULLED POINT ", i, '!');
+        }
+        
+        update_vert_color(i, isVisible);
+    }
     
     this->vao.bind();
     LS_LOG_GL_ERR();
