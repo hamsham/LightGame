@@ -51,7 +51,7 @@ namespace {
 //const char* TEXT_COLOR_UNIFORM = "primColor";
 
 /*-------------------------------------
- * Text Vertex Shader
+ * Vertex Shader
 -------------------------------------*/
 constexpr char const* vData[] = {
 u8R"***(
@@ -77,7 +77,7 @@ void main() {
 };
 
 /*-------------------------------------
- * Text Fragment Shader (with pseudo signed-distance field)
+ * Fragment Shader
 -------------------------------------*/
 constexpr char const* fData[] = {
 u8R"***(
@@ -96,6 +96,80 @@ void main() {
 }
 )***"
 };
+
+/*-------------------------------------
+ * Primitive vertex data
+-------------------------------------*/
+static constexpr math::vec3 positions[3] = {
+    math::vec3{-1.f, -1.f, 0.f},
+    math::vec3{1.f, -1.f, 0.f},
+    math::vec3{0.f, 1.f, 0.f},
+};
+
+
+static constexpr math::vec2 textures[3] = {
+    math::vec2{0.f, 0.f},
+    math::vec2{1.f, 0.f},
+    math::vec2{0.5f, 1.f}
+};
+
+static constexpr math::vec3 normals[3] = {
+    math::vec3{0.f, 0.f, -1.f},
+    math::vec3{0.f, 0.f, -1.f},
+    math::vec3{0.f, 0.f, -1.f}
+};
+
+static constexpr unsigned stride = sizeof(math::vec3) + sizeof(math::vec2) + sizeof(math::vec3);
+
+static constexpr math::mat4 modelMatrix = math::scale(math::mat4{1.f}, math::vec3{10.f});
+
+/*-------------------------------------
+ * Test function for FOV culling.
+-------------------------------------*/
+/*
+ls::math::vec3 eye_vec_from_vp_mat(const math::mat4& vpMat) {
+    const ls::math::mat3&&  rotationMat = ls::math::mat3{vpMat};
+    return -rotationMat[2] * ls::math::transpose(rotationMat);
+}
+*/
+
+bool is_pont_in_fov(const ls::draw::Camera& cam, math::vec3 point) {
+    /*
+    const math::vec3&   eyePos      = cam.get_position();
+    //const math::vec3&   absPos      = cam.get_abs_position();
+    const math::vec3&   absPos      = cam.get_up_direction();
+    math::vec3          eyeDir      = cam.get_eye_direction();
+    
+    eyeDir = math::normalize(eyeDir);
+    point = eyePos - point;
+    point = math::normalize(point);
+    
+    // FOV is an angle from 0-90 degrees (the angle between the camera's
+    // forward vector to its right vector).
+    const float fov = cam.get_fov();
+    const float dot = math::dot(eyeDir, point);
+    
+    LS_LOG_MSG(
+        "\n\tREL: ", eyePos[0], ", ", eyePos[1], ", ", eyePos[2],
+        "\n\tABS: ", absPos[0], ", ", absPos[1], ", ", absPos[2]
+    );
+    
+    return dot > (LS_PI_OVER_2 - fov);
+    */
+    const math::vec3&& eyeDir = math::normalize(cam.get_eye_direction());
+    const math::vec3& eyePos = cam.get_abs_position();
+    
+    const float pointAngle = math::dot(math::normalize(eyePos - point), eyeDir);
+    
+    return LS_COS(cam.get_fov()) < pointAngle;
+}
+
+math::vec3 transform_point(const math::mat4& modelMat, const math::vec3& point) {
+    const math::vec4 newPos{point[0], point[1], point[2], 1.f};
+    const math::vec4 transPos = modelMat * newPos;
+    return math::vec3{transPos[0], transPos[1], transPos[2]};
+}
+
 } // end anonymous namespace
 
 /*-------------------------------------
@@ -135,11 +209,12 @@ HelloPrimState& HelloPrimState::operator=(HelloPrimState&& state) {
 /*-------------------------------------
 -------------------------------------*/
 void HelloPrimState::setup_camera() {
-    camera.set_projection_params(LS_DEG2RAD(60.f), 800.f, 600.f, 0.1f, 1000.f);
-    camera.look_at(ls::math::vec3{20.0}, ls::math::vec3{LS_EPSILON});
+    camera.set_projection_params(LS_DEG2RAD(75.f), 800.f, 600.f, 0.1f, 1000.f);
+    camera.look_at(ls::math::vec3{1.0}, math::vec3{LS_EPSILON});
     camera.make_perspective();
     camera.lock_y_axis(true);
     camera.set_view_mode(ls::draw::camera_mode_t::ARCBALL);
+    //camera.set_view_mode(ls::draw::camera_mode_t::FIRST_PERSON);
     
     update_camera();
 }
@@ -150,7 +225,7 @@ void HelloPrimState::update_camera() {
     camera.update();
     
     shader.bind();
-    ls::draw::set_shader_uniform(0, math::scale(math::mat4{1.f}, math::vec3{10.f}));
+    ls::draw::set_shader_uniform(0, modelMatrix);
     ls::draw::set_shader_uniform(1, ls::math::vec4{0.f, 1.f, 0.f, 1.f});
     ls::draw::set_shader_uniform(2, camera.get_vp_matrix());
     shader.unbind();
@@ -186,29 +261,9 @@ void HelloPrimState::setup_shaders() {
 /*-------------------------------------
 -------------------------------------*/
 std::unique_ptr<char[]> HelloPrimState::gen_vertex_data() {
-    static constexpr math::vec3 positions[3] = {
-        math::vec3{-1.f, -1.f, 0.f},
-        math::vec3{1.f, -1.f, 0.f},
-        math::vec3{0.f, 1.f, 0.f},
-    };
-    
-    
-    static constexpr math::vec2 textures[3] = {
-        math::vec2{0.f, 0.f},
-        math::vec2{1.f, 0.f},
-        math::vec2{0.5f, 1.f}
-    };
-    
-    static constexpr math::vec3 normals[3] = {
-        math::vec3{0.f, 0.f, -1.f},
-        math::vec3{0.f, 0.f, -1.f},
-        math::vec3{0.f, 0.f, -1.f}
-    };
-    
-    static constexpr unsigned stride = sizeof(math::vec3) + sizeof(math::vec2) + sizeof(math::vec3);
     std::unique_ptr<char[]> pData{new char[stride * 3]};
     
-    
+    // interleave all vertex data
     for (unsigned i = 0; i < 3; ++i) {
         static constexpr unsigned posOffset = 0;
         static constexpr unsigned texOffset = sizeof(math::vec3);
@@ -229,9 +284,6 @@ void HelloPrimState::setup_prims() {
     using ls::draw::vertex_data_t;
     using ls::draw::STANDARD_VERTEX;
     
-    assert(this->vao.init());
-    this->vao.bind();
-    
     ls::draw::VertexAttrib vboAttribs[] = {
         ls::draw::create_vertex_attrib<vertex_data_t::VERTEX_DATA_VEC_3F>(),
         ls::draw::create_vertex_attrib<vertex_data_t::VERTEX_DATA_VEC_2F>(),
@@ -243,8 +295,10 @@ void HelloPrimState::setup_prims() {
     ls::draw::bind_buffer(this->vbo);
     const std::unique_ptr<char[]>&& pData = gen_vertex_data();
     ls::draw::set_buffer_data(vbo, 3 * ls::draw::get_vertex_byte_size((common_vertex_t)STANDARD_VERTEX), pData.get(), ls::draw::buffer_access_t::VBO_STATIC_DRAW);
-    this->vao.set_attrib_offsets(vboAttribs, numVboAttribs, ls::draw::get_vertex_byte_size((common_vertex_t)STANDARD_VERTEX));
     
+    assert(this->vao.init());
+    this->vao.bind();
+    this->vao.set_attrib_offsets(vboAttribs, numVboAttribs, ls::draw::get_vertex_byte_size((common_vertex_t)STANDARD_VERTEX));
     this->vao.unbind();
     
     ls::draw::unbind_buffer(vbo);
@@ -312,6 +366,12 @@ bool HelloPrimState::on_start() {
  * System Runtime
 -------------------------------------*/
 void HelloPrimState::on_run() {
+    
+    for (unsigned i = 0; i < LS_ARRAY_SIZE(positions); ++i) {
+        if (!is_pont_in_fov(camera, transform_point(modelMatrix, positions[i]))) {
+            LS_LOG_MSG(clock(), " CULLED POINT ", i, '!');
+        }
+    }
     
     this->shader.bind();
     LS_LOG_GL_ERR();
