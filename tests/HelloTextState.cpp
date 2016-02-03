@@ -120,7 +120,7 @@ HelloTextState::HelloTextState() {
  * Move Constructor
 -------------------------------------*/
 HelloTextState::HelloTextState(HelloTextState&& state) :
-    GameState{}
+    TestRenderState{}
 {
     *this = std::move(state);
 }
@@ -129,7 +129,7 @@ HelloTextState::HelloTextState(HelloTextState&& state) :
  * Move Operator
 -------------------------------------*/
 HelloTextState& HelloTextState::operator=(HelloTextState&& state) {
-    GameState::operator=(std::move(state));
+    TestRenderState::operator=(std::move(state));
     
     pControlState = state.pControlState;
     pControlState->set_render_state(this);

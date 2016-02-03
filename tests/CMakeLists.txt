@@ -72,8 +72,9 @@ include_directories(".")
 set(LS_GAME_PROTO_COMMON_SOURCES
     "Context.cpp"
     "Display.cpp"
+    "TestRenderState.cpp"
     "HelloPrimState.cpp"
-    #"HelloTextState.cpp"
+    "HelloTextState.cpp"
     "ControlState.cpp"
     "TextGeometryLoader.cpp"
 )

@@ -10,10 +10,12 @@
 
 #include "lightsky/math/Math.h"
 
+#include "lightsky/draw/Setup.h"
+
 #include "lightsky/game/GameSystem.h"
 
 #include "ControlState.h"
-#include "HelloPrimState.h"
+#include "TestRenderState.h"
 
 namespace math = ls::math;
 
@@ -68,7 +70,7 @@ ControlState& ControlState::operator=(ControlState&& state) {
 /*-------------------------------------
  * Parent renderer state management
 -------------------------------------*/
-void ControlState::set_render_state(HelloPrimState* const pState) {
+void ControlState::set_render_state(TestRenderState* const pState) {
     pRenderState = pState;
 }
 

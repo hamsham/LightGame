@@ -13,13 +13,14 @@
 
 #include "lightsky/game/GameState.h"
 
-class HelloPrimState;
+class TestRenderState;
 
 /**----------------------------------------------------------------------------
  * Global Controller testing state
 -----------------------------------------------------------------------------*/
 class ControlState final : virtual public ls::game::GameState {
         friend class HelloPrimState;
+        friend class HelloTextState;
 
         /*
          * Event Management
@@ -28,10 +29,10 @@ class ControlState final : virtual public ls::game::GameState {
         int mouseX = 0;
         int mouseY = 0;
         bool* pKeyStates = nullptr;
-        HelloPrimState* pRenderState = nullptr;
+        TestRenderState* pRenderState = nullptr;
         // ^set by the state that instantiated *this
 
-        void set_render_state       (HelloPrimState * const);
+        void set_render_state       (TestRenderState * const);
 
         void on_window_event        (const SDL_WindowEvent&);
         void on_key_up_event        (const SDL_KeyboardEvent&);

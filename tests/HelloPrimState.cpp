@@ -155,7 +155,7 @@ class VertexArray {
  * 
  * TODO: Should the model-view matrix "mvMat" be cached?
 -------------------------------------*/
-bool is_point_in_fov(const ls::draw::Camera& cam, math::vec3 point, const float coneReduction = 0.75f) {
+bool is_point_in_fov(const ls::draw::Camera& cam, math::vec3 point, const float fovReduction = 1.f) {
     // Get the local camera's absolute position and direction in world-space
     const math::vec3&& eyePos   = cam.get_abs_position();
     const math::vec3&& eyeDir   = math::normalize(cam.get_eye_direction());
@@ -163,23 +163,23 @@ bool is_point_in_fov(const ls::draw::Camera& cam, math::vec3 point, const float 
     // translate the input point using a model-view matrix (no projection
     // matrix should be used).
     const math::mat4&& mvMat    = modelMatrix * cam.get_view_matrix();
-    const math::vec4&& temp     = math::vec4{-point[0], -point[1], -point[2], 0.f} * mvMat;
+    const math::vec4&& temp     = math::vec4{-point[0], -point[1],-point[2], 0.f} * mvMat;
     
     // Move the translated point into the camera's local space
-    point = {temp[0], temp[1], temp[2]};
-    point = math::normalize(eyePos - point);
+    point                       = {temp[0], temp[1], temp[2]};
+    point                       = math::normalize(eyePos - point);
     
     // Get the cosine of the angle at which the point is oriented from the
     // camera's view direction
-    const float pointAngle = math::dot(point, eyeDir);
-    const float fov = cam.get_fov();
+    const float angleToPoint    = math::dot(point, eyeDir) * cam.get_fov();
+    const float angleOfView     = std::cos(cam.get_fov()) / fovReduction;
     
     /* FOV is in radians, pointAngle is from -1 to 1. FOV defines the angle of
      * a cone by which objects can be clipped within. Through extensive
      * testing, it appears the difference in units between these two values
      * doesn't matter :D
      * 
-     * A variable, coneReduction, has been provided to help grow or shrink the
+     * A variable, fovReduction, has been provided to help grow or shrink the
      * FOV to account for the camera's viewport dimensions not fitting
      * perfectly within the clipping cone.
      *         ______
@@ -190,8 +190,7 @@ bool is_point_in_fov(const ls::draw::Camera& cam, math::vec3 point, const float 
      *      \   cone   /
      *       \ ______ /
      */
-    
-    return pointAngle >= (fov*coneReduction);
+    return angleToPoint >= angleOfView;
 }
 
 } // end anonymous namespace
@@ -212,7 +211,7 @@ HelloPrimState::HelloPrimState() {
  * Move Constructor
 -------------------------------------*/
 HelloPrimState::HelloPrimState(HelloPrimState&& state) :
-    GameState{}
+    TestRenderState{}
 {
     *this = std::move(state);
 }
@@ -221,7 +220,7 @@ HelloPrimState::HelloPrimState(HelloPrimState&& state) :
  * Move Operator
 -------------------------------------*/
 HelloPrimState& HelloPrimState::operator=(HelloPrimState&& state) {
-    GameState::operator=(std::move(state));
+    TestRenderState::operator=(std::move(state));
     
     pControlState = state.pControlState;
     pControlState->set_render_state(this);
@@ -233,7 +232,7 @@ HelloPrimState& HelloPrimState::operator=(HelloPrimState&& state) {
 /*-------------------------------------
 -------------------------------------*/
 void HelloPrimState::setup_camera() {
-    camera.set_projection_params(LS_DEG2RAD(60.f), 800.f, 600.f, 0.1f, 1000.f);
+    camera.set_projection_params(LS_DEG2RAD(60.f), 2000.f, 600.f, 0.1f, 1000.f);
     camera.look_at(ls::math::vec3{1.0}, math::vec3{LS_EPSILON});
     camera.make_perspective();
     camera.lock_y_axis(true);

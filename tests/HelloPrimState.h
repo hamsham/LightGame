@@ -18,15 +18,15 @@
 #include "lightsky/draw/ShaderProgram.h"
 #include "lightsky/draw/VertexArray.h"
 
+#include "TestRenderState.h"
+
 
 
 class ControlState;
 
 
 
-class HelloPrimState final : public ls::game::GameState {
-    
-    friend class ControlState;
+class HelloPrimState final : public TestRenderState {
     
     private:
         ControlState* pControlState = nullptr;
@@ -35,11 +35,7 @@ class HelloPrimState final : public ls::game::GameState {
         
         ls::draw::BufferObject vbo;
         
-        //ls::draw::BufferObject ibo;
-        
         ls::draw::VertexArray vao;
-        
-        ls::draw::Camera camera;
         
         void update_camera();
         

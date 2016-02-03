@@ -16,15 +16,15 @@
 #include "lightsky/draw/ShaderProgram.h"
 #include "lightsky/draw/VertexArray.h"
 
+#include "TestRenderState.h"
+
 
 
 class ControlState;
 
 
 
-class HelloTextState final : public ls::game::GameState {
-    
-    friend class ControlState;
+class HelloTextState final : public TestRenderState {
     
     private:
         ControlState* pControlState = nullptr;
@@ -40,8 +40,6 @@ class HelloTextState final : public ls::game::GameState {
         ls::draw::BufferObject ibo;
         
         ls::draw::VertexArray vao;
-        
-        ls::draw::Camera camera;
         
         void set_text(const std::string& text);
         
