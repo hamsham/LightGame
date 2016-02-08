@@ -43,6 +43,45 @@ enum geometry_property_t: int {
 };
 
 /**------------------------------------
+ * @brief Basic structure to contain information about textual geometry
+ * residing on the GPU.
+-------------------------------------*/
+struct TextMetaData {
+    unsigned        numDrawableChars;
+    common_vertex_t vertTypes;
+    unsigned        vertStride;
+    unsigned        totalVerts;
+    unsigned        totalVertBytes;
+    index_element_t indexType;
+    unsigned        indexByteSize;
+    unsigned        totalIndices;
+    unsigned        totalIndexBytes;
+};
+
+/**------------------------------------
+ * @brief Generate information about what it takes to store text geometry on
+ * the GPU with certain vertex data.
+ * 
+ * @param metaData
+ * A reference to a TextMetaData object which will be used to store the
+ * generated textual meta-information.
+ * 
+ * @param str
+ * A constant reference to a string of text. The number of vertices, indices,
+ * and bytes required for both will be derived from this string.
+ * 
+ * @param vertexTypes
+ * A bitmask, containing a set of vertex types which will be taken into account
+ * when determining the number of vertices and indices required to render a
+ * string.
+-------------------------------------*/
+void gen_text_meta_data(
+    TextMetaData& metaData,
+    const std::string& str,
+    const common_vertex_t vertexTypes
+);
+
+/**------------------------------------
  * @brief Initialize, generate, and emplace a set of textual geometry into an
  * OpenGL VBO and IBO.
  * 
@@ -101,45 +140,6 @@ unsigned load_text_geometry(
  * characters in the input string.
 -------------------------------------*/
 unsigned get_num_drawable_chars(const std::string& str);
-
-/**------------------------------------
- * @brief
- * 
- * @param str
- * A constant reference to a string of text. The number of vertices, indices,
- * and bytes required for both will be derived from this string.
- * 
- * @param vertexTypes
- * A bitmask, containing a set of vertex types which will be taken into account
- * when determining the number of vertices and indices required to render a
- * string.
- * 
- * @param outNumVertices
- * A reference to an unsigned integer, which will contain the number of
- * vertices required to render a string.
- * 
- * @param outNumVertexBytes
- * A reference to an unsigned integer, which will contain the number of bytes
- * required by the sum of all vertices to generate a graphical representation
- * of a string.
- * 
- * @param outNumIndices
- * A reference to an unsigned integer, which will contain the number of indices
- * required to render the vertices for a string.
- * 
- * @param outNumIndexBytes
- * A reference to an unsigned integer, which will contain the number of bytes
- * required by the sum of all indices to reference the index data required to
- * render a string from OpenGL.
--------------------------------------*/
-void calc_text_geometry_size(
-    const std::string& str,
-    const common_vertex_t vertexTypes,
-    unsigned& outNumVertices,
-    unsigned& outNumVertexBytes,
-    unsigned& outNumIndices,
-    unsigned& outNumIndexBytes
-);
 
 } // end draw namespace
 } // end ls namespace

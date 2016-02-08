@@ -89,11 +89,13 @@ bool MainState::on_start() {
         std::cerr << "Unable to create a render context." << std::endl;
         return false;
     }
+    LS_LOG_GL_ERR();
 
     if (!ls::draw::init_ls_draw()) {
         std::cerr << "Unable to initialize LS Draw." << std::endl;
         return false;
     }
+    LS_LOG_GL_ERR();
 
     return true;
 }
@@ -102,10 +104,14 @@ bool MainState::on_start() {
  * System Runtime
 -------------------------------------*/
 void MainState::on_run() {
-    renderContext.make_current(*pDisplay);
-    renderContext.flip(*pDisplay);
-
     LS_LOG_GL_ERR();
+    
+    renderContext.make_current(*pDisplay);
+    LS_LOG_GL_ERR();
+    
+    renderContext.flip(*pDisplay);
+    LS_LOG_GL_ERR();
+    
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     LS_LOG_GL_ERR();
 }
@@ -147,8 +153,8 @@ int main(int argc, char* argv[]) {
 
     if (!sys.start()
     || !sys.push_game_state(new(std::nothrow) MainState{})
-    //|| !sys.push_game_state(new(std::nothrow) HelloTextState{})
-    || !sys.push_game_state(new(std::nothrow) HelloPrimState{})
+    || !sys.push_game_state(new(std::nothrow) HelloTextState{})
+    //|| !sys.push_game_state(new(std::nothrow) HelloPrimState{})
     ) {
         std::cerr << "Unable to create the main program.\n" << std::endl;
         goto quitTest;

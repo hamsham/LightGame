@@ -31,15 +31,25 @@ namespace {
 using ls::math::vec2;
 using ls::math::vec3;
 
+// draw objects
 using ls::draw::Atlas;
 using ls::draw::AtlasEntry;
 using ls::draw::BufferObject;
-using ls::draw::common_vertex_t;
-using ls::draw::vertex_data_t;
-using ls::draw::get_num_attrib_bytes;
-using ls::draw::index_element_t;
+using ls::draw::TextMetaData;
 
+// draw enums
+using ls::draw::common_vertex_t;
+using ls::draw::index_element_t;
+using ls::draw::vertex_data_t;
+using ls::draw::buffer_access_t;
+
+// draw functions
+using ls::draw::get_num_attrib_bytes;
+using ls::draw::get_vertex_byte_size;
+
+// draw constants
 using ls::draw::MESH_SPACES_PER_TAB;
+using ls::draw::MESH_VERTS_PER_GLYPH;
 using ls::draw::MESH_INDICES_PER_GLYPH;
 using ls::draw::INDEX_TYPE_UINT;
 
@@ -50,104 +60,121 @@ constexpr ls::draw::buffer_map_t DEFAULT_TEXT_MAPPING_FLAGS = (ls::draw::buffer_
     | ls::draw::VBO_MAP_BIT_WRITE
     | 0);
 
+
+/*-------------------------------------
+ * Calculate a portion of vertex data that a glyph should contain.
+-------------------------------------*/
+template <typename data_t>
+inline char* set_text_vertex_data(
+    char* const     pVert,
+    const unsigned  stride,
+    const data_t&   data
+) {
+    *reinterpret_cast<data_t* const>(pVert) = data;
+    return pVert + stride;
+}
+
+/*-------------------------------------
+ * Helper function to allocate and map an initialized buffer object.
+-------------------------------------*/
+char* allocate_and_map_buffer(BufferObject& buf, const unsigned numBytes) {
+    // VBO Allocation
+    set_buffer_data(buf, numBytes, nullptr, buffer_access_t::VBO_STREAM_DRAW);
+    LS_LOG_GL_ERR();
+
+    // VBO Mapping
+    char* const pBuffer = (char*)map_buffer_data(buf, 0, numBytes, DEFAULT_TEXT_MAPPING_FLAGS);
+    LS_LOG_GL_ERR();
+
+    if (!pBuffer) {
+        LS_LOG_ERR("\tAn error occurred while attempting to map a BufferObject for text geometry.");
+        return nullptr;
+    }
+
+    return pBuffer;
+}
+
 /*-------------------------------------
  * Calculate the vertex positions that a glyph should represent.
 -------------------------------------*/
 unsigned calc_text_geometry_pos(
-    const float xOffset,
-    const float yOffset,
-    const AtlasEntry& rGlyph,
-    char* const pPos,
-    const unsigned stride
+    const AtlasEntry&   rGlyph,
+    char*               pVert,
+    const unsigned      stride,
+    const float         xOffset,
+    const float         yOffset
 ) {
-    char* pVert = pPos;
+    pVert = set_text_vertex_data(pVert, stride, vec3{xOffset, yOffset+rGlyph.size[1], 0.f});
+    pVert = set_text_vertex_data(pVert, stride, vec3{xOffset, yOffset, 0.f});
+    pVert = set_text_vertex_data(pVert, stride, vec3{xOffset+rGlyph.size[0], yOffset+rGlyph.size[1], 0.f});
+            set_text_vertex_data(pVert, stride, vec3{xOffset+rGlyph.size[0],yOffset, 0.f});
     
-    *reinterpret_cast<vec3*>(pVert) = vec3{xOffset, yOffset+rGlyph.size[1], 0.f};
-    pVert += stride;
-    *reinterpret_cast<vec3*>(pVert) = vec3{xOffset, yOffset, 0.f};
-    pVert += stride;
-    *reinterpret_cast<vec3*>(pVert) = vec3{xOffset+rGlyph.size[0], yOffset+rGlyph.size[1], 0.f};
-    pVert += stride;
-    *reinterpret_cast<vec3*>(pVert) = vec3{xOffset+rGlyph.size[0],yOffset, 0.f};
-    
-    return get_num_attrib_bytes((vertex_data_t)common_vertex_t::POSITION_VERTEX);
+    return get_vertex_byte_size(common_vertex_t::POSITION_VERTEX);
 }
 
 /*-------------------------------------
  * Function to calculate the UVs which should represent a glyph.
 -------------------------------------*/
 unsigned calc_text_geometry_uvs(
-    const AtlasEntry& rGlyph,
-    char* const pUv,
-    const unsigned stride
+    const AtlasEntry&   rGlyph,
+    char*               pVert,
+    const unsigned      stride
 ) {
-    char* pVert = pUv;
+    pVert = set_text_vertex_data(pVert, stride, vec2{rGlyph.uv[0][0], rGlyph.uv[0][1]});
+    pVert = set_text_vertex_data(pVert, stride, vec2{rGlyph.uv[0][0], rGlyph.uv[1][1]});
+    pVert = set_text_vertex_data(pVert, stride, vec2{rGlyph.uv[1][0], rGlyph.uv[0][1]});
+            set_text_vertex_data(pVert, stride, vec2{rGlyph.uv[1][0], rGlyph.uv[1][1]});
     
-    *reinterpret_cast<vec2*>(pVert) = vec2{rGlyph.uv[0][0], rGlyph.uv[0][1]};
-    pVert += stride;
-    *reinterpret_cast<vec2*>(pVert) = vec2{rGlyph.uv[0][0], rGlyph.uv[1][1]};
-    pVert += stride;
-    *reinterpret_cast<vec2*>(pVert) = vec2{rGlyph.uv[1][0], rGlyph.uv[0][1]};
-    pVert += stride;
-    *reinterpret_cast<vec2*>(pVert) = vec2{rGlyph.uv[1][0], rGlyph.uv[1][1]};
-    
-    return get_num_attrib_bytes((vertex_data_t)common_vertex_t::TEXTURE_VERTEX);
+    return get_vertex_byte_size(common_vertex_t::TEXTURE_VERTEX);
 }
 
 /*-------------------------------------
  * Function to calculate the UVs which should represent a glyph.
 -------------------------------------*/
 unsigned calc_text_geometry_norms(
-    char* const pNrm,
-    const unsigned stride,
-    const vec3& normDir
+    char*           pVert,
+    const unsigned  stride,
+    const vec3&     normDir
 ) {
-    char* pVert = pNrm;
+    pVert = set_text_vertex_data(pVert, stride, normDir);
+    pVert = set_text_vertex_data(pVert, stride, normDir);
+    pVert = set_text_vertex_data(pVert, stride, normDir);
+            set_text_vertex_data(pVert, stride, normDir);
     
-    *reinterpret_cast<vec3*>(pVert) = normDir;
-    pVert += stride;
-    *reinterpret_cast<vec3*>(pVert) = normDir;
-    pVert += stride;
-    *reinterpret_cast<vec3*>(pVert) = normDir;
-    pVert += stride;
-    *reinterpret_cast<vec3*>(pVert) = normDir;
-    
-    return get_num_attrib_bytes((vertex_data_t)common_vertex_t::NORMAL_VERTEX);
+    return get_vertex_byte_size(common_vertex_t::NORMAL_VERTEX);
 }
 
 /*-------------------------------------
  * Function to dispatch all text-loading responsibilities to their respective loaders.
 -------------------------------------*/
 char* gen_text_geometry_vert(
-    const ls::draw::AtlasEntry& rGlyph,
-    char* pVert,
-    unsigned stride,
-    const float xOffset,
-    const float yOffset,
-    const ls::draw::common_vertex_t vertTypes
+    const AtlasEntry&   rGlyph,
+    char* const         pData,
+    const float         xOffset,
+    const float         yOffset,
+    const TextMetaData& metaData
 ) {
-    using ls::math::vec2;
-    using ls::math::vec3;
-    using ls::draw::common_vertex_t;
+    const common_vertex_t vertTypes = metaData.vertTypes;
+    char* pVert = pData;
     
     if (vertTypes & common_vertex_t::POSITION_VERTEX) {
-        pVert += calc_text_geometry_pos(xOffset, yOffset, rGlyph, pVert, stride);
+        pVert += calc_text_geometry_pos(rGlyph, pVert, metaData.vertStride, xOffset, yOffset);
     }
     
     if (vertTypes & common_vertex_t::TEXTURE_VERTEX) {
-        pVert += calc_text_geometry_uvs(rGlyph, pVert, stride);
+        pVert += calc_text_geometry_uvs(rGlyph, pVert, metaData.vertStride);
     }
     
     if (vertTypes & common_vertex_t::NORMAL_VERTEX) {
-        pVert += calc_text_geometry_norms(pVert, stride, vec3{0.f, 0.f, 1.f});
+        pVert += calc_text_geometry_norms(pVert, metaData.vertStride, vec3{0.f, 0.f, 1.f});
     }
     
     if (vertTypes & common_vertex_t::TANGENT_VERTEX) {
-        pVert += calc_text_geometry_norms(pVert, stride, vec3{1.f, 0.f, 0.f});
+        pVert += calc_text_geometry_norms(pVert, metaData.vertStride, vec3{1.f, 0.f, 0.f});
     }
     
     if (vertTypes & common_vertex_t::BITANGENT_VERTEX) {
-        pVert += calc_text_geometry_norms(pVert, stride, vec3{0.f, 1.f, 0.f});
+        pVert += calc_text_geometry_norms(pVert, metaData.vertStride, vec3{0.f, 1.f, 0.f});
     }
     
     if (vertTypes & common_vertex_t::MODEL_MAT_VERTEX) {
@@ -162,79 +189,112 @@ char* gen_text_geometry_vert(
         LS_ASSERT(false);
     }
     
-    return pVert + stride;
+    return pData + (metaData.vertStride * MESH_VERTS_PER_GLYPH);
+}
+
+/*-------------------------------------
+ * Set the index data required by geometry text (helper function).
+-------------------------------------*/
+template <typename data_t>
+char* fill_geometry_indices(void* const pIndices, const unsigned indexOffset) {
+    data_t* pData = reinterpret_cast<data_t*>(pIndices);
+    
+    *(pData++) = indexOffset+0;
+    *(pData++) = indexOffset+1;
+    *(pData++) = indexOffset+2;
+    *(pData++) = indexOffset+2;
+    *(pData++) = indexOffset+1;
+    *(pData++) = indexOffset+3;
+    
+    return reinterpret_cast<char*>(pData);
 }
 
 /*-------------------------------------
  * Set the index data required by geometry text.
 -------------------------------------*/
-char* set_text_geometry_indices(
+inline char* set_text_geometry_indices(
     char* pIndices,
-    const index_element_t indexType,
-    const unsigned indexStride,
-    const unsigned indexOffset
+    const unsigned indexOffset,
+    const TextMetaData& metaData
 ) {
-    const unsigned indices[] = {
-        indexOffset+0,
-        indexOffset+1,
-        indexOffset+2,
-        indexOffset+2,
-        indexOffset+1,
-        indexOffset+3
-    };
-    
-    if (indexType == index_element_t::INDEX_TYPE_USHORT) {
-        for (unsigned i = 0; i < LS_ARRAY_SIZE(indices); ++i) {
-            unsigned short* pUshort = (unsigned short*)pIndices;
-            *pUshort = indices[i];
-            pIndices += indexStride;
-        }
-    }
-    else {
-        for (unsigned i = 0; i < LS_ARRAY_SIZE(indices); ++i) {
-            unsigned int* pUint = (unsigned int*)pIndices;
-            *pUint = indices[i];
-            pIndices += indexStride;
-        }
+    if (metaData.indexType == index_element_t::INDEX_TYPE_USHORT) {
+        return fill_geometry_indices<unsigned short>(pIndices, indexOffset);
     }
     
-    return pIndices;
+    return fill_geometry_indices<unsigned int>(pIndices, indexOffset);
 }
 
 /*-------------------------------------
  * Text/String Generation
 -------------------------------------*/
-unsigned gen_text_geometry(
-    const std::string& str,
-    const common_vertex_t vertexTypes,
-    BufferObject& vbo,
-    BufferObject& ibo,
-    const Atlas& atlas
+/*
+void gen_text_geometry(
+    const std::string&  str,
+    char*               pVerts,
+    char*               pIndices,
+    const Atlas&        atlas,
+    const TextMetaData& metaData
 ) {
-    using ls::draw::get_num_drawable_chars;
-    using ls::draw::get_vertex_byte_size;
-    using ls::draw::geometry_property_t;
     using ls::draw::map_buffer_data;
-    using ls::draw::get_required_index_type;
     
-    const AtlasEntry* const pGlyphs = atlas.pEntries; // Get pointers to the buffer data that will be filled with quads
-    const unsigned numDrawable      = get_num_drawable_chars(str);
+    // Get pointers to the buffer data that will be filled with quads
+    const AtlasEntry* const pGlyphs = atlas.pEntries;
     
-    const unsigned vertStride       = get_vertex_byte_size(vertexTypes);
-    const unsigned totalVerts       = numDrawable*geometry_property_t::MESH_VERTS_PER_GLYPH;
-    char* pVerts                    = (char*)map_buffer_data(vbo, 0, totalVerts*vertStride, DEFAULT_TEXT_MAPPING_FLAGS);
+    // The y-origin was found using a lot of testing. This was for resolution independence
+    constexpr unsigned nl   = (unsigned)'\n';
+    float yPos              = -((pGlyphs[nl].bearing[1]*2.f)+pGlyphs[nl].bearing[1]-pGlyphs[nl].size[1]);
+    float xPos              = 0.f;
+    unsigned indexOffset    = 0;
     
-    const index_element_t indexType = get_required_index_type(totalVerts);
-    const unsigned indexStride      = (indexType == INDEX_TYPE_UINT) ? sizeof(unsigned int) : sizeof(unsigned short);
-    unsigned totalIndices           = numDrawable*geometry_property_t::MESH_VERTS_PER_GLYPH;
-    char* pIndices                  = (char*)map_buffer_data(ibo, 0, totalIndices*indexStride, DEFAULT_TEXT_MAPPING_FLAGS);
+    for (unsigned i = 0; i < str.size(); ++i) {
+        const unsigned currChar     = (unsigned)str[i];
+        const AtlasEntry& rGlyph    = pGlyphs[currChar];
+        const float vertHang        = (rGlyph.bearing[1]-rGlyph.size[1]);
+        
+        if (currChar == '\n') {
+            yPos -= (rGlyph.bearing[1]*2.f)+vertHang; // formula found through trial and error
+            xPos = 0.f;
+        }
+        else if (currChar == '\v') {
+            yPos -= ((rGlyph.bearing[1]*2.f)+vertHang)*MESH_SPACES_PER_TAB;
+            xPos = 0.f;
+        }
+        else if (currChar == '\r') {
+            xPos = 0.f;
+        }
+        else if (currChar == ' ') {
+            xPos += rGlyph.advance[0];
+        }
+        else if (currChar == '\t') {
+            xPos += rGlyph.advance[0]*MESH_SPACES_PER_TAB;
+        }
+        else {
+            const float yOffset = yPos+vertHang;
+            const float xOffset = xPos+rGlyph.bearing[0];
+            xPos                += rGlyph.advance[0];
+            pVerts              = gen_text_geometry_vert(rGlyph, pVerts, xOffset, yOffset, metaData);
+            pIndices            = set_text_geometry_indices(pIndices, indexOffset, metaData);
+            indexOffset         += MESH_VERTS_PER_GLYPH;
+        }
+    }
+}
+*/
+
+void gen_text_geometry(
+    const std::string& str,
+    char* pVerts,
+    char* pIndices,
+    const Atlas& atlas,
+    const TextMetaData& metaData
+) {
     
-    LS_LOG_GL_ERR();
-    
+    // Get pointers to the buffer data that will be filled with quads
+    const AtlasEntry* const pGlyphs = atlas.pEntries;
     // The y-origin was found using a lot of testing. This was for resolution independence
     constexpr unsigned nl = (unsigned)'\n';
     float yPos = -((pGlyphs[nl].bearing[1]*2.f)+pGlyphs[nl].bearing[1]-pGlyphs[nl].size[1]);
     float xPos = 0.f;
+    unsigned indexOffset = 0;
     
     for (unsigned i = 0; i < str.size(); ++i) {
         const unsigned currChar = (unsigned)str[i];
@@ -259,19 +319,14 @@ unsigned gen_text_geometry(
             xPos += rGlyph.advance[0]*MESH_SPACES_PER_TAB;
         }
         else {
-            const float yOffset = yPos+vertHang;
-            const float xOffset = xPos+rGlyph.bearing[0];
-            xPos += rGlyph.advance[0];
-            pVerts = gen_text_geometry_vert(rGlyph, pVerts, vertStride, xOffset, yOffset, vertexTypes);
-            pIndices = set_text_geometry_indices(pIndices, indexType, indexStride, totalIndices);
-            totalIndices += MESH_INDICES_PER_GLYPH;
+            const float yOffset = yPos + vertHang;
+            const float xOffset = xPos + rGlyph.bearing[0];
+            xPos                = xPos + rGlyph.advance[0];
+            pVerts              = gen_text_geometry_vert(rGlyph, pVerts, xOffset, yOffset, metaData);
+            pIndices            = set_text_geometry_indices(pIndices, indexOffset, metaData);
+            indexOffset         = indexOffset + MESH_VERTS_PER_GLYPH;
         }
     }
-    
-    unmap_buffer_data(vbo);
-    unmap_buffer_data(ibo);
-    
-    return totalIndices;
 }
 
 } // end anonymous namespace
@@ -280,72 +335,110 @@ unsigned gen_text_geometry(
  * Geometry Functions
 -----------------------------------------------------------------------------*/
 namespace ls {
-namespace draw {
+
+/*-------------------------------------
+ * Meta information about the text being generated.
+-------------------------------------*/
+void draw::gen_text_meta_data(
+    TextMetaData& metaData,
+    const std::string& str,
+    const common_vertex_t vertexTypes
+) {
+    metaData.numDrawableChars   = get_num_drawable_chars(str);
+    
+    metaData.vertTypes          = vertexTypes;
+    metaData.vertStride         = get_vertex_byte_size(metaData.vertTypes);
+    metaData.totalVerts         = metaData.numDrawableChars * geometry_property_t::MESH_VERTS_PER_GLYPH;
+    metaData.totalVertBytes     = metaData.totalVerts * metaData.vertStride;
+    
+    metaData.indexType          = get_required_index_type(metaData.totalVerts);
+    metaData.indexByteSize      = get_index_byte_size(metaData.indexType);
+    metaData.totalIndices       = metaData.numDrawableChars * geometry_property_t::MESH_INDICES_PER_GLYPH;
+    metaData.totalIndexBytes    = metaData.totalIndices * metaData.indexByteSize;
+    
+    LS_LOG_MSG(
+        "Text Geometry Meta Data:",
+        "\n\tBytes Per Vertex:  ", metaData.vertStride,
+        "\n\tVertex Count:      ", metaData.totalVerts,
+        "\n\tVertex Bytes:      ", metaData.totalVertBytes,
+        "\n\tBytes Per Index:   ", metaData.indexByteSize,
+        "\n\tIndex Count:       ", metaData.totalIndices,
+        "\n\tIndex Bytes:       ", metaData.totalIndexBytes
+    );
+}
 
 /*-------------------------------------
  * Text/String loading
+ * 
+ * NOTE: Remove the buffer initialization, allocation, and the DMA mapping to
+ * make this function thread-safe-ish.
 -------------------------------------*/
-unsigned load_text_geometry(
-    const std::string& str,
-    const common_vertex_t vertexTypes,
-    BufferObject& vbo,
-    BufferObject& ibo,
-    const Atlas& atlas
+unsigned draw::load_text_geometry(
+    const std::string&      str,
+    const common_vertex_t   vertexTypes,
+    BufferObject&           vbo,
+    BufferObject&           ibo,
+    const Atlas&            atlas
 ) {
-    //LS_LOG_MSG("Attempting to load text geometry.");
+    LS_LOG_MSG("Attempting to load text geometry.");
+    char* pVerts = nullptr;
+    char* pIndices = nullptr;
     
-    // determine the number of non-whitespace characters
-    unsigned numVertices = 0;
-    unsigned numVertexBytes = 0;
-    unsigned numIndices = 0;
-    unsigned numIndexBytes = 0;
-    calc_text_geometry_size(str, vertexTypes, numVertices, numVertexBytes, numIndices, numIndexBytes);
+    TextMetaData metaData;
+    gen_text_meta_data(metaData, str, vertexTypes);
     
-    // insurance/ghetto cleanup
-    auto terminate_text_buffers = [&]()->void {terminate_buffer(vbo); terminate_buffer(ibo);};
-    
-    // Attempt to get a pointer to an unsynchronized memory buffer
-    if (!init_buffer(vbo) || !init_buffer(ibo)) {
-        LS_LOG_ERR("\tUnable to allocate memory for text geometry.\n");
-        terminate_text_buffers();
+    // Initialize VBO
+    if (!ls::draw::setup_vertex_buffer_attribs(vbo, metaData.vertTypes)) {
+        LS_LOG_ERR("\tUnable to initialize text geometry meta-data.\n");
         return 0;
     }
     
-    if (!ls::draw::setup_vertex_buffer_attribs(vbo, vertexTypes)) {
-        LS_LOG_ERR("\tUnable to initialize text geometry attribute meta-data.\n");
-        terminate_text_buffers();
+    // VBO Mapping
+    pVerts = allocate_and_map_buffer(vbo, metaData.totalVertBytes);
+    if (!pVerts) {
+        LS_LOG_ERR("\tAn error occurred while attempting to map a VBO for text geometry.");
+        return false;
+    }
+    
+    // Initialize IBO
+    if (!ls::draw::setup_index_buffer_attribs(ibo, metaData.indexType)) {
+        unmap_buffer_data(vbo);
+        LS_LOG_ERR("\tUnable to initialize text index meta-data.\n");
         return 0;
     }
-    else {
-        vbo.bufferType = draw::VBO_BUFFER_ARRAY;
-        ibo.bufferType = draw::VBO_BUFFER_ELEMENT;
+    
+    // IBO Mapping
+    pIndices = allocate_and_map_buffer(ibo, metaData.totalVertBytes);
+    if (!pIndices) {
+        unmap_buffer_data(vbo);
+        LS_LOG_ERR("\tAn error occurred while attempting to map an IBO for text geometry.");
+        return false;
     }
-
-    bind_buffer(ibo);
-    set_buffer_data(ibo, numIndexBytes, nullptr, buffer_access_t::VBO_STREAM_DRAW);
-    LS_LOG_GL_ERR();
     
-    bind_buffer(vbo);
-    set_buffer_data(vbo, numVertexBytes, nullptr, buffer_access_t::VBO_STREAM_DRAW);
-    LS_LOG_GL_ERR();
+    // Generate the text geometry
+    gen_text_geometry(str, pVerts, pIndices, atlas, metaData);
     
-    gen_text_geometry(str, vertexTypes, vbo, ibo, atlas);
-    LS_LOG_GL_ERR();
-    /*
+    unmap_buffer_data(vbo);
+    unmap_buffer_data(ibo);
+    
     LS_LOG_MSG(
         "\tSuccessfully sent a string to the GPU.",
-        "\n\t\tVertices:    ", numVertices,
-        "\n\t\tIndices:     ", numIndices,
+        "\n\t\tCharacters:  ", metaData.numDrawableChars,
+        "\n\t\tVertices:    ", metaData.totalVerts,
+        "\n\t\tVert Size:   ", metaData.totalVertBytes, " bytes"
+        "\n\t\tIndices:     ", metaData.totalIndices,
+        "\n\t\tIndex Size:  ", metaData.totalIndexBytes, " bytes"
+        "\n\t\tTotal Size:  ", metaData.totalVertBytes+metaData.totalIndexBytes, " bytes",
         '\n'
     );
-    */
-    return numIndices;
+    
+    return metaData.totalIndices;
 }
 
 /*-------------------------------------
  * Utility function to get all of the non-whitespace characters in a string
 -------------------------------------*/
-unsigned get_num_drawable_chars(const std::string& str) {
+unsigned draw::get_num_drawable_chars(const std::string& str) {
     unsigned charCount = 0;
     
 	for (unsigned i = 0; i < str.size(); ++i) {
@@ -357,31 +450,4 @@ unsigned get_num_drawable_chars(const std::string& str) {
     return charCount;
 }
 
-/*-------------------------------------
- * Determine how many bytes are required to populate a vertex buffer and index
- * buffer of textual glyphs.
--------------------------------------*/
-void calc_text_geometry_size(
-    const std::string& str,
-    const common_vertex_t vertexTypes,
-    unsigned& outNumVertices,
-    unsigned& outNumVertexBytes,
-    unsigned& outNumIndices,
-    unsigned& outNumIndexBytes
-) {
-    const unsigned numChars = get_num_drawable_chars(str);
-    
-    const unsigned vertexBytes = get_vertex_byte_size(vertexTypes);
-    outNumVertices = numChars * geometry_property_t::MESH_VERTS_PER_GLYPH;
-    outNumVertexBytes = outNumVertices * vertexBytes;
-    
-    const unsigned indexBytes =
-        get_required_index_type(outNumVertices) == index_element_t::INDEX_TYPE_UINT
-            ? sizeof(unsigned int)
-            : sizeof(unsigned short);
-    outNumIndices = numChars * geometry_property_t::MESH_INDICES_PER_GLYPH;
-    outNumIndexBytes = outNumIndices * indexBytes;
-}
-
-} // end draw namespace
 } // end ls namespace

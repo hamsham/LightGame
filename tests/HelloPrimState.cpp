@@ -313,11 +313,11 @@ void HelloPrimState::setup_prims() {
     assert(ls::draw::init_buffer(this->vbo));
     ls::draw::bind_buffer(this->vbo);
     const std::unique_ptr<char[]>&& pData = gen_vertex_data();
-    ls::draw::set_buffer_data(vbo, 3 * ls::draw::get_vertex_byte_size((common_vertex_t)STANDARD_VERTEX), pData.get(), ls::draw::buffer_access_t::VBO_STATIC_DRAW);
+    ls::draw::set_buffer_data(vbo, 3 * ls::draw::get_vertex_byte_size(STANDARD_VERTEX), pData.get(), ls::draw::buffer_access_t::VBO_STATIC_DRAW);
     
     assert(this->vao.init());
     this->vao.bind();
-    this->vao.set_attrib_offsets(vboAttribs, numVboAttribs, ls::draw::get_vertex_byte_size((common_vertex_t)STANDARD_VERTEX));
+    this->vao.set_attrib_offsets(vboAttribs, numVboAttribs, ls::draw::get_vertex_byte_size(STANDARD_VERTEX));
     this->vao.unbind();
     
     ls::draw::unbind_buffer(vbo);

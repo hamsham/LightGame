@@ -53,7 +53,6 @@ else()
         SDL2
         freetype
         freeimage
-        GL
     )
 endif(WIN32)
 

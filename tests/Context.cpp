@@ -69,9 +69,12 @@ bool Context::init(const Display& disp, bool useVsync) {
     LS_LOG_MSG("Initializing an OpenGL rendering context.");
     pContext = SDL_GL_CreateContext(disp.get_window());
 
-    if (!pContext/* || !ls::draw::init()*/) {
-        LS_LOG_ERR("\tUnable to create a render context through SDL.");
-        LS_LOG_ERR('\t', SDL_GetError(), '\n');
+    if (!pContext) {
+        LS_LOG_ERR(
+            "\tUnable to create a render context through SDL.",
+            "\n\t", SDL_GetError(),
+            '\n'
+        );
         terminate();
         return false;
     }
@@ -79,13 +82,18 @@ bool Context::init(const Display& disp, bool useVsync) {
 
     // Quick setup in order to normalize OpenGL to the display coordinates.
     this->make_current(disp);
+    
     const math::vec2i&& displayRes = disp.get_resolution();
     glViewport(0, 0, displayRes[0], displayRes[1]);
+    LS_LOG_GL_ERR();
 
     // Set the default back buffer color
     const ls::draw::color::color& mgcPnk = ls::draw::color::magenta;
     glClearColor(mgcPnk[0], mgcPnk[1], mgcPnk[2], mgcPnk[3]);
+    LS_LOG_GL_ERR();
+    
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    LS_LOG_GL_ERR();
 
     set_vsync(useVsync);
 

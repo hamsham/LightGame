@@ -19,6 +19,7 @@
 #include "lightsky/game/GameState.h"
 #include "lightsky/game/GameSystem.h"
 
+#include "lightsky/draw/BlendObject.h"
 #include "lightsky/draw/FontResource.h"
 #include "lightsky/draw/ShaderObject.h"
 #include "lightsky/draw/ShaderUniform.h"
@@ -30,6 +31,9 @@
 #include "ControlState.h"
 
 namespace math = ls::math;
+using ls::draw::VertexAttrib;
+using ls::draw::ShaderUniform;
+
 
 #ifndef LS_GAME_TEST_FONT
     #define LS_GAME_TEST_FONT "testfont.ttf"
@@ -42,17 +46,20 @@ namespace {
 /*-------------------------------------
  * Model Matrix Uniform Name
 -------------------------------------*/
-//const char* TEXT_MODEL_MATRIX_UNIFORM = "modelMatrix";
+const char* TEXT_MODEL_MATRIX_UNIFORM_STR = "modelMatrix";
+unsigned TEXT_MODEL_MATRIX_UNIFORM_ID = 0;
 
 /*-------------------------------------
  * Camera/VP Matrix Uniform Name
 -------------------------------------*/
-//const char* TEXT_VP_MATRIX_UNIFORM = "vpMatrix";
+const char* TEXT_VP_MATRIX_UNIFORM_STR = "vpMatrix";
+unsigned TEXT_VP_MATRIX_UNIFORM_ID = 0;
 
 /*-------------------------------------
  * Camera/VP Matrix Uniform Name
 -------------------------------------*/
-//const char* TEXT_COLOR_UNIFORM = "textColor";
+const char* TEXT_COLOR_UNIFORM_STR = "textColor";
+unsigned TEXT_COLOR_UNIFORM_ID = 0;
 
 /*-------------------------------------
  * Text Vertex Shader
@@ -141,12 +148,11 @@ HelloTextState& HelloTextState::operator=(HelloTextState&& state) {
 /*-------------------------------------
 -------------------------------------*/
 void HelloTextState::setup_camera() {
-    camera.set_projection_params(60.f, 800.f, 600.f, 0.1f, 1000.f);
-    camera.look_at(ls::math::vec3{5.0}, ls::math::vec3{0.1f});
+    camera.set_projection_params(LS_DEG2RAD(60.f), 800.f, 600.f, 0.1f, 1000.f);
+    camera.look_at(ls::math::vec3{1.0}, math::vec3{LS_EPSILON});
     camera.make_perspective();
     camera.lock_y_axis(true);
-    //camera.set_view_mode(ls::draw::camera_mode_t::ARCBALL);
-    camera.set_view_mode(ls::draw::camera_mode_t::FIRST_PERSON);
+    camera.set_view_mode(ls::draw::camera_mode_t::ARCBALL);
     
     update_camera();
 }
@@ -157,10 +163,19 @@ void HelloTextState::update_camera() {
     camera.update();
     
     shader.bind();
-    ls::draw::set_shader_uniform(0, math::scale(math::mat4{1.f}, math::vec3{10.f}));
-    ls::draw::set_shader_uniform(3, camera.get_vp_matrix());
-    ls::draw::set_shader_uniform(2, ls::math::vec4{0.f, 1.f, 0.f, 1.f});
+    LS_LOG_GL_ERR();
+    
+    ls::draw::set_shader_uniform(TEXT_MODEL_MATRIX_UNIFORM_ID, math::mat4{1.f});
+    LS_LOG_GL_ERR();
+    
+    ls::draw::set_shader_uniform(TEXT_VP_MATRIX_UNIFORM_ID, camera.get_vp_matrix());
+    LS_LOG_GL_ERR();
+    
+    ls::draw::set_shader_uniform(TEXT_COLOR_UNIFORM_ID, ls::math::vec4{0.f, 1.f, 0.f, 1.f});
+    LS_LOG_GL_ERR();
+    
     shader.unbind();
+    LS_LOG_GL_ERR();
 }
 
 /*-------------------------------------
@@ -173,88 +188,26 @@ void HelloTextState::setup_shaders() {
         LS_LOG_GL_ERR();
         assert(false);
     }
+    LS_LOG_GL_ERR();
     
     if (!fShader.init(LS_ARRAY_SIZE(fData), fData)) {
         LS_LOG_GL_ERR();
         assert(false);
     }
+    LS_LOG_GL_ERR();
     
     if (!shader.init(vShader, fShader)) {
         LS_LOG_GL_ERR();
         assert(false);
     }
+    LS_LOG_GL_ERR();
     
     if (!shader.link()) {
         LS_LOG_GL_ERR();
         assert(false);
     }
-}
-
-/*-------------------------------------
--------------------------------------*/
-void HelloTextState::setup_atlas() {
-    ls::utils::Pointer<ls::draw::FontResource> pFont;
-
-    pFont.reset(new ls::draw::FontResource{});
-
-    assert(pFont->load_file(LS_GAME_TEST_FONT, 72));
-    assert(atlas.init(*pFont));
-}
-
-/*-------------------------------------
--------------------------------------*/
-void HelloTextState::set_text(const std::string& text) {
-    using ls::draw::common_vertex_t;
-    using ls::draw::STANDARD_VERTEX;
-    
-    static constexpr common_vertex_t vertTypes = (common_vertex_t)STANDARD_VERTEX;
-    
-    numTextIndices = ls::draw::load_text_geometry(text, vertTypes, this->vbo, this->ibo, this->atlas);
-    assert(numTextIndices > 0);
-}
-
-/*-------------------------------------
--------------------------------------*/
-void HelloTextState::setup_text() {
-    using ls::draw::common_vertex_t;
-    using ls::draw::vertex_data_t;
-    using ls::draw::STANDARD_VERTEX;
-    
-    assert(this->vao.init());
-    this->vao.bind();
-    
-    ls::draw::VertexAttrib vboAttribs[] = {
-        ls::draw::create_vertex_attrib<vertex_data_t::VERTEX_DATA_VEC_3F>(),
-        ls::draw::create_vertex_attrib<vertex_data_t::VERTEX_DATA_VEC_2F>(),
-        ls::draw::create_vertex_attrib<vertex_data_t::VERTEX_DATA_VEC_3F>()
-    };
-    const unsigned numVboAttribs = LS_ARRAY_SIZE(vboAttribs);
-    
-    ls::draw::bind_buffer(vbo);
-    set_text("Hello World!\nHello World!\nHello World!\nHello World!\nHello World!\n");
-    this->vao.set_attrib_offsets(vboAttribs, numVboAttribs, ls::draw::get_vertex_byte_size((common_vertex_t)STANDARD_VERTEX));
-    ls::draw::bind_buffer(ibo);
-    
-    this->vao.unbind();
-    
-    ls::draw::unbind_buffer(vbo);
-    ls::draw::unbind_buffer(ibo);
-}
-
-/*-------------------------------------
- * System Startup
--------------------------------------*/
-bool HelloTextState::on_start() {
-    using ls::draw::ShaderUniform;
-    using ls::draw::VertexAttrib;
-    
-    setup_atlas();
-    setup_shaders();
-    setup_text();
-    setup_camera();
-    
-    glDisable(GL_CULL_FACE);
-    
+    LS_LOG_GL_ERR();
+        
     const std::vector<ShaderUniform>&& uniforms = shader.get_uniforms();
     const std::vector<VertexAttrib>&& attribs = shader.get_attribs();
     unsigned i = 0;
@@ -280,7 +233,93 @@ bool HelloTextState::on_start() {
             "\n\tStride:     ", u.stride,
             "\n\tOffset:     ", u.offset
         );
+        
+        if (u.name == TEXT_VP_MATRIX_UNIFORM_STR) {
+            TEXT_VP_MATRIX_UNIFORM_ID = u.index;
+        }
+        else if (u.name == TEXT_MODEL_MATRIX_UNIFORM_STR) {
+            TEXT_MODEL_MATRIX_UNIFORM_ID = u.index;
+        }
+        else if (u.name == TEXT_COLOR_UNIFORM_STR) {
+            TEXT_COLOR_UNIFORM_ID = u.index;
+        }
     }
+}
+
+/*-------------------------------------
+-------------------------------------*/
+void HelloTextState::setup_atlas() {
+    ls::utils::Pointer<ls::draw::FontResource> pFont;
+
+    pFont.reset(new ls::draw::FontResource{});
+
+    assert(pFont->load_file(LS_GAME_TEST_FONT, 72));
+    assert(atlas.init(*pFont));
+}
+
+/*-------------------------------------
+-------------------------------------*/
+void HelloTextState::set_text(const std::string& text) {
+    using ls::draw::common_vertex_t;
+    using ls::draw::STANDARD_VERTEX;
+    
+    static constexpr common_vertex_t vertTypes = STANDARD_VERTEX;
+    
+    numTextIndices = ls::draw::load_text_geometry(text, vertTypes, this->vbo, this->ibo, this->atlas);
+    assert(numTextIndices > 0);
+}
+
+/*-------------------------------------
+-------------------------------------*/
+void HelloTextState::setup_text() {
+    using ls::draw::common_vertex_t;
+    using ls::draw::vertex_data_t;
+    using ls::draw::STANDARD_VERTEX;
+    
+    assert(init_buffer(vbo, ls::draw::VBO_BUFFER_ARRAY));
+    LS_LOG_GL_ERR();
+    assert(init_buffer(ibo, ls::draw::VBO_BUFFER_ELEMENT));
+    LS_LOG_GL_ERR();
+    
+    assert(this->vao.init());
+    LS_LOG_GL_ERR();
+    this->vao.bind();
+    LS_LOG_GL_ERR();
+    
+    ls::draw::bind_buffer(vbo);
+    LS_LOG_GL_ERR();
+    ls::draw::bind_buffer(ibo);
+    LS_LOG_GL_ERR();
+    
+    //set_text("Hello World!");
+    set_text("Hello World!");
+    LS_LOG_GL_ERR();
+    
+    this->vao.set_attrib_offsets(vbo.pAttribs.get(), vbo.numAttribs, ls::draw::get_vertex_byte_size(STANDARD_VERTEX));
+    LS_LOG_GL_ERR();
+    this->vao.unbind();
+    LS_LOG_GL_ERR();
+    
+    ls::draw::unbind_buffer(vbo);
+    LS_LOG_GL_ERR();
+    ls::draw::unbind_buffer(ibo);
+    LS_LOG_GL_ERR();
+}
+
+/*-------------------------------------
+ * System Startup
+-------------------------------------*/
+bool HelloTextState::on_start() {
+    using ls::draw::ShaderUniform;
+    using ls::draw::VertexAttrib;
+    
+    setup_atlas();
+    setup_shaders();
+    setup_text();
+    setup_camera();
+    
+    glDisable(GL_CULL_FACE);
+    LS_LOG_GL_ERR();
     
     pControlState = new ControlState{};
     if (!pControlState) {
@@ -297,6 +336,8 @@ bool HelloTextState::on_start() {
         }
     }
     
+    LS_LOG_GL_ERR();
+    
     return true;
 }
 
@@ -304,28 +345,41 @@ bool HelloTextState::on_start() {
  * System Runtime
 -------------------------------------*/
 void HelloTextState::on_run() {
-    
-    set_text(std::to_string(clock()));
+    ls::draw::BlendObject blender;
+    blender.set_state(true);
+    blender.set_blend_equation(ls::draw::BLEND_EQU_ADD, ls::draw::BLEND_EQU_ADD);
+    blender.set_blend_function(
+        ls::draw::BLEND_FNC_ONE, ls::draw::BLEND_FNC_1_SUB_SRC_ALPHA,
+        ls::draw::BLEND_FNC_ONE, ls::draw::BLEND_FNC_ZERO
+    );
+    blender.bind();
     
     this->shader.bind();
     LS_LOG_GL_ERR();
     
     camera.update();
-    ls::draw::set_shader_uniform(3, camera.get_vp_matrix());
+    ls::draw::set_shader_uniform(TEXT_VP_MATRIX_UNIFORM_ID, camera.get_vp_matrix());
     LS_LOG_GL_ERR();
     
     this->vao.bind();
     LS_LOG_GL_ERR();
+    
     this->atlas.atlasTex.bind();
     LS_LOG_GL_ERR();
-    glDrawElements(GL_TRIANGLES, numTextIndices, GL_UNSIGNED_SHORT, (void*)0);
+    
+    glDrawElements(GL_TRIANGLES, numTextIndices, ls::draw::INDEX_TYPE_USHORT, nullptr);
     LS_LOG_GL_ERR();
+    
     this->atlas.atlasTex.unbind();
     LS_LOG_GL_ERR();
+    
     this->vao.unbind();
     LS_LOG_GL_ERR();
+    
     this->shader.unbind();
     LS_LOG_GL_ERR();
+    
+    //blender.unbind();
 }
 
 /*-------------------------------------
