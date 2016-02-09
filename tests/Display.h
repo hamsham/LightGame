@@ -137,7 +137,7 @@ class Display {
          *
          * @return TRUE if the display initialized properly, FALSE is not.
          */
-        bool init(const math::vec2i inResolution, bool isFullScreen = false);
+        bool init(const ls::math::vec2i inResolution, bool isFullScreen = false);
 
         /**
          * Close the window and free all memory/resources used by *this.
@@ -147,9 +147,9 @@ class Display {
         /**
          * Get the resolution, in pixels, of the display referenced by *this.
          *
-         * @return math::vec2i
+         * @return ls::math::vec2i
          */
-        const math::vec2i get_resolution() const;
+        const ls::math::vec2i get_resolution() const;
 
         /**
          * Set the resolution, in pixels, that this display should be.
@@ -158,7 +158,7 @@ class Display {
          * A new resolution, contained within a 2d integral vector, represented
          * in pixels.
          */
-        void set_resolution(const math::vec2i inResolution);
+        void set_resolution(const ls::math::vec2i inResolution);
 
         /**
          * Set whether or not this display should be made fullscreen.

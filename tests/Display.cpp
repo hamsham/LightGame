@@ -257,9 +257,7 @@ void Display::set_fullscreen_mode(fullscreen_t fsType) {
     }
 
     // apply the current fullscreen mode if requested
-    if (is_fullscreen() == true) {
-        set_fullscreen(true);
-    }
+    set_fullscreen(is_fullscreen() == false);
 }
 
 /*-------------------------------------

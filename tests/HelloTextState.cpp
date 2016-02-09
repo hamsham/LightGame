@@ -13,6 +13,7 @@
 
 #include "lightsky/math/Math.h"
 
+#include "lightsky/utils/DataResource.h"
 #include "lightsky/utils/Log.h"
 #include "lightsky/utils/Pointer.h"
 
@@ -26,6 +27,8 @@
 #include "lightsky/draw/VertexAttrib.h"
 #include "lightsky/draw/VertexUtils.h"
 
+#include "main.h"
+#include "Display.h"
 #include "HelloTextState.h"
 #include "TextGeometryLoader.h"
 #include "ControlState.h"
@@ -109,6 +112,22 @@ void main() {
 }
 )***"
 };
+
+/*-------------------------------------
+ * Helper function to load text data.
+-------------------------------------*/
+std::string load_test_text(const std::string filename = u8R"(lorem_ipsum.txt)") {
+    using ls::utils::DataResource;
+    
+    DataResource inFile;
+    
+    if (!inFile.load_file(filename)) {
+        return "Hello\nWorld!";
+    }
+    
+    return inFile.get_data_as_str();
+}
+
 } // end anonymous namespace
 
 /*-------------------------------------
@@ -148,8 +167,9 @@ HelloTextState& HelloTextState::operator=(HelloTextState&& state) {
 /*-------------------------------------
 -------------------------------------*/
 void HelloTextState::setup_camera() {
-    camera.set_projection_params(LS_DEG2RAD(60.f), 800.f, 600.f, 0.1f, 1000.f);
-    camera.look_at(ls::math::vec3{1.0}, math::vec3{LS_EPSILON});
+    const math::vec2&& fRes = (math::vec2)global::pDisplay->get_resolution();
+    camera.set_projection_params(LS_DEG2RAD(60.f), fRes[0], fRes[1], 0.1f, 1000.f);
+    camera.look_at(ls::math::vec3{-1.0}, math::vec3{LS_EPSILON});
     camera.make_perspective();
     camera.lock_y_axis(true);
     camera.set_view_mode(ls::draw::camera_mode_t::ARCBALL);
@@ -292,7 +312,7 @@ void HelloTextState::setup_text() {
     LS_LOG_GL_ERR();
     
     //set_text("Hello World!");
-    set_text("Hello World!");
+    set_text(std::move(load_test_text()));
     LS_LOG_GL_ERR();
     
     this->vao.set_attrib_offsets(vbo.pAttribs.get(), vbo.numAttribs, ls::draw::get_vertex_byte_size(STANDARD_VERTEX));
@@ -318,7 +338,8 @@ bool HelloTextState::on_start() {
     setup_text();
     setup_camera();
     
-    glDisable(GL_CULL_FACE);
+    //glDisable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
     LS_LOG_GL_ERR();
     
     pControlState = new ControlState{};
@@ -379,7 +400,7 @@ void HelloTextState::on_run() {
     this->shader.unbind();
     LS_LOG_GL_ERR();
     
-    //blender.unbind();
+    blender.unbind();
 }
 
 /*-------------------------------------

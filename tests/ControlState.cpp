@@ -14,6 +14,8 @@
 
 #include "lightsky/game/GameSystem.h"
 
+#include "main.h"
+#include "Display.h"
 #include "ControlState.h"
 #include "TestRenderState.h"
 
@@ -96,7 +98,7 @@ bool ControlState::on_start() {
  * Running state
 -------------------------------------*/
 void ControlState::on_run() {
-    const math::vec2i&& displayRes{800, 600};
+    const math::vec2i& displayRes = global::pDisplay->get_resolution();
     glViewport(0, 0, displayRes[0], displayRes[1]);
     
     SDL_Event e;
@@ -144,6 +146,9 @@ void ControlState::on_run() {
     }
     if (pKeyStates[SDL_SCANCODE_ESCAPE]) {
         get_parent_system().stop();
+    }
+    if (pKeyStates[SDL_SCANCODE_F11]) {
+        global::pDisplay->set_fullscreen(global::pDisplay->is_fullscreen());
     }
     
     mainCam.move(pos);
@@ -215,7 +220,7 @@ void ControlState::on_mouse_move_event(const SDL_MouseMotionEvent& e) {
         return;
     }
     
-    mouseX = e.xrel;
+    mouseX = -e.xrel;
     mouseY = e.yrel;
     
     // Get the current mouse position and LERP from the previous mouse position.
@@ -223,7 +228,7 @@ void ControlState::on_mouse_move_event(const SDL_MouseMotionEvent& e) {
     // the mouse delta between 0 and 1. This allows for the camera's orientation to
     // be LERPed without the need for multiplying it by the last time delta.
     // As a result, the camera's movement becomes as smooth and natural as possible.
-    const math::vec2&& fRes{800.f, 600.f};
+    const math::vec2&& fRes = (math::vec2)global::pDisplay->get_resolution();
     const math::vec3&& mouseDelta = math::vec3{
         (float)mouseX/fRes[0], (float)mouseY/fRes[1], 0.f
     };

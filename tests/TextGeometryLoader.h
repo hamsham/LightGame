@@ -34,12 +34,15 @@ class VertexArray;
  * within the geometry object's implementation.
 -------------------------------------*/
 enum geometry_property_t: int {
-    MESH_VERTS_PER_GLYPH = 4,
+    TEXT_VERTS_PER_GLYPH = 4,
     
-    MESH_INDICES_PER_GLYPH = 6,
+    TEXT_INDICES_PER_GLYPH = 6,
     
-    // TODO: Make this number editable within the "load_*" functions.
-    MESH_SPACES_PER_TAB = 4
+    // TODO: Make this number editable as a member variable.
+    TEXT_SPACES_PER_TAB = 4,
+    
+    // TODO: Make this number editable as a member variable.
+    TEXT_LINE_SPACING = 1
 };
 
 /**------------------------------------

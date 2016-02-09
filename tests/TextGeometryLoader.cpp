@@ -48,9 +48,10 @@ using ls::draw::get_num_attrib_bytes;
 using ls::draw::get_vertex_byte_size;
 
 // draw constants
-using ls::draw::MESH_SPACES_PER_TAB;
-using ls::draw::MESH_VERTS_PER_GLYPH;
-using ls::draw::MESH_INDICES_PER_GLYPH;
+using ls::draw::TEXT_SPACES_PER_TAB;
+using ls::draw::TEXT_VERTS_PER_GLYPH;
+using ls::draw::TEXT_INDICES_PER_GLYPH;
+using ls::draw::TEXT_LINE_SPACING;
 using ls::draw::INDEX_TYPE_UINT;
 
 constexpr ls::draw::buffer_map_t DEFAULT_TEXT_MAPPING_FLAGS = (ls::draw::buffer_map_t)(0
@@ -104,9 +105,9 @@ unsigned calc_text_geometry_pos(
     const float         xOffset,
     const float         yOffset
 ) {
-    pVert = set_text_vertex_data(pVert, stride, vec3{xOffset, yOffset+rGlyph.size[1], 0.f});
+    pVert = set_text_vertex_data(pVert, stride, vec3{xOffset, yOffset-rGlyph.size[1], 0.f});
     pVert = set_text_vertex_data(pVert, stride, vec3{xOffset, yOffset, 0.f});
-    pVert = set_text_vertex_data(pVert, stride, vec3{xOffset+rGlyph.size[0], yOffset+rGlyph.size[1], 0.f});
+    pVert = set_text_vertex_data(pVert, stride, vec3{xOffset+rGlyph.size[0], yOffset-rGlyph.size[1], 0.f});
             set_text_vertex_data(pVert, stride, vec3{xOffset+rGlyph.size[0],yOffset, 0.f});
     
     return get_vertex_byte_size(common_vertex_t::POSITION_VERTEX);
@@ -189,7 +190,7 @@ char* gen_text_geometry_vert(
         LS_ASSERT(false);
     }
     
-    return pData + (metaData.vertStride * MESH_VERTS_PER_GLYPH);
+    return pData + (metaData.vertStride * TEXT_VERTS_PER_GLYPH);
 }
 
 /*-------------------------------------
@@ -290,41 +291,49 @@ void gen_text_geometry(
     
     // Get pointers to the buffer data that will be filled with quads
     const AtlasEntry* const pGlyphs = atlas.pEntries;
-    // The y-origin was found using a lot of testing. This was for resolution independence
+    constexpr float lineSpacing = float{TEXT_LINE_SPACING};
+    
+    // The y-origin (starting 'yPos') was found using a lot of testing. This
+    // was for resolution independence
     constexpr unsigned nl = (unsigned)'\n';
-    float yPos = -((pGlyphs[nl].bearing[1]*2.f)+pGlyphs[nl].bearing[1]-pGlyphs[nl].size[1]);
+    float yPos = pGlyphs[nl].bearing[1] - (pGlyphs[nl].bearing[1]-pGlyphs[nl].size[1]);
     float xPos = 0.f;
     unsigned indexOffset = 0;
     
     for (unsigned i = 0; i < str.size(); ++i) {
         const unsigned currChar = (unsigned)str[i];
         const AtlasEntry& rGlyph = pGlyphs[currChar];
-        const float vertHang = (rGlyph.bearing[1]-rGlyph.size[1]);
         
-        if (currChar == '\n') {
-            yPos -= (rGlyph.bearing[1]*2.f)+vertHang; // formula found through trial and error
-            xPos = 0.f;
-        }
-        else if (currChar == '\v') {
-            yPos -= ((rGlyph.bearing[1]*2.f)+vertHang)*MESH_SPACES_PER_TAB;
-            xPos = 0.f;
-        }
-        else if (currChar == '\r') {
-            xPos = 0.f;
-        }
-        else if (currChar == ' ') {
+        // Amount the each glyph "hangs" below its Y-origin
+        const float vertHang = rGlyph.bearing[1] - rGlyph.size[1];
+        
+        if (currChar == u' ') {
             xPos += rGlyph.advance[0];
         }
-        else if (currChar == '\t') {
-            xPos += rGlyph.advance[0]*MESH_SPACES_PER_TAB;
+        else if (currChar == u'\t') {
+            xPos += rGlyph.advance[0]*TEXT_SPACES_PER_TAB;
+        }
+        else if (currChar == u'\n') {
+            // formula found through trial and error.
+            // TODO: The numerical constant '2.f' stands for double-point line
+            // spacing. Extract this function into a class so this can be
+            // adjusted as a member variable.
+            yPos += (rGlyph.bearing[1] + lineSpacing) + vertHang;
+            xPos = 0.f;
+        }
+        else if (currChar == u'\r') {
+            xPos = 0.f;
+        }
+        else if (currChar == u'\v') {
+            yPos += ((rGlyph.bearing[1] + lineSpacing) + vertHang) * TEXT_SPACES_PER_TAB;
         }
         else {
-            const float yOffset = yPos + vertHang;
+            const float yOffset = yPos - vertHang;
             const float xOffset = xPos + rGlyph.bearing[0];
             xPos                = xPos + rGlyph.advance[0];
             pVerts              = gen_text_geometry_vert(rGlyph, pVerts, xOffset, yOffset, metaData);
             pIndices            = set_text_geometry_indices(pIndices, indexOffset, metaData);
-            indexOffset         = indexOffset + MESH_VERTS_PER_GLYPH;
+            indexOffset         = indexOffset + TEXT_VERTS_PER_GLYPH;
         }
     }
 }
@@ -348,12 +357,12 @@ void draw::gen_text_meta_data(
     
     metaData.vertTypes          = vertexTypes;
     metaData.vertStride         = get_vertex_byte_size(metaData.vertTypes);
-    metaData.totalVerts         = metaData.numDrawableChars * geometry_property_t::MESH_VERTS_PER_GLYPH;
+    metaData.totalVerts         = metaData.numDrawableChars * geometry_property_t::TEXT_VERTS_PER_GLYPH;
     metaData.totalVertBytes     = metaData.totalVerts * metaData.vertStride;
     
     metaData.indexType          = get_required_index_type(metaData.totalVerts);
     metaData.indexByteSize      = get_index_byte_size(metaData.indexType);
-    metaData.totalIndices       = metaData.numDrawableChars * geometry_property_t::MESH_INDICES_PER_GLYPH;
+    metaData.totalIndices       = metaData.numDrawableChars * geometry_property_t::TEXT_INDICES_PER_GLYPH;
     metaData.totalIndexBytes    = metaData.totalIndices * metaData.indexByteSize;
     
     LS_LOG_MSG(

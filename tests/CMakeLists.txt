@@ -71,6 +71,7 @@ include_directories(".")
 set(LS_GAME_PROTO_COMMON_SOURCES
     "Context.cpp"
     "Display.cpp"
+    "MainState.cpp"
     "TestRenderState.cpp"
     "HelloPrimState.cpp"
     "HelloTextState.cpp"
@@ -89,7 +90,8 @@ set(
 # -------------------------------------
 # Misc Files
 # -------------------------------------
-configure_file(testfont.ttf testfont.ttf COPYONLY)
+configure_file(testfont.ttf ${CMAKE_CURRENT_BINARY_DIR}/testfont.ttf COPYONLY)
+configure_file(lorem_ipsum.txt ${CMAKE_CURRENT_BINARY_DIR}/lorem_ipsum.txt COPYONLY)
 
 
 

@@ -5,125 +5,14 @@
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 
-#include "lightsky/utils/Log.h"
 #include "lightsky/math/vec2.h"
 #include "lightsky/draw/Draw.h"
-#include "lightsky/game/Game.h"
-namespace math = ls::math;
 
-#include "Context.h"
-#include "Display.h"
+#include "MainState.h"
 #include "HelloTextState.h"
 #include "HelloPrimState.h"
 
-/*-----------------------------------------------------------------------------
- * Example System Object
------------------------------------------------------------------------------*/
-class MainState final : virtual public ls::game::GameState {
-    private:
-        Display* pDisplay = nullptr;
-        Context renderContext;
-
-    public:
-        MainState();
-
-        MainState(const MainState&) = delete;
-
-        MainState(MainState&&);
-
-        virtual ~MainState();
-
-        MainState& operator=(const MainState&) = delete;
-
-        MainState& operator=(MainState&&);
-
-    protected:
-        virtual bool on_start() override;
-
-        virtual void on_run() override;
-
-        virtual void on_stop() override;
-};
-
-/*-------------------------------------
- * Destructor
--------------------------------------*/
-MainState::~MainState() {
-}
-
-/*-------------------------------------
- * Contstructor
--------------------------------------*/
-MainState::MainState() {
-}
-
-/*-------------------------------------
- * Move Constructor
--------------------------------------*/
-MainState::MainState(MainState&& ms) :
-    GameState{std::move(ms)}
-{}
-
-/*-------------------------------------
- * Move Operator
--------------------------------------*/
-MainState& MainState::operator=(MainState&& ms) {
-    GameState::operator=(std::move(ms));
-
-    return *this;
-}
-
-/*-------------------------------------
- * System Startup
--------------------------------------*/
-bool MainState::on_start() {
-    pDisplay = new(std::nothrow) Display{};
-    if (!pDisplay || !pDisplay->init(math::vec2i{800, 600})) {
-        std::cerr << "Unable to create a display." << std::endl;
-        return false;
-    }
-
-    pDisplay->set_fullscreen_mode(FULLSCREEN_WINDOW);
-
-    if (!renderContext.init(*pDisplay)) {
-        std::cerr << "Unable to create a render context." << std::endl;
-        return false;
-    }
-    LS_LOG_GL_ERR();
-
-    if (!ls::draw::init_ls_draw()) {
-        std::cerr << "Unable to initialize LS Draw." << std::endl;
-        return false;
-    }
-    LS_LOG_GL_ERR();
-
-    return true;
-}
-
-/*-------------------------------------
- * System Runtime
--------------------------------------*/
-void MainState::on_run() {
-    LS_LOG_GL_ERR();
-    
-    renderContext.make_current(*pDisplay);
-    LS_LOG_GL_ERR();
-    
-    renderContext.flip(*pDisplay);
-    LS_LOG_GL_ERR();
-    
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    LS_LOG_GL_ERR();
-}
-
-/*-------------------------------------
- * System Stop
--------------------------------------*/
-void MainState::on_stop() {
-    renderContext.terminate();
-    delete pDisplay;
-    pDisplay = nullptr;
-}
+namespace math = ls::math;
 
 /*-----------------------------------------------------------------------------
  * Main() Methods
@@ -194,16 +83,12 @@ bool init_subsystems() {
         | 0;
 
     if (SDL_Init(sdlInitFlags) < 0) {
-        LS_LOG_ERR(
-            "Unable to initialize SDL due to error ", SDL_GetError(), '\n',
-            "Complain to your local programmer.\n"
-        );
+        std::cerr
+            << "Unable to initialize SDL due to error " << SDL_GetError() << '\n'
+            << "Complain to your local programmer.\n" << std::endl;
         return false;
     }
-    LS_LOG_MSG(
-        "Successfully initialized SDL.\n",
-        SDL_GetError(), '\n'
-    );
+    std::cout << "Successfully initialized SDL.\n" << SDL_GetError() << '\n' << std::endl;
 
     /*
      * Setup the necessary parameters for OpenGL 3.3
