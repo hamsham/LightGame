@@ -110,7 +110,9 @@ unsigned calc_text_geometry_pos(
     pVert = set_text_vertex_data(pVert, stride, vec3{xOffset+rGlyph.size[0], yOffset-rGlyph.size[1], 0.f});
             set_text_vertex_data(pVert, stride, vec3{xOffset+rGlyph.size[0],yOffset, 0.f});
     
-    return get_vertex_byte_size(common_vertex_t::POSITION_VERTEX);
+    //return byte-stride to the next vertex attrib
+    static const unsigned vertOffset = get_vertex_byte_size(common_vertex_t::POSITION_VERTEX);
+    return vertOffset;
 }
 
 /*-------------------------------------
@@ -126,7 +128,9 @@ unsigned calc_text_geometry_uvs(
     pVert = set_text_vertex_data(pVert, stride, vec2{rGlyph.uv[1][0], rGlyph.uv[0][1]});
             set_text_vertex_data(pVert, stride, vec2{rGlyph.uv[1][0], rGlyph.uv[1][1]});
     
-    return get_vertex_byte_size(common_vertex_t::TEXTURE_VERTEX);
+    //return byte-stride to the next vertex attrib
+    static const unsigned vertOffset = get_vertex_byte_size(common_vertex_t::TEXTURE_VERTEX);
+    return vertOffset;
 }
 
 /*-------------------------------------
@@ -142,7 +146,9 @@ unsigned calc_text_geometry_norms(
     pVert = set_text_vertex_data(pVert, stride, normDir);
             set_text_vertex_data(pVert, stride, normDir);
     
-    return get_vertex_byte_size(common_vertex_t::NORMAL_VERTEX);
+    //return byte-stride to the next vertex attrib
+    static const unsigned vertOffset = get_vertex_byte_size(common_vertex_t::NORMAL_VERTEX);
+    return vertOffset;
 }
 
 /*-------------------------------------
@@ -228,59 +234,6 @@ inline char* set_text_geometry_indices(
 /*-------------------------------------
  * Text/String Generation
 -------------------------------------*/
-/*
-void gen_text_geometry(
-    const std::string&  str,
-    char*               pVerts,
-    char*               pIndices,
-    const Atlas&        atlas,
-    const TextMetaData& metaData
-) {
-    using ls::draw::map_buffer_data;
-    
-    // Get pointers to the buffer data that will be filled with quads
-    const AtlasEntry* const pGlyphs = atlas.pEntries;
-    
-    // The y-origin was found using a lot of testing. This was for resolution independence
-    constexpr unsigned nl   = (unsigned)'\n';
-    float yPos              = -((pGlyphs[nl].bearing[1]*2.f)+pGlyphs[nl].bearing[1]-pGlyphs[nl].size[1]);
-    float xPos              = 0.f;
-    unsigned indexOffset    = 0;
-    
-    for (unsigned i = 0; i < str.size(); ++i) {
-        const unsigned currChar     = (unsigned)str[i];
-        const AtlasEntry& rGlyph    = pGlyphs[currChar];
-        const float vertHang        = (rGlyph.bearing[1]-rGlyph.size[1]);
-        
-        if (currChar == '\n') {
-            yPos -= (rGlyph.bearing[1]*2.f)+vertHang; // formula found through trial and error
-            xPos = 0.f;
-        }
-        else if (currChar == '\v') {
-            yPos -= ((rGlyph.bearing[1]*2.f)+vertHang)*MESH_SPACES_PER_TAB;
-            xPos = 0.f;
-        }
-        else if (currChar == '\r') {
-            xPos = 0.f;
-        }
-        else if (currChar == ' ') {
-            xPos += rGlyph.advance[0];
-        }
-        else if (currChar == '\t') {
-            xPos += rGlyph.advance[0]*MESH_SPACES_PER_TAB;
-        }
-        else {
-            const float yOffset = yPos+vertHang;
-            const float xOffset = xPos+rGlyph.bearing[0];
-            xPos                += rGlyph.advance[0];
-            pVerts              = gen_text_geometry_vert(rGlyph, pVerts, xOffset, yOffset, metaData);
-            pIndices            = set_text_geometry_indices(pIndices, indexOffset, metaData);
-            indexOffset         += MESH_VERTS_PER_GLYPH;
-        }
-    }
-}
-*/
-
 void gen_text_geometry(
     const std::string& str,
     char* pVerts,
