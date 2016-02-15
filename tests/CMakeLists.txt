@@ -7,9 +7,29 @@ project(lsgame_tests CXX)
 
 
 # -------------------------------------
+# CMake Setup
+# -------------------------------------
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules" ${CMAKE_MODULE_PATH})
+
+
+
+# -------------------------------------
+# Finders
+# -------------------------------------
+include(FindOpenGL)
+include(FindFreeType)
+
+find_package(SDL2 REQUIRED)
+
+
+
+# -------------------------------------
 # Include Paths
 # -------------------------------------
-include_directories(".")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
+include_directories(${OPENGL_INCLUDE_DIR})
+include_directories(${SDL2_INCLUDE_DIRS})
+include_directories(${FREETYPE_INCLUDE_DIRS})
 
 
 
@@ -35,33 +55,13 @@ set(
     lsgame
 )
 
-
-if(WIN32)
-    set(
-        LS_GAME_EXTERNAL_DEPS
-        SDL2main
-        SDL2
-        freetype
-        FreeImage
-        opengl32
-        mingw32
-    )
-else()
-    set(
-        LS_GAME_EXTERNAL_DEPS
-        SDL2main
-        SDL2
-        freetype
-        freeimage
-    )
-endif(WIN32)
-
-
-
-# -------------------------------------
-# Include Paths
-# -------------------------------------
-include_directories(".")
+set(
+    LS_GAME_EXTERNAL_DEPS
+    ${OPENGL_gl_LIBRARY}
+    ${SDL2_LIBRARIES}
+    ${FREETYPE_LIBRARIES}
+    FreeImage
+)
 
 
 

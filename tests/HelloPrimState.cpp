@@ -310,17 +310,17 @@ void HelloPrimState::setup_prims() {
     };
     const unsigned numVboAttribs = LS_ARRAY_SIZE(vboAttribs);
     
-    assert(ls::draw::init_buffer(this->vbo));
-    ls::draw::bind_buffer(this->vbo);
+    assert(vbo.init());
+    vbo.bind();
     const std::unique_ptr<char[]>&& pData = gen_vertex_data();
-    ls::draw::set_buffer_data(vbo, 3 * ls::draw::get_vertex_byte_size(STANDARD_VERTEX), pData.get(), ls::draw::buffer_access_t::VBO_STATIC_DRAW);
+    vbo.set_data(3 * ls::draw::get_vertex_byte_size(STANDARD_VERTEX), pData.get(), ls::draw::buffer_access_t::VBO_STATIC_DRAW);
     
     assert(this->vao.init());
-    this->vao.bind();
-    this->vao.set_attrib_offsets(vboAttribs, numVboAttribs, ls::draw::get_vertex_byte_size(STANDARD_VERTEX));
-    this->vao.unbind();
+    vao.bind();
+    vao.set_attrib_offsets(vboAttribs, numVboAttribs, ls::draw::get_vertex_byte_size(STANDARD_VERTEX));
+    vao.unbind();
     
-    ls::draw::unbind_buffer(vbo);
+    vbo.unbind();
 }
 
 void HelloPrimState::update_vert_color(const unsigned vertIndex, const bool isVisible) {
@@ -331,16 +331,15 @@ void HelloPrimState::update_vert_color(const unsigned vertIndex, const bool isVi
         colors[1] = 1.f;
     }
     
-    ls::draw::bind_buffer(vbo);
+    vbo.bind();
     
-    ls::draw::set_buffer_sub_data(
-        this->vbo,
+    vbo.set_sub_data(
         (vertIndex * testVertStride) + testTexStride,
         sizeof(colors),
         &colors
     );
     
-    ls::draw::unbind_buffer(vbo);
+    vbo.unbind();
 }
 
 /*-------------------------------------

@@ -13,7 +13,8 @@
 #include <memory>
 
 #include "lightsky/draw/Atlas.h"
-#include "lightsky/draw/BufferObject.h"
+#include "lightsky/draw/VertexBuffer.h"
+#include "lightsky/draw/IndexBuffer.h"
 #include "lightsky/draw/Camera.h"
 #include "lightsky/draw/ShaderProgram.h"
 #include "lightsky/draw/VertexArray.h"
@@ -33,7 +34,7 @@ class HelloPrimState final : public TestRenderState {
         
         ls::draw::ShaderProgram shader;
         
-        ls::draw::BufferObject vbo;
+        ls::draw::VertexBuffer vbo;
         
         ls::draw::VertexArray vao;
         

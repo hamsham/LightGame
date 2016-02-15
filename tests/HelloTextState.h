@@ -11,7 +11,8 @@
 
 
 #include "lightsky/draw/Atlas.h"
-#include "lightsky/draw/BufferObject.h"
+#include "lightsky/draw/VertexBuffer.h"
+#include "lightsky/draw/IndexBuffer.h"
 #include "lightsky/draw/Camera.h"
 #include "lightsky/draw/ShaderProgram.h"
 #include "lightsky/draw/VertexArray.h"
@@ -35,9 +36,9 @@ class HelloTextState final : public TestRenderState {
         
         ls::draw::Atlas atlas;
         
-        ls::draw::BufferObject vbo;
+        ls::draw::VertexBuffer vbo;
         
-        ls::draw::BufferObject ibo;
+        ls::draw::IndexBuffer ibo;
         
         ls::draw::VertexArray vao;
         

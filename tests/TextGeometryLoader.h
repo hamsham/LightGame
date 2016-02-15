@@ -21,9 +21,10 @@ namespace ls {
 namespace draw {
 
 enum common_vertex_t : unsigned;
-struct BufferObject;
 struct Atlas;
 struct AtlasEntry;
+struct IndexBuffer;
+struct VertexBuffer;
 class VertexArray;
 
 /**------------------------------------
@@ -123,8 +124,8 @@ void gen_text_meta_data(
 unsigned load_text_geometry(
     const std::string& str,
     const common_vertex_t vertexTypes,
-    BufferObject& vbo,
-    BufferObject& ibo,
+    VertexBuffer& vbo,
+    IndexBuffer& ibo,
     const Atlas& atlas
 );
 

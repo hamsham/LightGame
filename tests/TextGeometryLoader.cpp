@@ -16,7 +16,8 @@
 #include "lightsky/math/vec3.h"
 
 #include "lightsky/draw/Atlas.h"
-#include "lightsky/draw/BufferObject.h"
+#include "lightsky/draw/VertexBuffer.h"
+#include "lightsky/draw/IndexBuffer.h"
 #include "lightsky/draw/VertexAttrib.h"
 #include "lightsky/draw/VertexUtils.h"
 
@@ -35,6 +36,10 @@ using ls::math::vec3;
 using ls::draw::Atlas;
 using ls::draw::AtlasEntry;
 using ls::draw::BufferObject;
+using ls::draw::VBOAttrib;
+using ls::draw::VertexBuffer;
+using ls::draw::IndexBuffer;
+using ls::draw::IBOAttrib;
 using ls::draw::TextMetaData;
 
 // draw enums
@@ -46,6 +51,7 @@ using ls::draw::buffer_access_t;
 // draw functions
 using ls::draw::get_num_attrib_bytes;
 using ls::draw::get_vertex_byte_size;
+using ls::draw::pack_vertex_normal;
 
 // draw constants
 using ls::draw::TEXT_SPACES_PER_TAB;
@@ -80,11 +86,11 @@ inline char* set_text_vertex_data(
 -------------------------------------*/
 char* allocate_and_map_buffer(BufferObject& buf, const unsigned numBytes) {
     // VBO Allocation
-    set_buffer_data(buf, numBytes, nullptr, buffer_access_t::VBO_STREAM_DRAW);
+    buf.set_data(numBytes, nullptr, buffer_access_t::VBO_STREAM_DRAW);
     LS_LOG_GL_ERR();
 
     // VBO Mapping
-    char* const pBuffer = (char*)map_buffer_data(buf, 0, numBytes, DEFAULT_TEXT_MAPPING_FLAGS);
+    char* const pBuffer = (char*)buf.map_data(0, numBytes, DEFAULT_TEXT_MAPPING_FLAGS);
     LS_LOG_GL_ERR();
 
     if (!pBuffer) {
@@ -141,10 +147,11 @@ unsigned calc_text_geometry_norms(
     const unsigned  stride,
     const vec3&     normDir
 ) {
-    pVert = set_text_vertex_data(pVert, stride, normDir);
-    pVert = set_text_vertex_data(pVert, stride, normDir);
-    pVert = set_text_vertex_data(pVert, stride, normDir);
-            set_text_vertex_data(pVert, stride, normDir);
+    const int32_t norm = pack_vertex_normal(normDir);
+    pVert = set_text_vertex_data(pVert, stride, norm);
+    pVert = set_text_vertex_data(pVert, stride, norm);
+    pVert = set_text_vertex_data(pVert, stride, norm);
+            set_text_vertex_data(pVert, stride, norm);
     
     //return byte-stride to the next vertex attrib
     static const unsigned vertOffset = get_vertex_byte_size(common_vertex_t::NORMAL_VERTEX);
@@ -291,6 +298,22 @@ void gen_text_geometry(
     }
 }
 
+/*-------------------------------------
+ * Update some remaining attributes not set by "vbo/ibo.setup_attribs()"
+-------------------------------------*/
+void update_buffer_attribs(VertexBuffer& vbo, IndexBuffer& ibo, const TextMetaData& metaData) {
+    for (unsigned i = 0; i < vbo.get_num_attribs(); ++i) {
+        VBOAttrib& vboAttrib = vbo.get_attrib(i);
+        
+        vboAttrib.count = metaData.totalVerts;
+        vboAttrib.stride = metaData.vertStride;
+    }
+    
+    for (unsigned i = 0; i < ibo.get_num_attribs(); ++i) {
+        ibo.get_attrib(i).count = metaData.totalIndices;
+    }
+}
+
 } // end anonymous namespace
 
 /*-----------------------------------------------------------------------------
@@ -338,8 +361,8 @@ void draw::gen_text_meta_data(
 unsigned draw::load_text_geometry(
     const std::string&      str,
     const common_vertex_t   vertexTypes,
-    BufferObject&           vbo,
-    BufferObject&           ibo,
+    VertexBuffer&           vbo,
+    IndexBuffer&            ibo,
     const Atlas&            atlas
 ) {
     LS_LOG_MSG("Attempting to load text geometry.");
@@ -350,7 +373,7 @@ unsigned draw::load_text_geometry(
     gen_text_meta_data(metaData, str, vertexTypes);
     
     // Initialize VBO
-    if (!ls::draw::setup_vertex_buffer_attribs(vbo, metaData.vertTypes)) {
+    if (!vbo.setup_attribs(metaData.vertTypes)) {
         LS_LOG_ERR("\tUnable to initialize text geometry meta-data.\n");
         return 0;
     }
@@ -363,8 +386,8 @@ unsigned draw::load_text_geometry(
     }
     
     // Initialize IBO
-    if (!ls::draw::setup_index_buffer_attribs(ibo, metaData.indexType)) {
-        unmap_buffer_data(vbo);
+    if (!ibo.setup_attribs(metaData.indexType)) {
+        vbo.unmap_data();
         LS_LOG_ERR("\tUnable to initialize text index meta-data.\n");
         return 0;
     }
@@ -372,16 +395,17 @@ unsigned draw::load_text_geometry(
     // IBO Mapping
     pIndices = allocate_and_map_buffer(ibo, metaData.totalVertBytes);
     if (!pIndices) {
-        unmap_buffer_data(vbo);
+        vbo.unmap_data();
         LS_LOG_ERR("\tAn error occurred while attempting to map an IBO for text geometry.");
         return false;
     }
     
     // Generate the text geometry
     gen_text_geometry(str, pVerts, pIndices, atlas, metaData);
+    update_buffer_attribs(vbo, ibo, metaData);
     
-    unmap_buffer_data(vbo);
-    unmap_buffer_data(ibo);
+    vbo.unmap_data();
+    ibo.unmap_data();
     
     LS_LOG_MSG(
         "\tSuccessfully sent a string to the GPU.",

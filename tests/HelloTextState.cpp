@@ -24,6 +24,7 @@
 #include "lightsky/draw/FontResource.h"
 #include "lightsky/draw/ShaderObject.h"
 #include "lightsky/draw/ShaderUniform.h"
+#include "lightsky/draw/VAOAssembly.h"
 #include "lightsky/draw/VertexAttrib.h"
 #include "lightsky/draw/VertexUtils.h"
 
@@ -285,8 +286,18 @@ void HelloTextState::set_text(const std::string& text) {
     
     static constexpr common_vertex_t vertTypes = STANDARD_VERTEX;
     
+    vbo.bind();
+    LS_LOG_GL_ERR();
+    ibo.bind();
+    LS_LOG_GL_ERR();
+    
     numTextIndices = ls::draw::load_text_geometry(text, vertTypes, this->vbo, this->ibo, this->atlas);
     assert(numTextIndices > 0);
+    
+    vbo.unbind();
+    LS_LOG_GL_ERR();
+    ibo.unbind();
+    LS_LOG_GL_ERR();
 }
 
 /*-------------------------------------
@@ -296,34 +307,39 @@ void HelloTextState::setup_text() {
     using ls::draw::vertex_data_t;
     using ls::draw::STANDARD_VERTEX;
     
-    assert(init_buffer(vbo, ls::draw::VBO_BUFFER_ARRAY));
+    assert(vbo.init());
     LS_LOG_GL_ERR();
-    assert(init_buffer(ibo, ls::draw::VBO_BUFFER_ELEMENT));
-    LS_LOG_GL_ERR();
-    
-    assert(this->vao.init());
-    LS_LOG_GL_ERR();
-    this->vao.bind();
-    LS_LOG_GL_ERR();
-    
-    ls::draw::bind_buffer(vbo);
-    LS_LOG_GL_ERR();
-    ls::draw::bind_buffer(ibo);
+    assert(ibo.init());
     LS_LOG_GL_ERR();
     
     //set_text("Hello World!");
     set_text(std::move(load_test_text()));
     LS_LOG_GL_ERR();
     
-    this->vao.set_attrib_offsets(vbo.pAttribs.get(), vbo.numAttribs, ls::draw::get_vertex_byte_size(STANDARD_VERTEX));
-    LS_LOG_GL_ERR();
-    this->vao.unbind();
-    LS_LOG_GL_ERR();
+    ls::draw::VAOAssembly* const pAssembly = new(std::nothrow) ls::draw::VAOAssembly{};
     
-    ls::draw::unbind_buffer(vbo);
-    LS_LOG_GL_ERR();
-    ls::draw::unbind_buffer(ibo);
-    LS_LOG_GL_ERR();
+    pAssembly->set_vbo_attribs(vbo);
+    pAssembly->set_ibo_attrib(ibo);
+    
+    LS_ASSERT(pAssembly->set_attrib_name(0, ls::draw::VERT_ATTRIB_NAME_POSITION));
+    LS_ASSERT(pAssembly->set_attrib_name(1, ls::draw::VERT_ATTRIB_NAME_TEXTURE));
+    LS_ASSERT(pAssembly->set_attrib_name(2, ls::draw::VERT_ATTRIB_NAME_NORMAL));
+    
+    unsigned numAttribs = 0;
+    ls::utils::Pointer<ls::draw::VertexAttrib[]> vaoAttribs;
+    
+    LS_ASSERT(pAssembly->assemble_vao(numAttribs, vaoAttribs, vao));
+    
+    LS_LOG_MSG("Validating there are 3 attributes within a VAO.");
+    LS_ASSERT(numAttribs == 3);
+    
+    LS_LOG_MSG("Validating there are 3 attribute objects.");
+    LS_ASSERT(vaoAttribs.get() != nullptr);
+    
+    LS_LOG_MSG("Validating a VAO was successfully created.");
+    LS_ASSERT(vao.is_valid());
+    
+    delete pAssembly;
 }
 
 /*-------------------------------------
@@ -408,6 +424,8 @@ void HelloTextState::on_run() {
 -------------------------------------*/
 void HelloTextState::on_stop() {
     shader.terminate();
+    vbo.terminate();
+    ibo.terminate();
     vao.terminate();
     
     if (pControlState) {
