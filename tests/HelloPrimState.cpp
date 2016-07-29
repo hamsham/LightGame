@@ -1,36 +1,46 @@
-/* 
+/*
  * File:   HelloPrimState.cpp
  * Author: miles
- * 
+ *
  * Created on January 29, 2015
  */
 
 #include <cassert>
 #include <ctime>
 #include <memory>
-#include <string>
+#include <cstring>
 
-#include "lightsky/setup/Macros.h"
+#include "ls/setup/Macros.h"
 
-#include "lightsky/math/Math.h"
+#include "ls/math/Math.h"
 
-#include "lightsky/utils/Log.h"
-#include "lightsky/utils/Pointer.h"
+#include "ls/utils/Log.h"
+#include "ls/utils/Pointer.h"
 
-#include "lightsky/game/GameState.h"
-#include "lightsky/game/GameSystem.h"
+#include "ls/game/GameState.h"
+#include "ls/game/GameSystem.h"
 
-#include "lightsky/draw/FontResource.h"
-#include "lightsky/draw/ShaderObject.h"
-#include "lightsky/draw/ShaderUniform.h"
-#include "lightsky/draw/VertexAttrib.h"
-#include "lightsky/draw/VertexUtils.h"
+#include "ls/draw/PackedVertex.h"
+#include "ls/draw/ShaderAssembly.h"
+#include "ls/draw/ShaderAttrib.h"
+#include "ls/draw/ShaderAttribArray.h"
+#include "ls/draw/ShaderObject.h"
+#include "ls/draw/ShaderUniform.h"
+#include "ls/draw/VAOAssembly.h"
+#include "ls/draw/VAOAttrib.h"
+#include "ls/draw/VertexUtils.h"
 
 #include "HelloPrimState.h"
 #include "ControlState.h"
+#include "Display.h"
+#include "HelloMeshState.h"
 
+
+
+namespace draw = ls::draw;
 namespace math = ls::math;
-    
+namespace utils = ls::utils;
+
 ///////////////////////////////////////////////////////////////////////////////
 //  Private Variables
 ///////////////////////////////////////////////////////////////////////////////
@@ -38,23 +48,25 @@ namespace {
 /*-------------------------------------
  * Model Matrix Uniform Name
 -------------------------------------*/
-//const char* TEXT_MODEL_MATRIX_UNIFORM = "modelMatrix";
+const char* PRIM_MODEL_MAT_UNIFORM_STR = "modelMatrix";
+int PRIM_MODEL_MAT_UNIFORM_ID = -1;
 
 /*-------------------------------------
  * Camera/VP Matrix Uniform Name
 -------------------------------------*/
-//const char* TEXT_VP_MATRIX_UNIFORM = "vpMatrix";
+const char* PRIM_VP_MAT_UNIFORM_STR = "vpMatrix";
+int PRIM_VP_MAT_UNIFORM_ID = -1;
 
 /*-------------------------------------
  * Camera/VP Matrix Uniform Name
 -------------------------------------*/
-//const char* TEXT_COLOR_UNIFORM = "primColor";
+const char* PRIM_COLOR_UNIFORM_STR = "primColor";
+int PRIM_COLOR_UNIFORM_ID = -1;
 
 /*-------------------------------------
  * Vertex Shader
 -------------------------------------*/
-constexpr char const* vData[] = {
-u8R"***(
+constexpr char vsPrimShaderData[] = u8R"***(
 #version 330 core
 
 precision mediump float;
@@ -67,20 +79,20 @@ uniform mat4 vpMatrix;
 uniform mat4 modelMatrix;
 
 out vec2 uvCoords;
+out vec3 normCoords;
 
 void main() {
     mat4 mvp = vpMatrix * modelMatrix;
     gl_Position = mvp * vec4(inPos, 1.0);
     uvCoords = inUv;
+    normCoords = inNorm;
 }
-)***"
-};
+)***";
 
 /*-------------------------------------
  * Fragment Shader
 -------------------------------------*/
-constexpr char const* fData[] = {
-u8R"***(
+constexpr char fsPrimShaderData[] = u8R"***(
 #version 330 core
 
 precision mediump float;
@@ -88,14 +100,14 @@ precision mediump float;
 uniform vec4 primColor;
 
 in vec2 uvCoords;
+in vec3 normCoords;
 
-out vec4 outFragCol;
+out vec4 fragOutColor;
 
 void main() {
-    outFragCol = vec4(uvCoords.xy, primColor.zw);
+    fragOutColor = vec4(normCoords.xyz, primColor.w);
 }
-)***"
-};
+)***";
 
 /*-------------------------------------
  * Primitive vertex data
@@ -113,85 +125,20 @@ static constexpr math::vec2 testTextures[3] = {
     math::vec2{0.5f, 1.f}
 };
 
-static constexpr math::vec3 testNormals[3] = {
-    math::vec3{0.f, 0.f, -1.f},
-    math::vec3{0.f, 0.f, -1.f},
-    math::vec3{0.f, 0.f, -1.f}
+static const int32_t testNormals[3] = {
+    ls::draw::pack_vertex_normal(math::vec3{0.f, 0.f, -1.f}),
+    ls::draw::pack_vertex_normal(math::vec3{0.f, 0.f, -1.f}),
+    ls::draw::pack_vertex_normal(math::vec3{0.f, 0.f, -1.f})
 };
 
-static constexpr unsigned testPosStride = 0;
-static constexpr unsigned testTexStride = sizeof(math::vec3);
-static constexpr unsigned testNormStride = testTexStride + sizeof(math::vec2);
-static constexpr unsigned testVertStride = testNormStride + sizeof(math::vec3);
+static const unsigned testPosStride = 0;
+static const unsigned testTexStride = sizeof (math::vec3);
+static const unsigned testNormStride = testTexStride + sizeof (math::vec2);
+static const unsigned testVertStride = testNormStride + sizeof (int32_t);
 
-static constexpr math::mat4 modelMatrix = math::scale(math::mat4{1.f}, math::vec3{10.f});
+static constexpr math::mat4 modelMatrix = {1.f};
 
-class VertexArray {
-    private:
-        std::unique_ptr<char[]> mData;
-        unsigned mNumVerts;
-        unsigned mStride;
-        
-    public:
-        ~VertexArray();
-        VertexArray();
-        VertexArray(const VertexArray&);
-        VertexArray(VertexArray&&);
-        
-        bool set_vertex_data(
-            const ls::draw::common_vertex_t attribs,
-            const unsigned numVerts,
-            char* const pVertices,
-            unsigned stride,
-            bool canMove = true
-        );
-        
-        const char* operator[] (const unsigned index) const;
-        char* operator[] (const unsigned index);
-};
 
-/*-------------------------------------
- * Test function for FOV-based culling.
- * 
- * TODO: Should the model-view matrix "mvMat" be cached?
--------------------------------------*/
-bool is_point_in_fov(const ls::draw::Camera& cam, math::vec3 point, const float fovReduction = 1.f) {
-    // Get the local camera's absolute position and direction in world-space
-    const math::vec3&& eyePos   = cam.get_abs_position();
-    const math::vec3&& eyeDir   = math::normalize(cam.get_eye_direction());
-    
-    // translate the input point using a model-view matrix (no projection
-    // matrix should be used).
-    const math::mat4&& mvMat    = modelMatrix * cam.get_view_matrix();
-    const math::vec4&& temp     = math::vec4{-point[0], -point[1],-point[2], 0.f} * mvMat;
-    
-    // Move the translated point into the camera's local space
-    point                       = {temp[0], temp[1], temp[2]};
-    point                       = math::normalize(eyePos - point);
-    
-    // Get the cosine of the angle at which the point is oriented from the
-    // camera's view direction
-    const float angleToPoint    = math::dot(point, eyeDir) * cam.get_fov();
-    const float angleOfView     = std::cos(cam.get_fov()) / fovReduction;
-    
-    /* FOV is in radians, pointAngle is from -1 to 1. FOV defines the angle of
-     * a cone by which objects can be clipped within. Through extensive
-     * testing, it appears the difference in units between these two values
-     * doesn't matter :D
-     * 
-     * A variable, fovReduction, has been provided to help grow or shrink the
-     * FOV to account for the camera's viewport dimensions not fitting
-     * perfectly within the clipping cone.
-     *         ______
-     *       /clipping\
-     *      /__________\
-     *     || viewport ||
-     *     ||__________||
-     *      \   cone   /
-     *       \ ______ /
-     */
-    return angleToPoint >= angleOfView;
-}
 
 } // end anonymous namespace
 
@@ -211,7 +158,7 @@ HelloPrimState::HelloPrimState() {
  * Move Constructor
 -------------------------------------*/
 HelloPrimState::HelloPrimState(HelloPrimState&& state) :
-    TestRenderState{}
+    GameState{}
 {
     *this = std::move(state);
 }
@@ -219,184 +166,186 @@ HelloPrimState::HelloPrimState(HelloPrimState&& state) :
 /*-------------------------------------
  * Move Operator
 -------------------------------------*/
-HelloPrimState& HelloPrimState::operator=(HelloPrimState&& state) {
-    TestRenderState::operator=(std::move(state));
-    
-    pControlState = state.pControlState;
-    pControlState->set_render_state(this);
-    state.pControlState = nullptr;
-    
+HelloPrimState& HelloPrimState::operator =(HelloPrimState&& state) {
+    GameState::operator =(std::move(state));
+
+    shader = std::move(state.shader);
+    vbo = std::move(state.vbo);
+    vao = std::move(state.vao);
+
     return *this;
 }
 
 /*-------------------------------------
 -------------------------------------*/
-void HelloPrimState::setup_camera() {
-    camera.set_projection_params(LS_DEG2RAD(60.f), 2000.f, 600.f, 0.1f, 1000.f);
-    camera.look_at(ls::math::vec3{1.0}, math::vec3{LS_EPSILON});
-    camera.make_perspective();
-    camera.lock_y_axis(true);
-    camera.set_view_mode(ls::draw::camera_mode_t::ARCBALL);
-    //camera.set_view_mode(ls::draw::camera_mode_t::FIRST_PERSON);
-    
-    update_camera();
-}
-
-/*-------------------------------------
--------------------------------------*/
 void HelloPrimState::update_camera() {
-    camera.update();
+    const ControlState* const pController = get_parent_system().get_game_state<ControlState>();
+    const math::mat4& vpMatrix = pController->get_camera_view_projection();
     
     shader.bind();
-    ls::draw::set_shader_uniform(0, modelMatrix);
-    ls::draw::set_shader_uniform(1, ls::math::vec4{0.f, 1.f, 0.f, 1.f});
-    ls::draw::set_shader_uniform(2, camera.get_vp_matrix());
+    ls::draw::set_shader_uniform(PRIM_MODEL_MAT_UNIFORM_ID, modelMatrix);
+    ls::draw::set_shader_uniform(PRIM_COLOR_UNIFORM_ID, ls::math::vec4 {0.f, 1.f, 0.f, 1.f});
+    ls::draw::set_shader_uniform(PRIM_VP_MAT_UNIFORM_ID, vpMatrix);
     shader.unbind();
 }
 
 /*-------------------------------------
+ * Update the colors or all triangle vertices
 -------------------------------------*/
-void HelloPrimState::setup_shaders() {
-    ls::draw::vertexShader vShader;
-    ls::draw::fragmentShader fShader;
-    
-    if (!vShader.init(LS_ARRAY_SIZE(vData), vData)) {
-        LS_LOG_GL_ERR();
-        assert(false);
+void HelloPrimState::update_vert_color(const unsigned vertIndex, const bool isVisible) {
+    math::vec3 colors = {1.f, 0.f, 0.f};
+
+    if (!isVisible) {
+        colors[0] = 0.f;
+        colors[1] = 1.f;
     }
-    
-    if (!fShader.init(LS_ARRAY_SIZE(fData), fData)) {
-        LS_LOG_GL_ERR();
-        assert(false);
-    }
-    
-    if (!shader.init(vShader, fShader)) {
-        LS_LOG_GL_ERR();
-        assert(false);
-    }
-    
-    if (!shader.link()) {
-        LS_LOG_GL_ERR();
-        assert(false);
-    }
+
+    const int32_t packedColors = ls::draw::pack_vertex_normal(colors);
+
+    vbo.bind();
+    LS_LOG_GL_ERR();
+
+    vbo.modify((vertIndex * testVertStride) + testNormStride, sizeof (int32_t), &packedColors);
+    LS_LOG_GL_ERR();
+
+    vbo.unbind();
+    LS_LOG_GL_ERR();
 }
 
 /*-------------------------------------
+ * Generate a triangle
 -------------------------------------*/
-std::unique_ptr<char[]> HelloPrimState::gen_vertex_data() {
-    std::unique_ptr<char[]> pData{new char[testVertStride * 3]};
-    
+std::unique_ptr<char[] > HelloPrimState::gen_vertex_data() {
+    std::unique_ptr<char[] > pData {new char[testVertStride * 3]};
+
     // interleave all vertex data
     for (unsigned i = 0; i < 3; ++i) {
-        *reinterpret_cast<math::vec3*>(pData.get() + (i*testVertStride) + testPosStride) = testPositions[i];
-        *reinterpret_cast<math::vec2*>(pData.get() + (i*testVertStride) + testTexStride) = testTextures[i];
-        *reinterpret_cast<math::vec3*>(pData.get() + (i*testVertStride) + testNormStride) = testNormals[i];
+        *reinterpret_cast<math::vec3*>(pData.get() + (i * testVertStride) + testPosStride) = testPositions[i];
+        *reinterpret_cast<math::vec2*>(pData.get() + (i * testVertStride) + testTexStride) = testTextures[i];
+        *reinterpret_cast<int32_t*>(pData.get() + (i * testVertStride) + testNormStride) = testNormals[i];
     }
-    
+
     return pData;
 }
 
 /*-------------------------------------
 -------------------------------------*/
-void HelloPrimState::setup_prims() {
-    using ls::draw::common_vertex_t;
-    using ls::draw::vertex_data_t;
-    using ls::draw::STANDARD_VERTEX;
+void HelloPrimState::setup_shaders() {
+    ls::draw::ShaderProgramAssembly shaderMaker;
+    ls::draw::ShaderObject vShader;
+    ls::draw::ShaderObject fShader;
+
+    if (!vShader.init(ls::draw::SHADER_STAGE_VERTEX, vsPrimShaderData, 0)) {
+        LS_LOG_GL_ERR();
+        LS_ASSERT(false);
+    }
+    else {
+        LS_ASSERT(shaderMaker.set_vertex_shader(vShader));
+    }
+
+    if (!fShader.init(ls::draw::SHADER_STAGE_FRAGMENT, fsPrimShaderData, 0)) {
+        LS_LOG_GL_ERR();
+        LS_ASSERT(false);
+    }
+    else {
+        LS_ASSERT(shaderMaker.set_fragment_shader(fShader));
+    }
+
+    LS_ASSERT(shaderMaker.is_assembly_valid());
+    LS_ASSERT(shaderMaker.assemble(shader, true));
     
-    ls::draw::VertexAttrib vboAttribs[] = {
-        ls::draw::create_vertex_attrib<vertex_data_t::VERTEX_DATA_VEC_3F>(),
-        ls::draw::create_vertex_attrib<vertex_data_t::VERTEX_DATA_VEC_2F>(),
-        ls::draw::create_vertex_attrib<vertex_data_t::VERTEX_DATA_VEC_3F>()
-    };
-    const unsigned numVboAttribs = LS_ARRAY_SIZE(vboAttribs);
+    vShader.terminate();
+    fShader.terminate();
     
-    assert(vbo.init());
-    vbo.bind();
-    const std::unique_ptr<char[]>&& pData = gen_vertex_data();
-    vbo.set_data(3 * ls::draw::get_vertex_byte_size(STANDARD_VERTEX), pData.get(), ls::draw::buffer_access_t::VBO_STATIC_DRAW);
-    
-    assert(this->vao.init());
-    vao.bind();
-    vao.set_attrib_offsets(vboAttribs, numVboAttribs, ls::draw::get_vertex_byte_size(STANDARD_VERTEX));
-    vao.unbind();
-    
-    vbo.unbind();
+    setup_uniforms(shader);
 }
 
-void HelloPrimState::update_vert_color(const unsigned vertIndex, const bool isVisible) {
-    math::vec2 colors = {1.f, 0.f};
+/*-------------------------------------
+-------------------------------------*/
+void HelloPrimState::setup_uniforms(const ls::draw::ShaderProgram& s) {
+    s.bind();
+    LS_LOG_GL_ERR();
     
-    if (!isVisible) {
-        colors[0] = 0.f;
-        colors[1] = 1.f;
+    const draw::ShaderAttribArray& uniforms = s.get_uniforms();
+
+    for (unsigned i = 0; i < uniforms.get_num_attribs(); ++i) {
+        
+        const utils::Pointer<GLchar[]>& uniformName = uniforms.get_attrib_name(i);
+        const GLint index = s.get_uniform_location(uniformName.get());
+
+        if (index < 0) {
+            continue;
+        }
+
+        if (strcmp(uniformName.get(), PRIM_MODEL_MAT_UNIFORM_STR) == 0) {
+            LS_LOG_MSG("Found Model Matrix Uniform ", index, ": ", uniformName);
+            PRIM_MODEL_MAT_UNIFORM_ID = index;
+        }
+        else if (strcmp(uniformName.get(), PRIM_VP_MAT_UNIFORM_STR) == 0) {
+            LS_LOG_MSG("Found VP Matrix Uniform ", index, ": ", uniformName);
+            PRIM_VP_MAT_UNIFORM_ID = index;
+        }
+        else if (strcmp(uniformName.get(), PRIM_COLOR_UNIFORM_STR) == 0) {
+            LS_LOG_MSG("Found Prim Color Unifom", index, ": ", uniformName);
+            PRIM_COLOR_UNIFORM_ID = index;
+        }
+        else {
+            LS_LOG_MSG("Unknown shader uniform found: ", uniformName);
+        }
     }
     
+    s.unbind();
+    LS_LOG_GL_ERR();
+}
+
+/*-------------------------------------
+-------------------------------------*/
+void HelloPrimState::setup_prims() {
+    namespace draw = ls::draw;
+    using draw::common_vertex_t;
+    using draw::vertex_data_t;
+
+    assert(vbo.init());
     vbo.bind();
     
-    vbo.set_sub_data(
-        (vertIndex * testVertStride) + testTexStride,
-        sizeof(colors),
-        &colors
-    );
-    
+    const std::unique_ptr<char[]>&& pData = gen_vertex_data();
+    vbo.setup_attribs(draw::STANDARD_VERTEX);
+    vbo.set_data(3 * draw::get_vertex_byte_size(draw::STANDARD_VERTEX), pData.get(), draw::buffer_access_t::VBO_STATIC_DRAW);
     vbo.unbind();
+
+    draw::VAOAssembly * const pAssembly = new(std::nothrow) draw::VAOAssembly {};
+
+    pAssembly->set_vbo_attribs(vbo);
+
+    LS_ASSERT(pAssembly->set_attrib_name(0, draw::VERT_ATTRIB_NAME_POSITION));
+    LS_ASSERT(pAssembly->set_attrib_name(1, draw::VERT_ATTRIB_NAME_TEXTURE));
+    LS_ASSERT(pAssembly->set_attrib_name(2, draw::VERT_ATTRIB_NAME_NORMAL));
+
+    LS_ASSERT(pAssembly->assemble(vao));
+
+    LS_LOG_MSG("Validating there are 3 attributes within a VAO.");
+    LS_ASSERT(vao.get_num_attribs() == 3);
+
+    LS_LOG_MSG("Validating a VAO was successfully created.");
+    LS_ASSERT(vao.is_valid());
+
+    delete pAssembly;
+
 }
 
 /*-------------------------------------
  * System Startup
 -------------------------------------*/
 bool HelloPrimState::on_start() {
-    using ls::draw::ShaderUniform;
-    using ls::draw::VertexAttrib;
-    
+    using ls::draw::ShaderAttribArray;
+    using ls::draw::VAOAttrib;
+
     setup_shaders();
     setup_prims();
-    setup_camera();
-    
+
     glDisable(GL_CULL_FACE);
-    
-    const std::vector<ShaderUniform>&& uniforms = shader.get_uniforms();
-    const std::vector<VertexAttrib>&& attribs = shader.get_attribs();
-    unsigned i = 0;
-    
-    for (const VertexAttrib a : attribs) {
-        LS_LOG_MSG("Shader Attribute ", i++,
-            "\n\tName:       ", a.name,
-            "\n\tIndex:      ", a.index,
-            "\n\tComponents: ", a.components,
-            "\n\tNormalized: ", (int)a.normalized,
-            "\n\tStride:     ", a.stride,
-            "\n\tOffset:     ", a.offset
-        );
-    }
-    
-    i = 0;
-    for (const ShaderUniform u : uniforms) {
-        LS_LOG_MSG("Shader Uniform ", i++,
-            "\n\tName:       ", u.name,
-            "\n\tIndex:      ", u.index,
-            "\n\tComponents: ", u.components,
-            "\n\tNormalized: ", (int)u.normalized,
-            "\n\tStride:     ", u.stride,
-            "\n\tOffset:     ", u.offset
-        );
-    }
-    
-    pControlState = new ControlState{};
-    if (!pControlState) {
-        LS_LOG_ERR("Error: Unable to create a hardware control state.");
-        return false;
-    }
-    else {
-        pControlState->set_render_state(this);
-        ls::game::GameSystem& sys = get_parent_system();
-        if (!sys.push_game_state(pControlState)) {
-            LS_LOG_ERR("Error: Unable to start the hardware control state.");
-            delete pControlState;
-            return false;
-        }
-    }
-    
+
+
     return true;
 }
 
@@ -406,26 +355,33 @@ bool HelloPrimState::on_start() {
 void HelloPrimState::on_run() {
     this->shader.bind();
     LS_LOG_GL_ERR();
+
+    const ControlState* const pController = get_parent_system().get_game_state<ControlState>();
+    const math::mat4& vpMatrix = pController->get_camera_view_projection();
     
-    camera.update();
-    ls::draw::set_shader_uniform(2, camera.get_vp_matrix());
+    const math::mat4& mvpMat = vpMatrix * modelMatrix;
+    
+    ls::draw::set_shader_uniform(PRIM_VP_MAT_UNIFORM_ID, vpMatrix);
     LS_LOG_GL_ERR();
-    
+
     for (unsigned i = 0; i < LS_ARRAY_SIZE(testPositions); ++i) {
-        const bool isVisible = !is_point_in_fov(camera, testPositions[i]);
-        if (isVisible) {
+        const bool invisible = !draw::is_visible(testPositions[i], mvpMat);
+        if (invisible) {
             LS_LOG_MSG(clock(), " CULLED POINT ", i, '!');
         }
-        
-        update_vert_color(i, isVisible);
+
+        update_vert_color(i, invisible);
     }
-    
+
     this->vao.bind();
     LS_LOG_GL_ERR();
+    
     glDrawArrays(GL_TRIANGLES, 0, 3);
     LS_LOG_GL_ERR();
+    
     this->vao.unbind();
     LS_LOG_GL_ERR();
+    
     this->shader.unbind();
     LS_LOG_GL_ERR();
 }
@@ -436,9 +392,5 @@ void HelloPrimState::on_run() {
 void HelloPrimState::on_stop() {
     shader.terminate();
     vao.terminate();
-    
-    if (pControlState) {
-        pControlState->set_state(ls::game::game_state_t::STOPPED);
-        pControlState = nullptr;
-    }
+    vbo.terminate();
 }

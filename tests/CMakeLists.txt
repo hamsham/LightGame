@@ -1,8 +1,8 @@
-
+﻿
 # -------------------------------------
 # Project Setup
 # -------------------------------------
-project(lsgame_tests CXX)
+project(ls_game_tests CXX)
 
 
 
@@ -16,10 +16,13 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules" ${CMAKE_MODULE
 # -------------------------------------
 # Finders
 # -------------------------------------
+# Only using OpenGL for its libraries, not headers
 include(FindOpenGL)
-include(FindFreeType)
+
+include(FindFreetype)
 
 find_package(SDL2 REQUIRED)
+find_package(ASSIMP REQUIRED)
 
 
 
@@ -31,15 +34,7 @@ include_directories(${OPENGL_INCLUDE_DIR})
 include_directories(${SDL2_INCLUDE_DIRS})
 include_directories(${FREETYPE_INCLUDE_DIRS})
 
-
-
-# -------------------------------------
-# Definitions
-# -------------------------------------
-if (CMAKE_BUILD_TYPE MATCHES "DEBUG" OR CMAKE_BUILD_TYPE MATCHES "RELWITHDEBINFO")
-    message("Building LightSky tests with debug info.")
-    add_definitions(-DLS_DEBUG)
-endif()
+file(GLOB RECURSE __LS_GAME_TEST_H__ EADERS "include/*.h" "include/*.hpp")
 
 
 
@@ -48,11 +43,11 @@ endif()
 # -------------------------------------
 set(
     LS_GAME_INTERNAL_DEPS
-    lssetup
-    lsutils
-    lsmath
-    lsdraw
-    lsgame
+    ls_setup
+    ls_utils
+    ls_math
+    ls_draw
+    ls_game
 )
 
 set(
@@ -60,29 +55,30 @@ set(
     ${OPENGL_gl_LIBRARY}
     ${SDL2_LIBRARIES}
     ${FREETYPE_LIBRARIES}
-    FreeImage
+    ${ASSIMP_LIBRARIES}
+    freeimage
 )
-
 
 
 # -------------------------------------
 # Source Paths
 # -------------------------------------
-set(LS_GAME_PROTO_COMMON_SOURCES
+set(LS_GAME_TEST_SOURCES
     "Context.cpp"
+    "ControlState.cpp"
     "Display.cpp"
-    "MainState.cpp"
-    "TestRenderState.cpp"
+    "HelloMeshState.cpp"
+    "HelloPropertyState.cpp"
     "HelloPrimState.cpp"
     "HelloTextState.cpp"
-    "ControlState.cpp"
-    "TextGeometryLoader.cpp"
+    "MainState.cpp"
 )
 
 set(
-    LS_GAME_PROTO_HELLO_SOURCES
-    "hello_lsgame.cpp"
-    ${LS_GAME_PROTO_COMMON_SOURCES}
+    LS_GAME_TEST_SOURCES_HELLOWORLD
+    "main.cpp"
+    ${LS_GAME_TEST_SOURCES}
+    ${LS_GAME_TEST_HEADERS}
 )
 
 
@@ -90,8 +86,7 @@ set(
 # -------------------------------------
 # Misc Files
 # -------------------------------------
-configure_file(testfont.ttf ${CMAKE_CURRENT_BINARY_DIR}/testfont.ttf COPYONLY)
-configure_file(lorem_ipsum.txt ${CMAKE_CURRENT_BINARY_DIR}/lorem_ipsum.txt COPYONLY)
+file(COPY "${PROJECT_SOURCE_DIR}/testdata" DESTINATION "${PROJECT_BINARY_DIR}")
 
 
 
@@ -104,4 +99,4 @@ function(LS_GAME_ADD_TARGET trg srcs)
     target_link_libraries(${trg} ${LS_GAME_INTERNAL_DEPS} ${LS_GAME_EXTERNAL_DEPS})
 endfunction(LS_GAME_ADD_TARGET)
 
-LS_GAME_ADD_TARGET(hello_lsgame "${LS_GAME_PROTO_HELLO_SOURCES}")
+LS_GAME_ADD_TARGET(hello_eds_game "${LS_GAME_TEST_SOURCES_HELLOWORLD}")

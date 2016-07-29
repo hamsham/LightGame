@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   event.h
  * Author: miles
  *
@@ -6,7 +6,7 @@
  */
 
 #ifndef __LS_GAME_EVENT_H__
-#define	__LS_GAME_EVENT_H__
+#define __LS_GAME_EVENT_H__
 
 #include <cstdint>
 
@@ -19,6 +19,8 @@ namespace game {
 class Subscriber;
 class Dispatcher;
 
+
+
 /**----------------------------------------------------------------------------
  * Basic event structure.
 -----------------------------------------------------------------------------*/
@@ -27,25 +29,25 @@ struct Event {
      * @brief pSource contains a pointer to the source of a event.
      */
     Dispatcher* pSource;
-    
+
     /**
      * @brief A event's baseId should contain enough information about a
      * event to identify where an event came from.
-     * 
+     *
      * For example, a base ID could be something similar to "KEYBOARD_EVENT"
      * while the action ID is "KEY_BUTTON_PRESSED."
      */
     uint32_t baseId;
-    
+
     /**
      * @brief The action id should help subscribers determine what action was
      * performed by the event source.
      */
     uint32_t actionId;
-    
+
     /**
      * @brief pData contains a pointer to any data from within the source
-     * dispatcher. 
+     * dispatcher.
      */
     void* pData;
 };
@@ -53,5 +55,4 @@ struct Event {
 } // end game namespace
 } // end ls namespace
 
-#endif	/* __LS_GAME_EVENT_H__ */
-
+#endif  /* __LS_GAME_EVENT_H__ */

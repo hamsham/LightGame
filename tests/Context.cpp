@@ -7,15 +7,15 @@
 
 #include <iostream>
 
-#include "lightsky/draw/Setup.h" // pull in OpenGL's headers
+#include "ls/draw/Setup.h" // pull in OpenGL's headers
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
 
-#include "lightsky/utils/Log.h"
-#include "lightsky/math/vec2.h"
-#include "lightsky/draw/Color.h"
-#include "lightsky/game/Game.h"
+#include "ls/utils/Log.h"
+#include "ls/math/vec2.h"
+#include "ls/draw/Color.h"
+#include "ls/game/Game.h"
 namespace math = ls::math;
 
 #include "Display.h"
@@ -25,14 +25,15 @@ namespace math = ls::math;
     Render Context constructor
 -------------------------------------*/
 Context::Context() :
-    pContext{nullptr}
-{}
+    pContext {nullptr}
+{
+}
 
 /*-------------------------------------
     Render Context move constructor
 -------------------------------------*/
 Context::Context(Context&& r) :
-    pContext{r.pContext}
+    pContext {r.pContext}
 {
     r.pContext = nullptr;
 }
@@ -40,7 +41,7 @@ Context::Context(Context&& r) :
 /*-------------------------------------
     Render Context move operator
 -------------------------------------*/
-Context& Context::operator=(Context&& r) {
+Context& Context::operator =(Context&& r) {
     pContext = r.pContext;
     r.pContext = nullptr;
 
@@ -74,7 +75,7 @@ bool Context::init(const Display& disp, bool useVsync) {
             "\tUnable to create a render context through SDL.",
             "\n\t", SDL_GetError(),
             '\n'
-        );
+            );
         terminate();
         return false;
     }
@@ -82,7 +83,7 @@ bool Context::init(const Display& disp, bool useVsync) {
 
     // Quick setup in order to normalize OpenGL to the display coordinates.
     this->make_current(disp);
-    
+
     const math::vec2i&& displayRes = disp.get_resolution();
     glViewport(0, 0, displayRes[0], displayRes[1]);
     LS_LOG_GL_ERR();
@@ -91,7 +92,7 @@ bool Context::init(const Display& disp, bool useVsync) {
     const ls::draw::color::color& mgcPnk = ls::draw::color::magenta;
     glClearColor(mgcPnk[0], mgcPnk[1], mgcPnk[2], mgcPnk[3]);
     LS_LOG_GL_ERR();
-    
+
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     LS_LOG_GL_ERR();
 
@@ -100,7 +101,7 @@ bool Context::init(const Display& disp, bool useVsync) {
     LS_LOG_MSG(
         "\tSuccessfully initialized a OpenGL 3.3-compatible render context:"
         "\n\tV-Sync: ", get_vsync()
-    );
+        );
 
     LS_LOG_MSG("\tSuccessfully initialized the OpenGL 3.3 render context.\n");
 

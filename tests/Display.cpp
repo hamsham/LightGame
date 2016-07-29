@@ -14,10 +14,10 @@
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_render.h>
 
-#include "lightsky/utils/Assertions.h"
-#include "lightsky/utils/Log.h"
-#include "lightsky/math/vec2.h"
-#include "lightsky/game/Game.h"
+#include "ls/utils/Assertions.h"
+#include "ls/utils/Log.h"
+#include "ls/math/vec2.h"
+#include "ls/game/Game.h"
 namespace math = ls::math;
 
 #include "Display.h"
@@ -33,21 +33,21 @@ namespace math = ls::math;
 void printWindowFlags(uint32_t flags) {
     LS_LOG_MSG(
         "\tWindow Flags:\n",
-        "\t\tSDL_WINDOW_FULLSCREEN:         ",  0 < (flags & SDL_WINDOW_FULLSCREEN), '\n',
-        "\t\tSDL_WINDOW_FULLSCREEN_DESKTOP: ",  0 < (flags & SDL_WINDOW_FULLSCREEN_DESKTOP), '\n',
-        "\t\tSDL_WINDOW_OPENGL:             ",  0 < (flags & SDL_WINDOW_OPENGL), '\n',
-        "\t\tSDL_WINDOW_SHOWN:              ",  0 < (flags & SDL_WINDOW_SHOWN), '\n',
-        "\t\tSDL_WINDOW_HIDDEN:             ",  0 < (flags & SDL_WINDOW_HIDDEN), '\n',
-        "\t\tSDL_WINDOW_BORDERLESS:         ",  0 < (flags & SDL_WINDOW_BORDERLESS), '\n',
-        "\t\tSDL_WINDOW_RESIZABLE:          ",  0 < (flags & SDL_WINDOW_RESIZABLE), '\n',
-        "\t\tSDL_WINDOW_MINIMIZED:          ",  0 < (flags & SDL_WINDOW_MINIMIZED), '\n',
-        "\t\tSDL_WINDOW_MAXIMIZED:          ",  0 < (flags & SDL_WINDOW_MAXIMIZED), '\n',
-        "\t\tSDL_WINDOW_INPUT_GRABBED:      ",  0 < (flags & SDL_WINDOW_INPUT_GRABBED), '\n',
-        "\t\tSDL_WINDOW_INPUT_FOCUS:        ",  0 < (flags & SDL_WINDOW_INPUT_FOCUS), '\n',
-        "\t\tSDL_WINDOW_MOUSE_FOCUS:        ",  0 < (flags & SDL_WINDOW_MOUSE_FOCUS), '\n',
-        "\t\tSDL_WINDOW_FOREIGN:            ",  0 < (flags & SDL_WINDOW_FOREIGN), '\n',
-        "\t\tSDL_WINDOW_ALLOW_HIGHDPI:      ",  0 < (flags & SDL_WINDOW_ALLOW_HIGHDPI), '\n'
-    );
+        "\t\tSDL_WINDOW_FULLSCREEN:         ", 0 < (flags & SDL_WINDOW_FULLSCREEN), '\n',
+        "\t\tSDL_WINDOW_FULLSCREEN_DESKTOP: ", 0 < (flags & SDL_WINDOW_FULLSCREEN_DESKTOP), '\n',
+        "\t\tSDL_WINDOW_OPENGL:             ", 0 < (flags & SDL_WINDOW_OPENGL), '\n',
+        "\t\tSDL_WINDOW_SHOWN:              ", 0 < (flags & SDL_WINDOW_SHOWN), '\n',
+        "\t\tSDL_WINDOW_HIDDEN:             ", 0 < (flags & SDL_WINDOW_HIDDEN), '\n',
+        "\t\tSDL_WINDOW_BORDERLESS:         ", 0 < (flags & SDL_WINDOW_BORDERLESS), '\n',
+        "\t\tSDL_WINDOW_RESIZABLE:          ", 0 < (flags & SDL_WINDOW_RESIZABLE), '\n',
+        "\t\tSDL_WINDOW_MINIMIZED:          ", 0 < (flags & SDL_WINDOW_MINIMIZED), '\n',
+        "\t\tSDL_WINDOW_MAXIMIZED:          ", 0 < (flags & SDL_WINDOW_MAXIMIZED), '\n',
+        "\t\tSDL_WINDOW_INPUT_GRABBED:      ", 0 < (flags & SDL_WINDOW_INPUT_GRABBED), '\n',
+        "\t\tSDL_WINDOW_INPUT_FOCUS:        ", 0 < (flags & SDL_WINDOW_INPUT_FOCUS), '\n',
+        "\t\tSDL_WINDOW_MOUSE_FOCUS:        ", 0 < (flags & SDL_WINDOW_MOUSE_FOCUS), '\n',
+        "\t\tSDL_WINDOW_FOREIGN:            ", 0 < (flags & SDL_WINDOW_FOREIGN), '\n',
+        "\t\tSDL_WINDOW_ALLOW_HIGHDPI:      ", 0 < (flags & SDL_WINDOW_ALLOW_HIGHDPI), '\n'
+        );
 }
 
 /*-------------------------------------
@@ -61,8 +61,8 @@ Display::Display() {
     Display move constructor
 -------------------------------------*/
 Display::Display(Display&& d) :
-    pWindow{d.pWindow},
-    windowIsNative{d.windowIsNative}
+    pWindow {d.pWindow},
+windowIsNative {d.windowIsNative}
 {
     d.pWindow = nullptr;
     d.windowIsNative = false;
@@ -71,7 +71,7 @@ Display::Display(Display&& d) :
 /*-------------------------------------
     Display move operator
 -------------------------------------*/
-Display& Display::operator=(Display&& d) {
+Display& Display::operator =(Display&& d) {
     pWindow = d.pWindow;
     d.pWindow = nullptr;
 
@@ -102,9 +102,9 @@ bool Display::init(void* const hwnd) {
     LS_LOG_MSG("\tLoading internal flags for a native window.");
 
 
-    Display tempDisp{};
+    Display tempDisp {};
 
-    if (!tempDisp.init(math::vec2i{0})) {
+    if (!tempDisp.init(math::vec2i {0})) {
         LS_LOG_ERR("\tUnable to create a shared context for a native window.\n");
         return false;
     }
@@ -113,7 +113,7 @@ bool Display::init(void* const hwnd) {
 
         // SDL requires a string, containing the SDL_Window* pointer, to be
         // formatted with "%p". using std::to_string() does not work.
-        char nativeHandleStr[sizeof(void*)*2]; // <--- only big enough to stringify a pointer
+        char nativeHandleStr[sizeof (void*)*2]; // <--- only big enough to stringify a pointer
         sprintf(nativeHandleStr, "%p", (void*)tempDisp.get_window());
 
         LS_LOG_MSG("\tCopying window flags from ", nativeHandleStr, " to ", hwnd, '.');
@@ -121,7 +121,7 @@ bool Display::init(void* const hwnd) {
         const int wasFlagCopied = SDL_SetHintWithPriority(
             SDL_HINT_VIDEO_WINDOW_SHARE_PIXEL_FORMAT,
             nativeHandleStr, SDL_HINT_OVERRIDE
-        );
+            );
 
         if (wasFlagCopied != SDL_TRUE) {
             LS_LOG_ERR("\tUnable to toggle internal OpenGL 3.3 compatibility.\n");
@@ -155,11 +155,11 @@ bool Display::init(const math::vec2i inResolution, bool isFullScreen) {
     LS_LOG_MSG("Attempting to create an OpenGL 3.3-compatible display through SDL.");
 
     Uint32 windowFlags =
-        SDL_WINDOW_OPENGL       |
-        SDL_WINDOW_SHOWN        |
-        SDL_WINDOW_INPUT_FOCUS  |
-        SDL_WINDOW_MOUSE_FOCUS  |
-        SDL_WINDOW_RESIZABLE    |
+        SDL_WINDOW_OPENGL |
+        SDL_WINDOW_SHOWN |
+        SDL_WINDOW_INPUT_FOCUS |
+        SDL_WINDOW_MOUSE_FOCUS |
+        SDL_WINDOW_RESIZABLE |
         0;
 
     if (isFullScreen) {
@@ -174,7 +174,7 @@ bool Display::init(const math::vec2i inResolution, bool isFullScreen) {
     pWindow = SDL_CreateWindow(
         "LightSky", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         inResolution[0], inResolution[1], windowFlags
-    );
+        );
 
     if (!pWindow) {
         LS_LOG_ERR("\tUnable to create a display object.");
@@ -208,7 +208,7 @@ void Display::terminate() {
 const math::vec2i Display::get_resolution() const {
     int x, y;
     SDL_GetWindowSize(pWindow, &x, &y);
-    return math::vec2i{x, y};
+    return math::vec2i {x, y};
 }
 
 /*-------------------------------------
@@ -237,7 +237,7 @@ void Display::set_fullscreen(bool fs) {
 -------------------------------------*/
 bool Display::is_fullscreen() const {
     return pWindow != nullptr
-    && (SDL_GetWindowFlags(pWindow) & SDL_WINDOW_FULLSCREEN) != 0;
+        && (SDL_GetWindowFlags(pWindow) & SDL_WINDOW_FULLSCREEN) != 0;
 }
 
 /*-------------------------------------
@@ -268,7 +268,6 @@ fullscreen_t Display::get_fullscreen_mode() const {
         ? FULLSCREEN_DISPLAY
         : FULLSCREEN_WINDOW;
 }
-
 
 /*-------------------------------------
     Get a handle to the SDL_Window responsible for the window that this

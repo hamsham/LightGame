@@ -5,9 +5,9 @@
  * Created on November 20, 2014, 10:24 PM
  */
 
-#include "lightsky/game/Event.h"
-#include "lightsky/game/Subscriber.h"
-#include "lightsky/game/Dispatcher.h"
+#include "ls/game/Event.h"
+#include "ls/game/Subscriber.h"
+#include "ls/game/Dispatcher.h"
 
 namespace ls {
 namespace game {
@@ -43,7 +43,7 @@ Subscriber::Subscriber(Subscriber&& s) {
 /*-------------------------------------
  * Copy Operator
 -------------------------------------*/
-Subscriber& Subscriber::operator=(const Subscriber& s) {
+Subscriber& Subscriber::operator =(const Subscriber& s) {
     set_dispatcher(s.pParent);
     return *this;
 }
@@ -51,7 +51,7 @@ Subscriber& Subscriber::operator=(const Subscriber& s) {
 /*-------------------------------------
  * Move Operator
 -------------------------------------*/
-Subscriber& Subscriber::operator=(Subscriber&& s) {
+Subscriber& Subscriber::operator =(Subscriber&& s) {
     set_dispatcher(s.pParent);
     s.set_dispatcher(nullptr);
     return *this;
@@ -60,7 +60,7 @@ Subscriber& Subscriber::operator=(Subscriber&& s) {
 /*-------------------------------------
  * Set the parent dispatcher
 -------------------------------------*/
-void Subscriber::set_dispatcher(Dispatcher* const pDispatcher) {
+void Subscriber::set_dispatcher(Dispatcher * const pDispatcher) {
     if (pParent == pDispatcher) {
         return;
     }

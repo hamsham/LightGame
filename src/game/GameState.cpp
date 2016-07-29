@@ -5,7 +5,7 @@
  * Created on November 15, 2013, 8:45 PM
  */
 
-#include "lightsky/game/GameState.h"
+#include "ls/game/GameState.h"
 
 namespace ls {
 namespace game {
@@ -26,19 +26,19 @@ GameState::GameState() {
     Move Constructor
 -------------------------------------*/
 GameState::GameState(GameState&& gs) :
-    currentState{gs.currentState},
-    pSystem{gs.pSystem}
+    currentState {gs.currentState},
+pSystem {gs.pSystem}
 {
-    gs.currentState = game_state_t::STOPPED;
+    gs.currentState = game_state_status_t::STOPPED;
 }
 
 /*-------------------------------------
     Move Operator
 -------------------------------------*/
-GameState& GameState::operator=(GameState&& gs) {
+GameState& GameState::operator =(GameState&& gs) {
 
     currentState = gs.currentState;
-    gs.currentState = game_state_t::STOPPED;
+    gs.currentState = game_state_status_t::STOPPED;
 
     pSystem = gs.pSystem;
 

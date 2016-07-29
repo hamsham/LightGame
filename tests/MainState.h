@@ -1,5 +1,5 @@
 
-/* 
+/*
  * File:   MainState.h
  * Author: miles
  *
@@ -9,36 +9,59 @@
 #ifndef MAINSTATE_H
 #define MAINSTATE_H
 
-#include "lightsky/game/Game.h"
+#include "ls/utils/Pointer.h"
+#include "ls/game/Game.h"
 
 #include "Context.h"
+
+
+
+/*-----------------------------------------------------------------------------
+ * Forward Declarations
+-----------------------------------------------------------------------------*/
+class Display;
+
+
+
+/*-----------------------------------------------------------------------------
+ * Objects global to the main program state
+-----------------------------------------------------------------------------*/
+namespace global {
+    extern ls::utils::Pointer<Display> pDisplay;
+}
+
+
 
 /*-----------------------------------------------------------------------------
  * Example System Object
 -----------------------------------------------------------------------------*/
 class MainState final : virtual public ls::game::GameState {
-    private:
-        Context renderContext;
+  private:
+    Context renderContext;
+    
+    bool bootstrap_subsystems();
+    
+    bool setup_substates();
 
-    public:
-        MainState();
+  public:
+    MainState();
 
-        MainState(const MainState&) = delete;
+    MainState(const MainState&) = delete;
 
-        MainState(MainState&&);
+    MainState(MainState&&);
 
-        virtual ~MainState();
+    virtual ~MainState();
 
-        MainState& operator=(const MainState&) = delete;
+    MainState& operator=(const MainState&) = delete;
 
-        MainState& operator=(MainState&&);
+    MainState& operator=(MainState&&);
 
-    protected:
-        virtual bool on_start() override;
+  protected:
+    virtual bool on_start() override;
 
-        virtual void on_run() override;
+    virtual void on_run() override;
 
-        virtual void on_stop() override;
+    virtual void on_stop() override;
 };
 
 #endif /* MAINSTATE_H */
