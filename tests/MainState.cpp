@@ -8,11 +8,11 @@
 
 #include <SDL2/SDL.h>
 
-#include "ls/utils/Log.h"
+#include "lightsky/utils/Log.h"
 
-#include "ls/draw/Setup.h"
+#include "lightsky/draw/Setup.h"
 
-#include "ls/game/GameSystem.h"
+#include "lightsky/game/GameSystem.h"
 
 #include "MainState.h"
 #include "Display.h"

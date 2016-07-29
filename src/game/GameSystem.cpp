@@ -9,11 +9,11 @@
 #include <utility> // std::move
 #include <chrono> // std::chrono::steady_clock, std::chrono::milliseconds
 
-#include "ls/utils/Assertions.h"
+#include "lightsky/utils/Assertions.h"
 
-#include "ls/game/Setup.h"
-#include "ls/game/GameState.h"
-#include "ls/game/GameSystem.h"
+#include "lightsky/game/Setup.h"
+#include "lightsky/game/GameState.h"
+#include "lightsky/game/GameSystem.h"
 
 namespace ls {
 namespace game {

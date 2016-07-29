@@ -8,13 +8,13 @@
 #ifndef __LS_GAME_H__
 #define __LS_GAME_H__
 
-#include "ls/game/Setup.h"
+#include "lightsky/game/Setup.h"
 
-#include "ls/game/Dispatcher.h"
-#include "ls/game/Event.h"
-#include "ls/game/GameState.h"
-#include "ls/game/GameSystem.h"
-#include "ls/game/Manager.h"
-#include "ls/game/Subscriber.h"
+#include "lightsky/game/Dispatcher.h"
+#include "lightsky/game/Event.h"
+#include "lightsky/game/GameState.h"
+#include "lightsky/game/GameSystem.h"
+#include "lightsky/game/Manager.h"
+#include "lightsky/game/Subscriber.h"
 
 #endif  /* __LS_GAME_H__ */

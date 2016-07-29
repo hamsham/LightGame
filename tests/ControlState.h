@@ -11,14 +11,14 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
 
-#include "ls/math/mat4.h"
+#include "lightsky/math/mat4.h"
 
-#include "ls/utils/Pointer.h"
+#include "lightsky/utils/Pointer.h"
 
-#include "ls/draw/Camera.h"
-#include "ls/draw/Transform.h"
+#include "lightsky/draw/Camera.h"
+#include "lightsky/draw/Transform.h"
 
-#include "ls/game/GameState.h"
+#include "lightsky/game/GameState.h"
 
 class TestRenderState;
 

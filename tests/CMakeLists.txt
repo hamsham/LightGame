@@ -34,7 +34,7 @@ include_directories(${OPENGL_INCLUDE_DIR})
 include_directories(${SDL2_INCLUDE_DIRS})
 include_directories(${FREETYPE_INCLUDE_DIRS})
 
-file(GLOB RECURSE __LS_GAME_TEST_H__ EADERS "include/*.h" "include/*.hpp")
+file(GLOB RECURSE LS_GAME_TEST_HEADERS "include/*.h" "include/*.hpp")
 
 
 
@@ -43,11 +43,11 @@ file(GLOB RECURSE __LS_GAME_TEST_H__ EADERS "include/*.h" "include/*.hpp")
 # -------------------------------------
 set(
     LS_GAME_INTERNAL_DEPS
-    ls_setup
-    ls_utils
-    ls_math
-    ls_draw
-    ls_game
+    lssetup
+    lsutils
+    lsmath
+    lsdraw
+    lsgame
 )
 
 set(

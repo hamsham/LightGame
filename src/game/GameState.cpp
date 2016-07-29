@@ -5,7 +5,7 @@
  * Created on November 15, 2013, 8:45 PM
  */
 
-#include "ls/game/GameState.h"
+#include "lightsky/game/GameState.h"
 
 namespace ls {
 namespace game {

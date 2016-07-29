@@ -8,7 +8,7 @@
 #ifndef __LS_GAME_SUBSCRIBER_H__
 #define __LS_GAME_SUBSCRIBER_H__
 
-#include "ls/game/Event.h"
+#include "lightsky/game/Event.h"
 
 namespace ls {
 namespace game {

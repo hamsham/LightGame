@@ -5,9 +5,9 @@
  * Created on November 20, 2014, 10:27 PM
  */
 
-#include "ls/game/Event.h"
-#include "ls/game/Subscriber.h"
-#include "ls/game/Dispatcher.h"
+#include "lightsky/game/Event.h"
+#include "lightsky/game/Subscriber.h"
+#include "lightsky/game/Dispatcher.h"
 
 namespace ls {
 namespace game {

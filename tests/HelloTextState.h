@@ -10,17 +10,17 @@
 
 #include <vector>
 
-#include "ls/draw/Atlas.h"
-#include "ls/draw/BoundingBox.h"
-#include "ls/draw/Camera.h"
-#include "ls/draw/FrameBuffer.h"
-#include "ls/draw/PixelBuffer.h"
-#include "ls/draw/RenderBuffer.h"
-#include "ls/draw/SceneGraph.h"
-#include "ls/draw/ShaderProgram.h"
-#include "ls/draw/Texture.h"
+#include "lightsky/draw/Atlas.h"
+#include "lightsky/draw/BoundingBox.h"
+#include "lightsky/draw/Camera.h"
+#include "lightsky/draw/FrameBuffer.h"
+#include "lightsky/draw/PixelBuffer.h"
+#include "lightsky/draw/RenderBuffer.h"
+#include "lightsky/draw/SceneGraph.h"
+#include "lightsky/draw/ShaderProgram.h"
+#include "lightsky/draw/Texture.h"
 
-#include "ls/game/GameState.h"
+#include "lightsky/game/GameState.h"
 
 
 

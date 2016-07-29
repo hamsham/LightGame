@@ -8,11 +8,11 @@
 #include <new> // std::nothrow
 #include <utility> // std::move
 
-#include "ls/math/Math.h"
+#include "lightsky/math/Math.h"
 
-#include "ls/draw/Setup.h"
+#include "lightsky/draw/Setup.h"
 
-#include "ls/game/GameSystem.h"
+#include "lightsky/game/GameSystem.h"
 
 #include "MainState.h"
 #include "Display.h"

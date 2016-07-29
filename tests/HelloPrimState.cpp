@@ -10,25 +10,25 @@
 #include <memory>
 #include <cstring>
 
-#include "ls/setup/Macros.h"
+#include "lightsky/setup/Macros.h"
 
-#include "ls/math/Math.h"
+#include "lightsky/math/Math.h"
 
-#include "ls/utils/Log.h"
-#include "ls/utils/Pointer.h"
+#include "lightsky/utils/Log.h"
+#include "lightsky/utils/Pointer.h"
 
-#include "ls/game/GameState.h"
-#include "ls/game/GameSystem.h"
+#include "lightsky/game/GameState.h"
+#include "lightsky/game/GameSystem.h"
 
-#include "ls/draw/PackedVertex.h"
-#include "ls/draw/ShaderAssembly.h"
-#include "ls/draw/ShaderAttrib.h"
-#include "ls/draw/ShaderAttribArray.h"
-#include "ls/draw/ShaderObject.h"
-#include "ls/draw/ShaderUniform.h"
-#include "ls/draw/VAOAssembly.h"
-#include "ls/draw/VAOAttrib.h"
-#include "ls/draw/VertexUtils.h"
+#include "lightsky/draw/PackedVertex.h"
+#include "lightsky/draw/ShaderAssembly.h"
+#include "lightsky/draw/ShaderAttrib.h"
+#include "lightsky/draw/ShaderAttribArray.h"
+#include "lightsky/draw/ShaderObject.h"
+#include "lightsky/draw/ShaderUniform.h"
+#include "lightsky/draw/VAOAssembly.h"
+#include "lightsky/draw/VAOAttrib.h"
+#include "lightsky/draw/VertexUtils.h"
 
 #include "HelloPrimState.h"
 #include "ControlState.h"

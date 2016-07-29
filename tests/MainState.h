@@ -9,8 +9,8 @@
 #ifndef MAINSTATE_H
 #define MAINSTATE_H
 
-#include "ls/utils/Pointer.h"
-#include "ls/game/Game.h"
+#include "lightsky/utils/Pointer.h"
+#include "lightsky/game/Game.h"
 
 #include "Context.h"
 

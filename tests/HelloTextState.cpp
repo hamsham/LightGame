@@ -10,17 +10,17 @@
 #include <algorithm>
 #include <string>
 
-#include "ls/setup/Setup.h"
-#include "ls/math/Math.h"
-#include "ls/utils/Utils.h"
-#include "ls/game/Game.h"
-#include "ls/draw/Draw.h"
-#include "ls/draw/OcclusionMeshLoader.h"
-#include "ls/draw/TextMeshLoader.h"
-#include "ls/draw/TextureAssembly.h"
-#include "ls/draw/FBOAssembly.h"
-#include "ls/draw/FBOAttrib.h"
-#include "ls/draw/RBOAssembly.h"
+#include "lightsky/setup/Setup.h"
+#include "lightsky/math/Math.h"
+#include "lightsky/utils/Utils.h"
+#include "lightsky/game/Game.h"
+#include "lightsky/draw/Draw.h"
+#include "lightsky/draw/OcclusionMeshLoader.h"
+#include "lightsky/draw/TextMeshLoader.h"
+#include "lightsky/draw/TextureAssembly.h"
+#include "lightsky/draw/FBOAssembly.h"
+#include "lightsky/draw/FBOAttrib.h"
+#include "lightsky/draw/RBOAssembly.h"
 
 #include "MainState.h"
 #include "Display.h"

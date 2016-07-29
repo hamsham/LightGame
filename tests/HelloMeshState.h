@@ -12,13 +12,13 @@
 #include <vector>
 #include <future>
 
-#include "ls/draw/AnimationPlayer.h"
-#include "ls/draw/SceneGraph.h"
-#include "ls/draw/SceneFileLoader.h"
-#include "ls/draw/ShaderProgram.h"
-#include "ls/draw/UniformBuffer.h"
+#include "lightsky/draw/AnimationPlayer.h"
+#include "lightsky/draw/SceneGraph.h"
+#include "lightsky/draw/SceneFileLoader.h"
+#include "lightsky/draw/ShaderProgram.h"
+#include "lightsky/draw/UniformBuffer.h"
 
-#include "ls/game/GameState.h"
+#include "lightsky/game/GameState.h"
 
 
 

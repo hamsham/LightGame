@@ -10,11 +10,11 @@
 #include <algorithm>
 #include <string>
 
-#include "ls/setup/Setup.h"
-#include "ls/math/Math.h"
-#include "ls/utils/Utils.h"
-#include "ls/draw/Draw.h"
-#include "ls/game/Game.h"
+#include "lightsky/setup/Setup.h"
+#include "lightsky/math/Math.h"
+#include "lightsky/utils/Utils.h"
+#include "lightsky/draw/Draw.h"
+#include "lightsky/game/Game.h"
 
 #include "Display.h"
 #include "HelloMeshState.h"

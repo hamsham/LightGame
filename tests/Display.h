@@ -8,7 +8,7 @@
 #ifndef DISPLAY_H
 #define DISPLAY_H
 
-#include "ls/math/vec2.h"
+#include "lightsky/math/vec2.h"
 
 
 /*-----------------------------------------------------------------------------

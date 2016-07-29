@@ -12,15 +12,15 @@
 #include <locale>
 #include <utility>
 
-#include "ls/setup/Setup.h"
+#include "lightsky/setup/Setup.h"
 
-#include "ls/math/Math.h"
+#include "lightsky/math/Math.h"
 
-#include "ls/utils/Utils.h"
-#include "ls/utils/Copy.h"
+#include "lightsky/utils/Utils.h"
+#include "lightsky/utils/Copy.h"
 
-#include "ls/game/Game.h"
-#include "ls/draw/Draw.h"
+#include "lightsky/game/Game.h"
+#include "lightsky/draw/Draw.h"
 
 #include "Display.h"
 #include "HelloPropertyState.h"

@@ -14,10 +14,10 @@
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_render.h>
 
-#include "ls/utils/Assertions.h"
-#include "ls/utils/Log.h"
-#include "ls/math/vec2.h"
-#include "ls/game/Game.h"
+#include "lightsky/utils/Assertions.h"
+#include "lightsky/utils/Log.h"
+#include "lightsky/math/vec2.h"
+#include "lightsky/game/Game.h"
 namespace math = ls::math;
 
 #include "Display.h"

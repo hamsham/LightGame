@@ -11,7 +11,7 @@
 #include <vector>
 #include <unordered_map>
 
-#include "ls/game/Event.h"
+#include "lightsky/game/Event.h"
 
 namespace ls {
 namespace game {

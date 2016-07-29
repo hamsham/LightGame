@@ -7,15 +7,15 @@
 
 #include <iostream>
 
-#include "ls/draw/Setup.h" // pull in OpenGL's headers
+#include "lightsky/draw/Setup.h" // pull in OpenGL's headers
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
 
-#include "ls/utils/Log.h"
-#include "ls/math/vec2.h"
-#include "ls/draw/Color.h"
-#include "ls/game/Game.h"
+#include "lightsky/utils/Log.h"
+#include "lightsky/math/vec2.h"
+#include "lightsky/draw/Color.h"
+#include "lightsky/game/Game.h"
 namespace math = ls::math;
 
 #include "Display.h"

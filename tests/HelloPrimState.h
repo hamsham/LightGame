@@ -12,11 +12,11 @@
 
 #include <memory>
 
-#include "ls/draw/VertexBuffer.h"
-#include "ls/draw/ShaderProgram.h"
-#include "ls/draw/VertexArray.h"
+#include "lightsky/draw/VertexBuffer.h"
+#include "lightsky/draw/ShaderProgram.h"
+#include "lightsky/draw/VertexArray.h"
 
-#include "ls/game/GameState.h"
+#include "lightsky/game/GameState.h"
 
 
 
