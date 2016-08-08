@@ -8,6 +8,8 @@
 #ifndef __LS_GAME_SUBSCRIBER_H__
 #define __LS_GAME_SUBSCRIBER_H__
 
+#include "lightsky/setup/Api.h"
+
 #include "lightsky/game/Event.h"
 
 namespace ls {
@@ -27,7 +29,7 @@ namespace game {
  * Event subscribers must be derived and have the virtual "handleEvent()"
  * function overridden.
 -----------------------------------------------------------------------------*/
-class Subscriber {
+class LS_API Subscriber {
     friend class Dispatcher;
 
   private:

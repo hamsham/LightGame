@@ -11,6 +11,8 @@
 #include <vector>
 #include <unordered_map>
 
+#include "lightsky/setup/Api.h"
+
 #include "lightsky/game/Event.h"
 
 namespace ls {
@@ -27,7 +29,7 @@ namespace game {
  * dereferenced if this object goes out of their scope (i.e. if a call to
  * "delete" is made or an instance is destroyed).
 -----------------------------------------------------------------------------*/
-class Dispatcher {
+class LS_API Dispatcher {
     friend class Subscriber;
 
   private:

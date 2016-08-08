@@ -10,6 +10,8 @@
 
 #include <cstdint>
 
+#include "lightsky/setup/Api.h"
+
 namespace ls {
 namespace game {
 
@@ -22,7 +24,7 @@ class GameSystem;
     ls::game::system objects and different game state objects.
 -----------------------------------------------------------------------------*/
 enum class game_state_status_t {
-    PAUSED,
+    PAUSED = 0,
     RUNNING,
     STOPPING,
     STOPPED,
@@ -39,7 +41,7 @@ enum class game_state_status_t {
     by the lsSubsystem. Game states are passed hardware events by subsystems
     when they are running.
 -----------------------------------------------------------------------------*/
-class GameState {
+class LS_API GameState {
     friend class GameSystem;
 
   private:

@@ -11,6 +11,8 @@
 #include <vector>
 #include <cstdint> // uint64_t
 
+#include "lightsky/setup/Api.h"
+
 namespace ls {
 namespace game {
 
@@ -24,7 +26,7 @@ class GameState;
  * when this object gets destroyed, therefore, all gameState objects managed by
  * a subSystem must be created using the "new" operator.
 -----------------------------------------------------------------------------*/
-class GameSystem {
+class LS_API GameSystem {
   private:
     /**
      * Stores the previous hardware time since the last update.

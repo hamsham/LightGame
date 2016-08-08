@@ -11,6 +11,8 @@
 #include <utility>
 #include <unordered_map>
 
+#include "lightsky/setup/Api.h"
+
 namespace ls {
 namespace game {
 
@@ -27,7 +29,7 @@ namespace game {
  * allocated with the 'new' operator.
  */
 template <typename hash_t, typename data_t>
-class Manager {
+class LS_API Manager {
   public:
     /**
      * @brief map_t
@@ -208,8 +210,7 @@ class Manager {
 template <typename hash_t, typename data_t>
 Manager<hash_t, data_t>::Manager() :
     dataMap{}
-{
-}
+{}
 
 /*-------------------------------------
     Move Constructor
@@ -217,8 +218,7 @@ Manager<hash_t, data_t>::Manager() :
 template <typename hash_t, typename data_t>
 Manager<hash_t, data_t>::Manager(Manager&& m) :
     dataMap{std::move(m.dataMap)}
-{
-}
+{}
 
 /*-------------------------------------
     Destructor
