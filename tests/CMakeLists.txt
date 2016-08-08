@@ -24,6 +24,8 @@ include(FindFreetype)
 find_package(SDL2 REQUIRED)
 find_package(ASSIMP REQUIRED)
 
+find_package(Boost REQUIRED COMPONENTS regex)
+
 
 
 # -------------------------------------
@@ -56,6 +58,7 @@ set(
     ${SDL2_LIBRARIES}
     ${FREETYPE_LIBRARIES}
     ${ASSIMP_LIBRARIES}
+    ${Boost_Regex_LIBRARY}
     freeimage
 )
 
