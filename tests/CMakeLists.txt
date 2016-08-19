@@ -22,9 +22,19 @@ include(FindOpenGL)
 include(FindFreetype)
 
 find_package(SDL2 REQUIRED)
+if (NOT SDL2_FOUND)
+    message(FATAL_ERROR "Unable to locate the library for SDL2.")
+endif()
+
 find_package(ASSIMP REQUIRED)
+if (NOT assimp_FOUND)
+    message(FATAL_ERROR "Unable to locate the library for ASSIMP.")
+endif()
 
 find_package(Boost REQUIRED COMPONENTS regex)
+if (NOT Boost_REGEX_FOUND)
+    message(FATAL_ERROR "Unable to locate the library for Boost-Regex.")
+endif()
 
 
 
@@ -57,7 +67,7 @@ set(
     ${OPENGL_gl_LIBRARY}
     ${SDL2_LIBRARIES}
     ${FREETYPE_LIBRARIES}
-    ${ASSIMP_LIBRARIES}
+    ${assimp_LIBRARIES}
     ${Boost_Regex_LIBRARY}
     freeimage
 )
