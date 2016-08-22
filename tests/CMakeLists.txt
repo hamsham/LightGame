@@ -68,7 +68,7 @@ set(
     ${SDL2_LIBRARIES}
     ${FREETYPE_LIBRARIES}
     ${assimp_LIBRARIES}
-    ${Boost_Regex_LIBRARY}
+    ${Boost_REGEX_LIBRARY}
     freeimage
 )
 
