@@ -386,10 +386,9 @@ void HelloMeshState::setup_meshes() {
 void HelloMeshState::setup_animations() {
     std::vector<draw::Animation>& sceneAnims = testData.animations;
 
-    for (draw::Animation& sceneAnim : sceneAnims) {
-        for (draw::AnimationChannel& channel : sceneAnim.get_anim_channels()) {
-            unsigned animFlag = draw::animation_flag_t::ANIM_FLAG_INTERPOLATE;
-            channel.animationMode = (draw::animation_flag_t)animFlag;
+    for (std::vector<draw::AnimationChannel>& animList : testData.nodeAnims) {
+        for (draw::AnimationChannel& track : animList) {
+            track.animationMode = draw::animation_flag_t::ANIM_FLAG_INTERPOLATE;
         }
     }
 
