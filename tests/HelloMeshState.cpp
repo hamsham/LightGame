@@ -10,6 +10,8 @@
 #include <algorithm>
 #include <string>
 
+#include <SDL2/SDL.h>
+
 #include "lightsky/setup/Setup.h"
 #include "lightsky/math/Math.h"
 #include "lightsky/utils/Utils.h"
@@ -563,6 +565,7 @@ void HelloMeshState::update_animations() {
  * System Startup
 -------------------------------------*/
 bool HelloMeshState::on_start() {
+    srand(time(nullptr));
     setup_shader(testShader, vsShaderData, fsShaderData);
 
 #ifdef LS_DRAW_BACKEND_GL
@@ -594,6 +597,25 @@ bool HelloMeshState::on_start() {
  * System Runtime
 -------------------------------------*/
 void HelloMeshState::on_run() {
+    const Uint8* const keyStates = SDL_GetKeyboardState(nullptr);
+    if (keyStates[SDL_SCANCODE_SPACE] && !testData.nodes.empty()) {
+        const unsigned deletedNode = rand() % testData.nodes.size();
+        const unsigned numDeletedNodes = testData.delete_node(deletedNode);
+        
+        LS_LOG_MSG("Deleted node ", deletedNode, " and ", numDeletedNodes-1, " others.",
+            "\n\t# Node Objects:          ", testData.nodes.size(),
+            "\n\t# Node Cameras:          ", testData.cameras.size(),
+            "\n\t# Draw Parameters:       ", testData.nodeMeshes.size(),
+            "\n\t# Node Meshes:           ", testData.nodeMeshCounts.size(),
+            "\n\t# Node Names:            ", testData.nodeNames.size(),
+            "\n\t# Base Transforms:       ", testData.baseTransforms.size(),
+            "\n\t# Active Transforms:     ", testData.currentTransforms.size(),
+            "\n\t# Model Matrices:        ", testData.modelMatrices.size(),
+            "\n\t# Animation Channels:    ", testData.nodeAnims.size(),
+            "\n\t# Total Animations:      ", testData.animations.size()
+        );
+    }
+    
     // this statement cannot be called from another function (GCC/CLang bug)
     if (preloader.valid() && preloader.wait_for(std::chrono::milliseconds{0}) == std::future_status::ready) {
         draw::SceneFileLoader loader;

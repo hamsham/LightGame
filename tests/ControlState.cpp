@@ -133,7 +133,7 @@ bool ControlState::on_start() {
         return false;
     }
 
-    // initialize the keybord
+    // initialize the keyboard
     for (unsigned i = 0; i < TEST_MAX_KEYBORD_STATES; ++i) {
         pKeyStates[i] = false;
     }
@@ -157,24 +157,31 @@ void ControlState::on_run() {
             case SDL_WINDOWEVENT:
                 this->on_window_event(pEvent->window);
                 break;
+                
             case SDL_KEYUP:
                 this->on_key_up_event(pEvent->key);
                 break;
+                
             case SDL_KEYDOWN:
                 this->on_key_down_event(pEvent->key);
                 break;
+                
             case SDL_MOUSEMOTION:
                 this->on_mouse_move_event(pEvent->motion);
                 break;
+                
             case SDL_FINGERMOTION:
                 this->on_track_mouse_event(pEvent->tfinger);
                 break;
+                
             case SDL_MOUSEBUTTONDOWN:
                 this->on_mouse_down_event(pEvent->button);
                 break;
+                
             case SDL_MOUSEWHEEL:
                 this->on_wheel_event(pEvent->wheel);
                 break;
+                
             default:
                 break;
         }
