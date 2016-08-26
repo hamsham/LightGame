@@ -1,4 +1,4 @@
-﻿/*
+/*
  * File:   HelloMeshState.h
  * Author: miles
  *

@@ -1,4 +1,4 @@
-﻿
+
 # -------------------------------------
 # Project Setup
 # -------------------------------------
@@ -112,4 +112,4 @@ function(LS_GAME_ADD_TARGET trg srcs)
     target_link_libraries(${trg} ${LS_GAME_INTERNAL_DEPS} ${LS_GAME_EXTERNAL_DEPS})
 endfunction(LS_GAME_ADD_TARGET)
 
-LS_GAME_ADD_TARGET(hello_eds_game "${LS_GAME_TEST_SOURCES_HELLOWORLD}")
+LS_GAME_ADD_TARGET(hello_ls_game "${LS_GAME_TEST_SOURCES_HELLOWORLD}")
