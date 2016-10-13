@@ -599,10 +599,21 @@ bool HelloMeshState::on_start() {
 void HelloMeshState::on_run() {
     const Uint8* const keyStates = SDL_GetKeyboardState(nullptr);
     if (keyStates[SDL_SCANCODE_SPACE] && !testData.nodes.empty()) {
-        const unsigned deletedNode = rand() % testData.nodes.size();
-        const unsigned numDeletedNodes = testData.delete_node(deletedNode);
+        const unsigned selectedNode = rand() % testData.nodes.size();
+        unsigned parentNode = selectedNode;
         
-        LS_LOG_MSG("Deleted node ", deletedNode, " and ", numDeletedNodes-1, " others.",
+        while (testData.node_is_child(selectedNode, parentNode)
+        || selectedNode == parentNode
+        ) {
+            parentNode = rand() % testData.nodes.size();
+        }
+        
+        testData.reparent_node(selectedNode, parentNode);
+        
+        /*
+        const unsigned numDeletedNodes = testData.delete_node(selectedNode);
+        
+        LS_LOG_MSG("Deleted node ", selectedNode, " and ", numDeletedNodes-1, " others.",
             "\n\t# Node Objects:          ", testData.nodes.size(),
             "\n\t# Node Cameras:          ", testData.cameras.size(),
             "\n\t# Draw Parameters:       ", testData.nodeMeshes.size(),
@@ -613,6 +624,16 @@ void HelloMeshState::on_run() {
             "\n\t# Model Matrices:        ", testData.modelMatrices.size(),
             "\n\t# Animation Channels:    ", testData.nodeAnims.size(),
             "\n\t# Total Animations:      ", testData.animations.size()
+        );
+        */
+        
+        LS_LOG_MSG("Node ", selectedNode, " has ",
+            testData.get_num_immediate_children(selectedNode), " immediate children and ",
+            testData.get_num_total_children(selectedNode), " total children."
+        );
+        
+        LS_LOG_MSG("Checking if ", selectedNode, " is a child of ", parentNode, ' ',
+            testData.node_is_child(selectedNode, parentNode), "\n\tDone."
         );
     }
     
