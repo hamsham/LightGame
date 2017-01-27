@@ -35,7 +35,7 @@ using draw::ShaderAttribArray;
 
 
 #ifndef LS_GAME_TEST_FONT
-    #define LS_GAME_TEST_FONT "testfont.ttf"
+    #define LS_GAME_TEST_FONT "testdata/testfont.ttf"
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -235,7 +235,7 @@ void main() {
 /*-------------------------------------
  * Helper function to load text data.
 -------------------------------------*/
-std::string load_test_text(const std::string& filename = u8R"(lorem_ipsum.txt)") {
+std::string load_test_text(const std::string& filename = u8R"(testdata/lorem_ipsum.txt)") {
     using ls::utils::DataResource;
 
     DataResource inFile;
@@ -442,7 +442,6 @@ void HelloTextState::setup_occlusion_fbo() {
         LS_ASSERT(fboAssembly->set_attrib(1, occlusionDepth, draw::fbo_attach_t::FBO_ATTACHMENT_DEPTH));
         LS_ASSERT(fboAssembly->assemble(occlusionFbo));
     }
-    
     {
         const unsigned components       = draw::get_num_pixel_components(texAttrib.get_internal_format());
         const unsigned bytesPerPixel    = draw::get_num_color_bytes(texAttrib.get_color_type());

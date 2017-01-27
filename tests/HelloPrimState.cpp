@@ -58,12 +58,6 @@ const char* PRIM_VP_MAT_UNIFORM_STR = "vpMatrix";
 int PRIM_VP_MAT_UNIFORM_ID = -1;
 
 /*-------------------------------------
- * Camera/VP Matrix Uniform Name
--------------------------------------*/
-const char* PRIM_COLOR_UNIFORM_STR = "primColor";
-int PRIM_COLOR_UNIFORM_ID = -1;
-
-/*-------------------------------------
  * Vertex Shader
 -------------------------------------*/
 constexpr char vsPrimShaderData[] = u8R"***(
@@ -71,9 +65,9 @@ constexpr char vsPrimShaderData[] = u8R"***(
 
 precision mediump float;
 
-layout (location = 0) in vec3 inPos;
-layout (location = 1) in vec2 inUv;
-layout (location = 2) in vec3 inNorm;
+layout (location = 0) in vec3 posAttrib;
+layout (location = 1) in vec2 uvAttrib;
+layout (location = 2) in vec3 normAttrib;
 
 uniform mat4 vpMatrix;
 uniform mat4 modelMatrix;
@@ -83,9 +77,9 @@ out vec3 normCoords;
 
 void main() {
     mat4 mvp = vpMatrix * modelMatrix;
-    gl_Position = mvp * vec4(inPos, 1.0);
-    uvCoords = inUv;
-    normCoords = inNorm;
+    gl_Position = mvp * vec4(posAttrib, 1.0);
+    uvCoords = uvAttrib;
+    normCoords = normAttrib;
 }
 )***";
 
@@ -105,7 +99,7 @@ in vec3 normCoords;
 out vec4 fragOutColor;
 
 void main() {
-    fragOutColor = vec4(normCoords.xyz, primColor.w);
+    fragOutColor = vec4(uvCoords.rg, normCoords.z, 1.0);
 }
 )***";
 
@@ -126,15 +120,15 @@ static constexpr math::vec2 testTextures[3] = {
 };
 
 static const int32_t testNormals[3] = {
-    ls::draw::pack_vertex_normal(math::vec3{0.f, 0.f, -1.f}),
-    ls::draw::pack_vertex_normal(math::vec3{0.f, 0.f, -1.f}),
-    ls::draw::pack_vertex_normal(math::vec3{0.f, 0.f, -1.f})
+    ls::draw::pack_vertex_normal(math::vec3{0.f, 0.f, 1.f}),
+    ls::draw::pack_vertex_normal(math::vec3{0.f, 0.f, 1.f}),
+    ls::draw::pack_vertex_normal(math::vec3{0.f, 0.f, 1.f})
 };
 
 static const unsigned testPosStride = 0;
-static const unsigned testTexStride = sizeof (math::vec3);
-static const unsigned testNormStride = testTexStride + sizeof (math::vec2);
-static const unsigned testVertStride = testNormStride + sizeof (int32_t);
+static const unsigned testTexStride = sizeof(math::vec3);
+static const unsigned testNormStride = testTexStride + sizeof(math::vec2);
+static const unsigned testVertStride = testNormStride + sizeof(int32_t);
 
 static constexpr math::mat4 modelMatrix = {1.f};
 
@@ -184,7 +178,6 @@ void HelloPrimState::update_camera() {
     
     shader.bind();
     ls::draw::set_shader_uniform(PRIM_MODEL_MAT_UNIFORM_ID, modelMatrix);
-    ls::draw::set_shader_uniform(PRIM_COLOR_UNIFORM_ID, ls::math::vec4 {0.f, 1.f, 0.f, 1.f});
     ls::draw::set_shader_uniform(PRIM_VP_MAT_UNIFORM_ID, vpMatrix);
     shader.unbind();
 }
@@ -193,19 +186,17 @@ void HelloPrimState::update_camera() {
  * Update the colors or all triangle vertices
 -------------------------------------*/
 void HelloPrimState::update_vert_color(const unsigned vertIndex, const bool isVisible) {
-    math::vec3 colors = {1.f, 0.f, 0.f};
+    math::vec2 colors = {1.f, 0.f};
 
     if (!isVisible) {
         colors[0] = 0.f;
         colors[1] = 1.f;
     }
 
-    const int32_t packedColors = ls::draw::pack_vertex_normal(colors);
-
     vbo.bind();
     LS_LOG_GL_ERR();
 
-    vbo.modify((vertIndex * testVertStride) + testNormStride, sizeof (int32_t), &packedColors);
+    vbo.modify((vertIndex * testVertStride) + testTexStride, sizeof (math::vec2), colors.v);
     LS_LOG_GL_ERR();
 
     vbo.unbind();
@@ -254,10 +245,10 @@ void HelloPrimState::setup_shaders() {
     LS_ASSERT(shaderMaker.is_assembly_valid());
     LS_ASSERT(shaderMaker.assemble(shader, true));
     
+    setup_uniforms(shader);
+    
     vShader.terminate();
     fShader.terminate();
-    
-    setup_uniforms(shader);
 }
 
 /*-------------------------------------
@@ -284,10 +275,6 @@ void HelloPrimState::setup_uniforms(const ls::draw::ShaderProgram& s) {
         else if (strcmp(uniformName.get(), PRIM_VP_MAT_UNIFORM_STR) == 0) {
             LS_LOG_MSG("Found VP Matrix Uniform ", index, ": ", uniformName);
             PRIM_VP_MAT_UNIFORM_ID = index;
-        }
-        else if (strcmp(uniformName.get(), PRIM_COLOR_UNIFORM_STR) == 0) {
-            LS_LOG_MSG("Found Prim Color Unifom", index, ": ", uniformName);
-            PRIM_COLOR_UNIFORM_ID = index;
         }
         else {
             LS_LOG_MSG("Unknown shader uniform found: ", uniformName);
@@ -320,7 +307,6 @@ void HelloPrimState::setup_prims() {
     LS_ASSERT(pAssembly->set_attrib_name(0, draw::VERT_ATTRIB_NAME_POSITION));
     LS_ASSERT(pAssembly->set_attrib_name(1, draw::VERT_ATTRIB_NAME_TEXTURE));
     LS_ASSERT(pAssembly->set_attrib_name(2, draw::VERT_ATTRIB_NAME_NORMAL));
-
     LS_ASSERT(pAssembly->assemble(vao));
 
     LS_LOG_MSG("Validating there are 3 attributes within a VAO.");
@@ -343,6 +329,7 @@ bool HelloPrimState::on_start() {
     setup_shaders();
     setup_prims();
 
+    glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
 
@@ -358,8 +345,7 @@ void HelloPrimState::on_run() {
 
     const ControlState* const pController = get_parent_system().get_game_state<ControlState>();
     const math::mat4& vpMatrix = pController->get_camera_view_projection();
-    
-    const math::mat4& mvpMat = vpMatrix * modelMatrix;
+    const math::mat4&& mvpMat = vpMatrix * modelMatrix;
     
     ls::draw::set_shader_uniform(PRIM_VP_MAT_UNIFORM_ID, vpMatrix);
     LS_LOG_GL_ERR();

@@ -418,7 +418,7 @@ void HelloMeshState::setup_uniform_blocks() {
     LS_LOG_GL_ERR();
 
     {
-        uboIndex = testShader.get_matching_uniform_block_index(uniformBlock.get_attribs().get_block_name());
+        uboIndex = testShader.get_matching_uniform_block_index(uniformBlock);
         LS_ASSERT(uboIndex >= 0);
 
         meshShaderUboIndex = (unsigned)uboIndex;
@@ -427,7 +427,7 @@ void HelloMeshState::setup_uniform_blocks() {
 
 #ifdef LS_DRAW_BACKEND_GL
     {
-        uboIndex = enbtShader.get_matching_uniform_block_index(uniformBlock.get_attribs().get_block_name());
+        uboIndex = enbtShader.get_matching_uniform_block_index(uniformBlock);
         LS_ASSERT(uboIndex >= 0);
 
         enbtShaderUboIndex = (unsigned)uboIndex;
