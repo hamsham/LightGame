@@ -442,7 +442,11 @@ void HelloMeshState::setup_uniform_blocks() {
 /*-------------------------------------
  * Rendering Scene Nodes
 -------------------------------------*/
-uint32_t HelloMeshState::render_scene_node(uint32_t currentVao, const uint32_t modelMatId, const draw::SceneNode& n) const {
+uint32_t HelloMeshState::render_scene_node(
+    uint32_t currentVao,
+    const uint32_t modelMatId,
+    const draw::SceneNode& n
+) const {
     unsigned materialId = draw::material_property_t::INVALID_MATERIAL;
     unsigned meshDataId = n.dataId;
 

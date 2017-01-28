@@ -10,11 +10,12 @@
 #include <algorithm>
 #include <string>
 
-#include "lightsky/setup/Setup.h"
-#include "lightsky/math/Math.h"
-#include "lightsky/utils/Utils.h"
-#include "lightsky/game/Game.h"
-#include "lightsky/draw/Draw.h"
+#include "lightsky/utils/DataResource.h"
+
+#include "lightsky/draw/FontResource.h"
+#include "lightsky/draw/ShaderUniform.h"
+#include "lightsky/draw/ShaderAssembly.h"
+#include "lightsky/draw/RenderValidation.h"
 #include "lightsky/draw/OcclusionMeshLoader.h"
 #include "lightsky/draw/TextMeshLoader.h"
 #include "lightsky/draw/TextureAssembly.h"
