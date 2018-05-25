@@ -19,11 +19,6 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules" ${CMAKE_MODULE
 # Only using OpenGL for its libraries, not headers
 include(FindOpenGL)
 
-find_package(SDL2 REQUIRED)
-if (NOT SDL2_FOUND)
-    message(FATAL_ERROR "Unable to locate the library for SDL2.")
-endif()
-
 
 
 # -------------------------------------
@@ -31,7 +26,6 @@ endif()
 # -------------------------------------
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 include_directories(${OPENGL_INCLUDE_DIR})
-include_directories(${SDL2_INCLUDE_DIRS})
 
 file(GLOB RECURSE LS_GAME_TEST_HEADERS "include/*.h" "include/*.hpp")
 
@@ -40,8 +34,7 @@ file(GLOB RECURSE LS_GAME_TEST_HEADERS "include/*.h" "include/*.hpp")
 # -------------------------------------
 # Dependency Setup
 # -------------------------------------
-set(
-    LS_GAME_INTERNAL_DEPS
+set(LS_GAME_INTERNAL_DEPS
     lssetup
     lsutils
     lsmath
@@ -49,10 +42,9 @@ set(
     lsgame
 )
 
-set(
-    LS_GAME_EXTERNAL_DEPS
+set(LS_GAME_EXTERNAL_DEPS
     ${OPENGL_gl_LIBRARY}
-    ${SDL2_LIBRARIES}
+    ${SDL2_LIBS}
     ${FREETYPE_LIBS}
     ${ASSIMP_LIBS}
     ${FREEIMAGE_LIBS}
@@ -145,6 +137,8 @@ configure_file(testdata/sibenik/sibenik.obj        testdata/sibenik/sibenik.obj 
 # -------------------------------------
 # Building and Linking Targets
 # -------------------------------------
+set(CMAKE_SKIP_RPATH ON)
+
 function(LS_GAME_ADD_TARGET trg srcs)
     add_executable(${trg} ${srcs})
     add_dependencies(${trg} ${LS_GAME_INTERNAL_DEPS})
