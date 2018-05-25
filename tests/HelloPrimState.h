@@ -32,8 +32,6 @@ class HelloPrimState final : public ls::game::GameState {
 
     ls::draw::VertexArray vao;
 
-    void update_camera();
-
     void update_vert_color(const unsigned vertPos, const bool isVisible);
 
     std::unique_ptr<char[]> gen_vertex_data();

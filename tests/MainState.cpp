@@ -151,8 +151,8 @@ bool MainState::setup_substates() {
     
     if (0
     //||!sys.push_game_state(new(std::nothrow) HelloPropertyState{})
-    || !sys.push_game_state(new(std::nothrow) HelloTextState{})
-    //|| !sys.push_game_state(new(std::nothrow) HelloPrimState{})
+    //|| !sys.push_game_state(new(std::nothrow) HelloTextState{})
+    || !sys.push_game_state(new(std::nothrow) HelloPrimState{})
     //|| !sys.push_game_state(new(std::nothrow) HelloMeshState{})
     ) {
         LS_LOG_ERR("Unable to run the internal render systems.\n");

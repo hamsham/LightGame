@@ -171,18 +171,6 @@ HelloPrimState& HelloPrimState::operator =(HelloPrimState&& state) {
 }
 
 /*-------------------------------------
--------------------------------------*/
-void HelloPrimState::update_camera() {
-    const ControlState* const pController = get_parent_system().get_game_state<ControlState>();
-    const math::mat4& vpMatrix = pController->get_camera_view_projection();
-    
-    shader.bind();
-    ls::draw::set_shader_uniform(PRIM_MODEL_MAT_UNIFORM_ID, modelMatrix);
-    ls::draw::set_shader_uniform(PRIM_VP_MAT_UNIFORM_ID, vpMatrix);
-    shader.unbind();
-}
-
-/*-------------------------------------
  * Update the colors or all triangle vertices
 -------------------------------------*/
 void HelloPrimState::update_vert_color(const unsigned vertIndex, const bool isVisible) {
@@ -222,7 +210,7 @@ std::unique_ptr<char[] > HelloPrimState::gen_vertex_data() {
 /*-------------------------------------
 -------------------------------------*/
 void HelloPrimState::setup_shaders() {
-    ls::draw::ShaderProgramAssembly shaderMaker;
+    ls::draw::ShaderProgramAssembly shaderMaker{};
     ls::draw::ShaderObject vShader;
     ls::draw::ShaderObject fShader;
 
@@ -233,6 +221,10 @@ void HelloPrimState::setup_shaders() {
     else {
         LS_ASSERT(shaderMaker.set_vertex_shader(vShader));
     }
+
+#ifdef LS_DRAW_BACKEND_GL
+    shaderMaker.clear_geometry_shader();
+#endif
 
     if (!fShader.init(ls::draw::SHADER_STAGE_FRAGMENT, fsPrimShaderData, 0)) {
         LS_LOG_GL_ERR();
@@ -346,7 +338,10 @@ void HelloPrimState::on_run() {
     const ControlState* const pController = get_parent_system().get_game_state<ControlState>();
     const math::mat4& vpMatrix = pController->get_camera_view_projection();
     const math::mat4&& mvpMat = vpMatrix * modelMatrix;
-    
+
+    ls::draw::set_shader_uniform(PRIM_MODEL_MAT_UNIFORM_ID, modelMatrix);
+    LS_LOG_GL_ERR();
+
     ls::draw::set_shader_uniform(PRIM_VP_MAT_UNIFORM_ID, vpMatrix);
     LS_LOG_GL_ERR();
 
