@@ -22,6 +22,47 @@
 
 
 
+struct Light
+{
+    ls::math::vec4 pos;
+    ls::math::vec4 ambient;
+    ls::math::vec4 diffuse;
+    ls::math::vec4 specular;
+};
+
+
+
+struct PointLight
+{
+    float constant;
+    float linear;
+    float quadratic;
+    float padding;
+};
+
+
+
+struct SpotLight
+{
+    float innerCutoff;
+    float outerCutoff;
+    ls::math::vec4 direction;
+};
+
+
+
+struct MeshUniforms
+{
+    ls::math::mat4 mvpMatrix;
+    ls::math::mat4 vpMatrix;
+    ls::math::mat4 modelMatrix;
+
+    Light light;
+    PointLight point;
+    SpotLight spot;
+};
+
+
 
 class HelloMeshState final : public ls::game::GameState {
   private:
@@ -69,16 +110,14 @@ class HelloMeshState final : public ls::game::GameState {
         const char* const fragData,
         const char* const geomData = nullptr
     );
-
-    void setup_meshes();
     
     void setup_animations();
     
     void setup_uniform_blocks();
     
-    uint32_t render_scene_node(uint32_t currentVao, const uint32_t modelMatId, const ls::draw::SceneNode& n) const;
+    uint32_t render_scene_node(uint32_t currentVao, const ls::draw::SceneNode& n);
     
-    void render_scene_graph(const ls::draw::ShaderProgram& s, const unsigned uboBindIndex) const;
+    void render_scene_graph(const ls::draw::ShaderProgram& s, const unsigned uboBindIndex);
     
     void update_animations();
 

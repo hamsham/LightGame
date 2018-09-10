@@ -174,7 +174,7 @@ bool Display::init(const math::vec2i inResolution, bool isFullScreen) {
     pWindow = SDL_CreateWindow(
         "LightSky", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         inResolution[0], inResolution[1], windowFlags
-        );
+    );
 
     if (!pWindow) {
         LS_LOG_ERR("\tUnable to create a display object.");

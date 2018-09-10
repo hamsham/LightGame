@@ -152,8 +152,8 @@ bool MainState::setup_substates() {
     if (0
     //||!sys.push_game_state(new(std::nothrow) HelloPropertyState{})
     //|| !sys.push_game_state(new(std::nothrow) HelloTextState{})
-    || !sys.push_game_state(new(std::nothrow) HelloPrimState{})
-    //|| !sys.push_game_state(new(std::nothrow) HelloMeshState{})
+    //|| !sys.push_game_state(new(std::nothrow) HelloPrimState{})
+    || !sys.push_game_state(new(std::nothrow) HelloMeshState{})
     ) {
         LS_LOG_ERR("Unable to run the internal render systems.\n");
         return false;
@@ -180,7 +180,7 @@ bool MainState::on_start() {
         return false;
     }
 
-    if (!renderContext.init(*global::pDisplay)) {
+    if (!renderContext.init(*global::pDisplay, false)) {
         std::cerr << "Unable to create a render context." << std::endl;
         return false;
     }
@@ -196,7 +196,7 @@ bool MainState::on_start() {
         return false;
     }
 
-    glClearColor(0.5f, 0.5f, 0.65f, 1.f);
+    glClearColor(0.f, 0.f, 0.f, 1.f);
 
     return true;
 }
@@ -221,6 +221,30 @@ void MainState::on_run() {
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     LS_LOG_GL_ERR();
+
+    const hr_time&& currTime = hr_clock::now();
+    frameTime                = currTime - prevTime;
+    tickTime                 = frameTime.count();
+    prevTime                 = currTime;
+
+    ++currFrames;
+    ++totalFrames;
+    currSeconds += tickTime;
+    totalSeconds += tickTime;
+
+    if (currSeconds >= 0.5f)
+    {
+        std::cout << "FPS: " << (float)currFrames/currSeconds << std::endl;
+        currFrames = 0;
+        currSeconds = 0.f;
+    }
+
+    /*
+    if (totalFrames >= 600)
+    {
+        get_parent_system().stop();
+    }
+    */
 }
 
 /*-------------------------------------

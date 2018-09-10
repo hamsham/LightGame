@@ -9,10 +9,21 @@
 #ifndef MAINSTATE_H
 #define MAINSTATE_H
 
+#include <chrono>
+
 #include "lightsky/utils/Pointer.h"
 #include "lightsky/game/Game.h"
 
 #include "Context.h"
+
+
+
+namespace chrono = std::chrono;
+
+typedef chrono::steady_clock hr_clock;
+typedef hr_clock::time_point hr_time;
+typedef std::chrono::duration<float> hr_duration;
+typedef chrono::seconds hr_prec;
 
 
 
@@ -38,6 +49,14 @@ namespace global {
 class MainState final : virtual public ls::game::GameState {
   private:
     Context renderContext;
+
+    hr_duration::rep tickTime = 0.f;
+    hr_time prevTime = hr_clock::now();
+    hr_duration frameTime{};
+    unsigned currFrames = 0;
+    unsigned totalFrames = 0;
+    float currSeconds = 0.f;
+    float totalSeconds = 0.f;
     
     bool bootstrap_subsystems();
     

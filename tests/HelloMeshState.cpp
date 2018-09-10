@@ -5,6 +5,7 @@
  * Created on October 27, 2015, 10:44 PM
  */
 
+#include <cstddef> // offsetof
 #include <cassert>
 #include <ctime>
 #include <algorithm>
@@ -30,7 +31,8 @@ using draw::ShaderAttribArray;
 
 
 #ifndef LS_GAME_TEST_MESH
-    #define LS_GAME_TEST_MESH "testdata/rover/testmesh.dae"
+    //#define LS_GAME_TEST_MESH "testdata/rover/testmesh.dae"
+    #define LS_GAME_TEST_MESH "testdata/sibenik/sibenik.obj"
 #endif
 
 
@@ -64,23 +66,49 @@ layout (location = 0) in vec3 posAttrib;
 layout (location = 1) in vec2 uvAttrib;
 layout (location = 2) in vec3 normAttrib;
 
+struct Light
+{
+    vec4 pos;
+    vec4 ambient;
+    vec4 diffuse;
+    vec4 specular;
+};
+
+struct PointLight
+{
+    float constant;
+    float linear;
+    float quadratic;
+    float padding;
+};
+
+struct SpotLight
+{
+    float innerCutoff;
+    float outerCutoff;
+    vec4 direction;
+};
+
 layout(shared) uniform BatchProperties {
+    mat4 mvpMatrix;
     mat4 vpMatrix;
+    mat4 modelMatrix;
+
+    Light light;
+    PointLight point;
+    SpotLight spot;
 } batchProperties;
 
-uniform mat4 MODEL_MATRIX;
-
-out vec2 fragVertUV;
-out vec3 fragEyeDirection;
-out vec3 fragVertNormal;
+out vec4 fragVertPos;
+out vec4 fragVertUV;
+out vec4 fragVertNorm;
 
 
 void main() {
-    mat4 vpMat          = batchProperties.vpMatrix;
-    gl_Position         = vpMat * MODEL_MATRIX * vec4(posAttrib, 1.0);
-    fragVertUV          = uvAttrib;
-    fragEyeDirection    = vec3(-vpMat[0][2], -vpMat[1][2], -vpMat[2][2]);
-    fragVertNormal      = normalize(vec4(MODEL_MATRIX * vec4(normAttrib, 0.0)).xyz);
+    gl_Position  = batchProperties.mvpMatrix * vec4(posAttrib, 1.0);
+    fragVertPos  = batchProperties.modelMatrix * vec4(posAttrib, 1.0);
+    fragVertUV   = uvAttrib.xyxy;
+    fragVertNorm = normalize(batchProperties.modelMatrix * vec4(normAttrib, 0.0));
 }
 )***";
 
@@ -95,24 +123,91 @@ precision mediump float;
 
 uniform sampler2D DIFFUSE_TEXTURE;
 
-in vec2 fragVertUV;
-in vec3 fragEyeDirection;
-in vec3 fragVertNormal;
+in vec4 fragVertPos;
+in vec4 fragVertUV;
+in vec4 fragVertNorm;
 
 out vec4 fragOutColor;
 
-float calc_diffuse_intensity(in vec3 vertNorm, in vec3 lightDir) {
-    return max(0.0, dot(vertNorm, lightDir));
-}
+struct Light
+{
+    vec4 pos;
+    vec4 ambient;
+    vec4 diffuse;
+    vec4 specular;
+};
+
+struct PointLight
+{
+    float constant;
+    float linear;
+    float quadratic;
+    float padding;
+};
+
+struct SpotLight
+{
+    float innerCutoff;
+    float outerCutoff;
+    vec4 direction;
+};
+
+layout(shared) uniform BatchProperties {
+    mat4 mvpMatrix;
+    mat4 vpMatrix;
+    mat4 modelMatrix;
+
+    Light light;
+    PointLight point;
+    SpotLight spot;
+} batchProperties;
+
 
 
 void main() {
-    //const vec4 baseCol  = vec4(0.5, 0.5, 0.5, 1.0);
-    vec4 baseCol        = texture(DIFFUSE_TEXTURE, fragVertUV);
-    vec3 e              = normalize(fragEyeDirection);
-    vec3 n              = normalize(fragVertNormal);
-    float brightness    = calc_diffuse_intensity(n, e);
-    fragOutColor        = baseCol * brightness;
+    vec3 pos   = fragVertPos.xyz;
+    vec3 uv    = fragVertUV.xyz;
+    vec3 norm  = fragVertNorm.xyz;
+    vec3 pixel = texture(DIFFUSE_TEXTURE, fragVertUV.xy).xyz;
+
+    pixel.r = pixel.r == 0.0 ? 1.0 : pixel.r;
+    pixel.g = pixel.g == 0.0 ? 1.0 : pixel.g;
+    pixel.b = pixel.b == 0.0 ? 1.0 : pixel.b;
+
+    float attenuation;
+    vec3 diffuse, specular;
+
+    // Light direction calculation
+    Light l         = batchProperties.light;
+    vec3  lightDir  = l.pos.xyz - pos;
+    float lightDist = length(lightDir);
+
+    lightDir = normalize(lightDir);
+
+    // Diffuse light calculation
+    {
+        float lightAngle = max(dot(lightDir, norm), 0.0);
+        float constant   = batchProperties.point.constant;
+        float linear     = batchProperties.point.linear;
+        float quadratic  = batchProperties.point.quadratic;
+
+        attenuation = 1.0 / (constant + (linear * lightDist) + (quadratic * lightDist * lightDist));
+        diffuse     = l.diffuse.xyz * (lightAngle * attenuation);
+    }
+
+    // Specular light calculation
+    {
+        SpotLight s         = batchProperties.spot;
+        float epsilon       = s.innerCutoff - s.outerCutoff;
+        float theta         = dot(lightDir, s.direction.xyz);
+        float spotIntensity = clamp((theta - s.outerCutoff) / epsilon, 0.0, 1.0);
+
+        specular = l.specular.xyz * (spotIntensity * attenuation);
+    }
+
+    // output composition
+    pixel = pixel * (diffuse + specular);
+    fragOutColor = vec4(min(pixel, vec3(1.0)), 1.0);
 }
 )***";
 
@@ -130,17 +225,44 @@ precision mediump float;
 layout (location = 0) in vec3 posAttrib;
 layout (location = 1) in vec3 normAttrib;
 
-layout(shared) uniform BatchProperties {
-    mat4 vpMatrix;
-} batchProperties;
+struct Light
+{
+    vec4 pos;
+    vec4 ambient;
+    vec4 diffuse;
+    vec4 specular;
+};
 
-uniform mat4 MODEL_MATRIX;
+struct PointLight
+{
+    float constant;
+    float linear;
+    float quadratic;
+    float padding;
+};
+
+struct SpotLight
+{
+    float innerCutoff;
+    float outerCutoff;
+    vec4 direction;
+};
+
+layout(shared) uniform BatchProperties {
+    mat4 mvpMatrix;
+    mat4 vpMatrix;
+    mat4 modelMatrix;
+
+    Light light;
+    PointLight point;
+    SpotLight spot;
+} batchProperties;
 
 out vec4 normPos;
 
 void main() {
     mat4 vpMat  = batchProperties.vpMatrix;
-    mat4 mvpMat = vpMat * MODEL_MATRIX;
+    mat4 mvpMat = vpMat * batchProperties.modelMatrix;
     gl_Position = mvpMat * vec4(posAttrib, 1.0);
     normPos     = mvpMat * vec4(normAttrib, 0.0);
 }
@@ -155,7 +277,7 @@ layout (triangles) in;
 layout (line_strip, max_vertices = 21) out;
 
 uniform bool showEdges      = true;
-uniform bool showNormals    = false;
+uniform bool showNormals    = true;
 
 in vec4 normPos[];
 out vec4 lineCol;
@@ -361,28 +483,6 @@ void HelloMeshState::setup_shader(
 }
 
 /*-------------------------------------
- * Mesh Setup
--------------------------------------*/
-void HelloMeshState::setup_meshes() {
-    if (testData.meshes.empty()) {
-        LS_LOG_ERR("ERROR: Failed to load the mesh \"", LS_GAME_TEST_MESH, ".\"");
-        return;
-    }
-
-    testShader.bind();
-    LS_LOG_GL_ERR();
-
-    const GLint MESH_MODEL_MAT_UNIFORM_ID = glGetUniformLocation(testShader.gpu_id(), "MODEL_MATRIX");
-    LS_LOG_GL_ERR();
-
-    draw::set_shader_uniform(MESH_MODEL_MAT_UNIFORM_ID, math::mat4{1.f});
-    LS_LOG_GL_ERR();
-
-    testShader.unbind();
-    LS_LOG_GL_ERR();
-}
-
-/*-------------------------------------
  * Animation Setup
 -------------------------------------*/
 void HelloMeshState::setup_animations() {
@@ -425,6 +525,57 @@ void HelloMeshState::setup_uniform_blocks() {
         LS_ASSERT(draw::are_attribs_compatible(testShader, meshShaderUboIndex, uniformBlock) >= 0);
     }
 
+    {
+        math::vec4 val = {30.f, 45.f, 45.f, 1.f};
+        uniformBlock.modify(offsetof(MeshUniforms, light.pos), sizeof(math::vec4), val.v);
+        LS_LOG_GL_ERR();
+    }
+    {
+        math::vec4 val = {1.f};
+        uniformBlock.modify(offsetof(MeshUniforms, light.ambient), sizeof(math::vec4), val.v);
+        LS_LOG_GL_ERR();
+    }
+    {
+        math::vec4 val = {1.f, 1.f, 1.f, 1.f};
+        uniformBlock.modify(offsetof(MeshUniforms, light.specular), sizeof(math::vec4), val.v);
+        LS_LOG_GL_ERR();
+    }
+    {
+        math::vec4 val = {1.f};
+        uniformBlock.modify(offsetof(MeshUniforms, light.diffuse), sizeof(math::vec4), val.v);
+        LS_LOG_GL_ERR();
+    }
+    {
+        float val = 1.f;
+        uniformBlock.modify(offsetof(MeshUniforms, point.constant), sizeof(float), &val);
+        LS_LOG_GL_ERR();
+    }
+    {
+        float val = 0.045f;
+        uniformBlock.modify(offsetof(MeshUniforms, point.linear), sizeof(float), &val);
+        LS_LOG_GL_ERR();
+    }
+    {
+        float val = 0.009f;
+        uniformBlock.modify(offsetof(MeshUniforms, point.quadratic), sizeof(float), &val);
+        LS_LOG_GL_ERR();
+    }
+    {
+        float val = std::cos(LS_DEG2RAD(6.5f));
+        uniformBlock.modify(offsetof(MeshUniforms, spot.innerCutoff), sizeof(float), &val);
+        LS_LOG_GL_ERR();
+    }
+    {
+        float val = std::cos(LS_DEG2RAD(13.f));
+        uniformBlock.modify(offsetof(MeshUniforms, spot.outerCutoff), sizeof(float), &val);
+        LS_LOG_GL_ERR();
+    }
+    {
+        math::vec4 val = {0.f, 0.f, -1.f, 1.f};
+        uniformBlock.modify(offsetof(MeshUniforms, spot.direction), sizeof(math::vec4), val.v);
+        LS_LOG_GL_ERR();
+    }
+
 #ifdef LS_DRAW_BACKEND_GL
     {
         uboIndex = enbtShader.get_matching_uniform_block_index(uniformBlock);
@@ -442,11 +593,10 @@ void HelloMeshState::setup_uniform_blocks() {
 /*-------------------------------------
  * Rendering Scene Nodes
 -------------------------------------*/
-uint32_t HelloMeshState::render_scene_node(
-    uint32_t currentVao,
-    const uint32_t modelMatId,
-    const draw::SceneNode& n
-) const {
+uint32_t HelloMeshState::render_scene_node(uint32_t currentVao, const draw::SceneNode& n) {
+    const ControlState* const pController = get_parent_system().get_game_state<ControlState>();
+    const math::mat4& vpMat = pController->get_camera_view_projection();
+
     unsigned materialId = draw::material_property_t::INVALID_MATERIAL;
     unsigned meshDataId = n.dataId;
 
@@ -458,6 +608,7 @@ uint32_t HelloMeshState::render_scene_node(
 
     const std::vector<math::mat4>& matrices = testData.modelMatrices;
     const math::mat4& modelMatrix = matrices[n.nodeId];
+    const math::mat4&& mvpMat = modelMatrix * vpMat;
 
     for (unsigned i = 0; i < numMeshes; ++i) {
         const draw::DrawCommandParams& params = drawParams[i];
@@ -479,7 +630,9 @@ uint32_t HelloMeshState::render_scene_node(
             testData.materials[materialId].bind();
         }
 
-        draw::set_shader_uniform(modelMatId, modelMatrix);
+        uniformBlock.modify(offsetof(MeshUniforms, mvpMatrix), sizeof(math::mat4), &mvpMat);
+        uniformBlock.modify(offsetof(MeshUniforms, modelMatrix), sizeof(math::mat4), &modelMatrix);
+
         LS_LOG_GL_ERR();
 
         switch (params.drawFunc) {
@@ -510,7 +663,7 @@ uint32_t HelloMeshState::render_scene_node(
 /*-------------------------------------
  * Scene Graph Rendering
 -------------------------------------*/
-void HelloMeshState::render_scene_graph(const draw::ShaderProgram& s, const unsigned uboBindIndex) const {
+void HelloMeshState::render_scene_graph(const draw::ShaderProgram& s, const unsigned uboBindIndex) {
     uint32_t currentVao = 0;
 
     s.bind();
@@ -519,18 +672,18 @@ void HelloMeshState::render_scene_graph(const draw::ShaderProgram& s, const unsi
     uniformBlock.bind_base(uboBindIndex);
     LS_LOG_GL_ERR();
 
-    const GLint modelMatId = glGetUniformLocation(s.gpu_id(), "MODEL_MATRIX");
-    LS_LOG_GL_ERR();
-
     for (const draw::SceneNode& node : testData.nodes) {
         if (node.type != draw::scene_node_t::NODE_TYPE_MESH) {
             continue;
         }
 
-        currentVao = render_scene_node(currentVao, modelMatId, node);
+        currentVao = render_scene_node(currentVao, node);
     }
 
     glBindVertexArray(0);
+
+    uniformBlock.unbind();
+    LS_LOG_GL_ERR();
 
     s.unbind();
     LS_LOG_GL_ERR();
@@ -601,46 +754,6 @@ bool HelloMeshState::on_start() {
  * System Runtime
 -------------------------------------*/
 void HelloMeshState::on_run() {
-    const Uint8* const keyStates = SDL_GetKeyboardState(nullptr);
-    if (keyStates[SDL_SCANCODE_SPACE] && !testData.nodes.empty()) {
-        const unsigned selectedNode = rand() % testData.nodes.size();
-        unsigned parentNode = selectedNode;
-        
-        while (testData.node_is_child(selectedNode, parentNode)
-        || selectedNode == parentNode
-        ) {
-            parentNode = rand() % testData.nodes.size();
-        }
-        
-        testData.reparent_node(selectedNode, parentNode);
-        
-        /*
-        const unsigned numDeletedNodes = testData.delete_node(selectedNode);
-        
-        LS_LOG_MSG("Deleted node ", selectedNode, " and ", numDeletedNodes-1, " others.",
-            "\n\t# Node Objects:          ", testData.nodes.size(),
-            "\n\t# Node Cameras:          ", testData.cameras.size(),
-            "\n\t# Draw Parameters:       ", testData.nodeMeshes.size(),
-            "\n\t# Node Meshes:           ", testData.nodeMeshCounts.size(),
-            "\n\t# Node Names:            ", testData.nodeNames.size(),
-            "\n\t# Base Transforms:       ", testData.baseTransforms.size(),
-            "\n\t# Active Transforms:     ", testData.currentTransforms.size(),
-            "\n\t# Model Matrices:        ", testData.modelMatrices.size(),
-            "\n\t# Animation Channels:    ", testData.nodeAnims.size(),
-            "\n\t# Total Animations:      ", testData.animations.size()
-        );
-        */
-        
-        LS_LOG_MSG("Node ", selectedNode, " has ",
-            testData.get_num_immediate_children(selectedNode), " immediate children and ",
-            testData.get_num_total_children(selectedNode), " total children."
-        );
-        
-        LS_LOG_MSG("Checking if ", selectedNode, " is a child of ", parentNode, ' ',
-            testData.node_is_child(selectedNode, parentNode), "\n\tDone."
-        );
-    }
-    
     // this statement cannot be called from another function (GCC/CLang bug)
     if (preloader.valid() && preloader.wait_for(std::chrono::milliseconds{0}) == std::future_status::ready) {
         draw::SceneFileLoader loader;
@@ -658,9 +771,21 @@ void HelloMeshState::on_run() {
     LS_LOG_GL_ERR();
 
     const ControlState* const pController = get_parent_system().get_game_state<ControlState>();
-    const math::mat4& vpMat = pController->get_camera_view_projection();
+    {
+        const math::mat4& vpMat = pController->get_camera_view_projection();
+        uniformBlock.modify(offsetof(MeshUniforms, vpMatrix), sizeof(math::mat4), vpMat.m);
+        LS_LOG_GL_ERR();
+    }
+    {
+        const draw::Transform& camTrans = pController->get_camera_transformation();
+        const math::vec3&&     camPos   = -camTrans.get_position();
+        const math::vec4       lightPos = {camPos[0], camPos[1], camPos[2], 1.f};
+        const math::mat4&      viewMat  = camTrans.get_transform();
+        const math::vec4&&     spotDir  = math::normalize(math::vec4{viewMat[0][2], viewMat[1][2], viewMat[2][2], 0.f});
 
-    uniformBlock.modify(0, sizeof(math::mat4), vpMat.m);
+        uniformBlock.modify(offsetof(MeshUniforms, light.pos), sizeof(math::vec4), lightPos.v);
+        uniformBlock.modify(offsetof(MeshUniforms, spot.direction), sizeof(spotDir), &spotDir.v);
+    }
     LS_LOG_GL_ERR();
 
     uniformBlock.unbind();

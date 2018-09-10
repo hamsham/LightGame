@@ -115,10 +115,11 @@ void ControlState::setup_camera() {
     camProjection.set_near_plane(0.1f);
     camProjection.set_far_plane(1000.f);
     camProjection.set_projection_type(draw::projection_type_t::PROJECTION_PERSPECTIVE);
-    
-    //camera.set_view_mode(draw::transform_type_t::FIRST_PERSON);
-    camTrans.set_type(draw::transform_type_t::TRANSFORM_TYPE_VIEW_ARC_LOCKED_Y);
-    camTrans.look_at(math::vec3{5.f}, math::vec3{0.f});
+
+    camTrans.set_type(draw::transform_type_t::TRANSFORM_TYPE_VIEW_FPS_LOCKED_Y);
+    //camTrans.set_type(draw::transform_type_t::TRANSFORM_TYPE_VIEW_ARC_LOCKED_Y);
+    //camTrans.look_at(math::vec3{5.f}, math::vec3{0.f});
+    camTrans.look_at(math::vec3{0.f}, math::vec3{3.f, -5.f, 0.f}, math::vec3{0.f, 1.f, 0.f});
     camTrans.lock_y_axis(true);
 }
 
