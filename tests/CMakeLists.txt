@@ -43,13 +43,25 @@ set(LS_GAME_INTERNAL_DEPS
     lsgame
 )
 
-set(LS_GAME_EXTERNAL_DEPS
-    ${OPENGL_gl_LIBRARY}
-    ${SDL2_LIBS}
-    ${FREETYPE_LIBS}
-    ${ASSIMP_LIBS}
-    ${FREEIMAGE_LIBS}
-)
+if (NOT MSVC)
+    set(LS_GAME_EXTERNAL_DEPS
+        ${OPENGL_gl_LIBRARY}
+        ${SDL2_LIBS}
+        ${FREETYPE_LIBRARIES}
+        ${ASSIMP_LIBRARIES}
+        ${FREEIMAGE_LIBRARIES}
+    )
+else()
+    set(LS_GAME_EXTERNAL_DEPS
+        ${OPENGL_gl_LIBRARY}
+        ${SDL2_LIBS}
+        ${FREETYPE_LIBRARIES}
+        ${ASSIMP_LIBRARIES}
+        ${FREEIMAGE_LIBRARIES}
+        pthread
+    )
+endif()
+
 
 
 # -------------------------------------
