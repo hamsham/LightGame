@@ -94,6 +94,8 @@ layout(shared) uniform BatchProperties {
     mat4 vpMatrix;
     mat4 modelMatrix;
 
+    vec4 camPos;
+
     Light light;
     PointLight point;
     SpotLight spot;
@@ -157,6 +159,8 @@ layout(shared) uniform BatchProperties {
     mat4 vpMatrix;
     mat4 modelMatrix;
 
+    vec4 camPos;
+
     Light light;
     PointLight point;
     SpotLight spot;
@@ -164,6 +168,7 @@ layout(shared) uniform BatchProperties {
 
 
 
+/*
 void main() {
     vec3 pos   = fragVertPos.xyz;
     vec3 uv    = fragVertUV.xyz;
@@ -209,6 +214,128 @@ void main() {
     pixel = pixel * (diffuse + specular);
     fragOutColor = vec4(min(pixel, vec3(1.0)), 1.0);
 }
+*/
+
+
+
+
+
+
+// Calculate the metallic component of a surface
+vec4 fresnel_schlick(float cosTheta, vec4 surfaceReflection)
+{
+    return surfaceReflection + (vec4(1.0) - surfaceReflection) * pow(1.0 - cosTheta, 5.0);
+}
+
+
+
+// normal distribution function within a hemisphere
+float distribution_ggx(vec4 norm, vec4 hemisphere, float roughness)
+{
+    float roughSquared = roughness * roughness;
+    float roughQuad    = roughSquared * roughSquared;
+    float nDotH        = max(dot(norm, hemisphere), 0.0);
+    float nDotH2       = nDotH * nDotH;
+    float distribution = nDotH2 * (roughQuad - 1.0) + 1.0;
+
+    return nDotH2 / (3.14159265 * distribution  * distribution);
+}
+
+
+
+// Determine how a surface's roughness affects how it reflects light
+float geometry_schlick_ggx(float normDotView, float roughness)
+{
+    roughness += 1.0;
+    roughness = (roughness*roughness) * 0.125; // 1/8
+
+    float geometry = normDotView * (1. - roughness) + roughness;
+    return normDotView / geometry;
+}
+
+
+
+// PBR Geometry function for determining how light bounces off a surface
+float geometry_smith(vec4 norm, vec4 viewDir, vec4 radiance, float roughness)
+{
+    float normDotView = max(dot(norm, viewDir), 0.0);
+    float normDotRad = max(dot(norm, radiance), 0.0);
+
+    return geometry_schlick_ggx(normDotView, roughness) * geometry_schlick_ggx(normDotRad, roughness);
+}
+
+
+
+void main()
+{
+    vec4     pos       = vec4(fragVertPos.xyz, 0.0);
+    vec2     uv        = fragVertUV.xy;
+    vec4     norm      = normalize(vec4(fragVertNorm.xyz, 0.0));
+    vec4     pixel     = vec4(texture(DIFFUSE_TEXTURE, fragVertUV.xy).xyz, 1.0);
+
+    // gamma correction
+    pixel = pow(pixel, vec4(2.2f, 2.2, 2.2, 1.0));
+
+    // surface model
+    vec4        camPos           = batchProperties.camPos;
+    vec4        viewDir          = normalize(camPos - pos);
+    vec4        lightPos         = batchProperties.light.pos;
+    vec4        albedo           = pixel;
+    const float metallic         = 0.4;
+    const float roughness        = 0.35;
+    const float ambientIntensity = 0.5;
+    const float diffuseIntensity = 50.0;
+
+    // Metallic reflectance at a normal incidence
+    // 0.04f should be close to plastic.
+    vec4 surfaceConstant   = vec4(0.4, 0.4, 0.4, 1.0);
+    vec4 surfaceReflection = mix(surfaceConstant, albedo, metallic);
+
+    vec4         lightDir0         = vec4(0.0);
+
+    vec4         lightDirN         = lightPos - pos;
+    float        distance          = length(lightDirN);
+    lightDirN                      = lightDirN / distance; // normalize
+    vec4         hemisphere        = normalize(viewDir + lightDirN);
+    float        attenuation       = 1.0 / (distance*distance);
+    vec4         radianceObj       = batchProperties.light.diffuse * attenuation * diffuseIntensity;
+
+    float        ndf               = distribution_ggx(norm, hemisphere, roughness);
+    float        geom              = geometry_smith(norm, viewDir, lightDirN, roughness);
+    vec4         fresnel           = fresnel_schlick(max(dot(hemisphere, viewDir), 0.0), surfaceReflection);
+
+    vec4         brdf              = fresnel * ndf * geom;
+    float        cookTorrance      = 4.0 * max(dot(norm, viewDir), 0.0) * max(dot(norm, lightDirN), 0.0) + 0.000001;  // avoid divide-by-0
+    vec4         specular          = brdf / cookTorrance;
+
+    vec4         specContrib       = fresnel;
+    vec4         refractRatio      = (vec4(1.0) - specContrib) * (vec4(1.0) - metallic);
+
+    float        normDotLight      = max(dot(lightDirN, norm), 0.0);
+    lightDir0                      += (refractRatio * albedo * 0.318309886 + specular) * radianceObj * normDotLight;
+
+    vec4         ambient           = batchProperties.light.ambient * ambientIntensity;
+
+    // Color normalization and light contribution
+    vec4 outRGB = albedo * (ambient + lightDir0);
+
+    // Tone mapping
+    //outRGB /= outRGB + vec4(1.0, 1.0, 1.0, 0.0);
+
+    // HDR Tone mapping
+    const float exposure = 4.0;
+    outRGB   = vec4(1.0) - exp(-outRGB * exposure);
+    outRGB.a = 1.0;
+
+    // Gamma correction
+    //const vec4 gamma = vce4(1.0 / 2.2f);
+    //outRGB[0] = clamp(pow(outRGB, gamma), vec4(0.0), vec4(1.0));
+    //outRGB[3] = 1.0;
+
+    fragOutColor = outRGB;
+}
+
+
 )***";
 
 
@@ -252,6 +379,8 @@ layout(shared) uniform BatchProperties {
     mat4 mvpMatrix;
     mat4 vpMatrix;
     mat4 modelMatrix;
+
+    vec4 camPos;
 
     Light light;
     PointLight point;
@@ -526,12 +655,12 @@ void HelloMeshState::setup_uniform_blocks() {
     }
 
     {
-        math::vec4 val = {30.f, 45.f, 45.f, 1.f};
+        math::vec4 val = {3.f, -5.f, 0.f, 1.f};
         uniformBlock.modify(offsetof(MeshUniforms, light.pos), sizeof(math::vec4), val.v);
         LS_LOG_GL_ERR();
     }
     {
-        math::vec4 val = {1.f};
+        math::vec4 val = {0.25f, 0.25f, 0.25f, 1.f};
         uniformBlock.modify(offsetof(MeshUniforms, light.ambient), sizeof(math::vec4), val.v);
         LS_LOG_GL_ERR();
     }
@@ -541,7 +670,7 @@ void HelloMeshState::setup_uniform_blocks() {
         LS_LOG_GL_ERR();
     }
     {
-        math::vec4 val = {1.f};
+        math::vec4 val = {0.5f, 0.5f, 0.5f, 1.f};
         uniformBlock.modify(offsetof(MeshUniforms, light.diffuse), sizeof(math::vec4), val.v);
         LS_LOG_GL_ERR();
     }
@@ -778,12 +907,13 @@ void HelloMeshState::on_run() {
     }
     {
         const draw::Transform& camTrans = pController->get_camera_transformation();
-        const math::vec3&&     camPos   = -camTrans.get_position();
-        const math::vec4       lightPos = {camPos[0], camPos[1], camPos[2], 1.f};
+        const math::vec3&&     camPos3  = -camTrans.get_position();
+        const math::vec4       camPos   = {camPos3[0], camPos3[1], camPos3[2], 1.f};
         const math::mat4&      viewMat  = camTrans.get_transform();
         const math::vec4&&     spotDir  = math::normalize(math::vec4{viewMat[0][2], viewMat[1][2], viewMat[2][2], 0.f});
 
-        uniformBlock.modify(offsetof(MeshUniforms, light.pos), sizeof(math::vec4), lightPos.v);
+        uniformBlock.modify(offsetof(MeshUniforms, camPos), sizeof(math::vec4), &camPos);
+        uniformBlock.modify(offsetof(MeshUniforms, light.pos), sizeof(math::vec4), math::vec4{3.f, -5.f, 0.f, 1.f}.v);
         uniformBlock.modify(offsetof(MeshUniforms, spot.direction), sizeof(spotDir), &spotDir.v);
     }
     LS_LOG_GL_ERR();
@@ -794,7 +924,7 @@ void HelloMeshState::on_run() {
     render_scene_graph(testShader, meshShaderUboIndex);
 
 #ifdef LS_DRAW_BACKEND_GL
-    //render_scene_graph(enbtShader, enbtShaderUboIndex);
+    render_scene_graph(enbtShader, enbtShaderUboIndex);
 #endif
 }
 

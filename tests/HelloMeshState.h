@@ -57,6 +57,8 @@ struct MeshUniforms
     ls::math::mat4 vpMatrix;
     ls::math::mat4 modelMatrix;
 
+    ls::math::vec4 camPos;
+
     Light light;
     PointLight point;
     SpotLight spot;
