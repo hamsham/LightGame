@@ -50,26 +50,14 @@ set(LS_GAME_INTERNAL_DEPS
     lsgame
 )
 
-if (NOT MSVC)
-    set(LS_GAME_EXTERNAL_DEPS
-        ${OPENGL_gl_LIBRARY}
-        ${SDL2_LIBS}
-        ${FREETYPE_LIBRARIES}
-        ${ASSIMP_LIBRARIES}
-        ${FREEIMAGE_LIBRARIES}
-        ${Boost_REGEX_LIBRARY}
-    )
-else()
-    set(LS_GAME_EXTERNAL_DEPS
-        ${OPENGL_gl_LIBRARY}
-        ${SDL2_LIBS}
-        ${FREETYPE_LIBRARIES}
-        ${ASSIMP_LIBRARIES}
-        ${FREEIMAGE_LIBRARIES}
-        ${Boost_REGEX_LIBRARY}
-        pthread
-    )
-endif()
+set(LS_GAME_EXTERNAL_DEPS
+    ${OPENGL_gl_LIBRARY}
+    ${SDL2_LIBS}
+    ${FREETYPE_LIBRARIES}
+    ${ASSIMP_LIBRARIES}
+    ${FREEIMAGE_LIBRARIES}
+    ${Boost_REGEX_LIBRARY}
+)
 
 
 
