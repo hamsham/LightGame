@@ -67,5 +67,5 @@ else()
         message(FATAL_ERROR "-- Unable to find Cocoa for linking with SDL2.")
     endif()
 
-    set(SDL2_LIBRARIES SDL2 ${COCOA_LIBRARY} Threads::Threads)
+    set(SDL2_LIBRARIES -framework SDL2 "-framework Cocoa" Threads::Threads)
 endif()
