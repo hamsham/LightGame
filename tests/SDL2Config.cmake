@@ -2,6 +2,11 @@
 # #####################################
 # External build for SDL2
 # #####################################
+set(CMAKE_THREAD_PREFER_PTHREAD)
+find_package(Threads)
+
+
+
 set(SDL2_BRANCH "release-2.0.8" CACHE STRING "Git branch or tag for checking out SDL2.")
 mark_as_advanced(SDL2_BRANCH)
 
@@ -37,13 +42,11 @@ ExternalProject_Add(
         ${CMAKE_COMMAND} -E chdir ${EXTERNAL_PROJECT_PREFIX}/src/Sdl2-build ${CMAKE_COMMAND} --build . --config ${CMAKE_CFG_INTDIR} --target install
 )
 
+
+
 # Add the imported library target
 add_library(SDL2 SHARED IMPORTED)
 set_target_properties(SDL2 PROPERTIES IMPORTED_LOCATION ${EXTERNAL_PROJECT_PREFIX}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}SDL2${CMAKE_SHARED_LIBRARY_SUFFIX})
 add_dependencies(SDL2 Sdl2)
 
-if(NOT MSVC)
-    set(SDL2_LIBS SDL2 pthread)
-else()
-    set(SDL2_LIBS SDL2)
-endif()
+set(SDL2_LIBRARIES SDL2 Threads::Threads)
