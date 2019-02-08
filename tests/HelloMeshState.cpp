@@ -30,9 +30,24 @@ using draw::VAOAttrib;
 using draw::ShaderAttribArray;
 
 
-#ifndef LS_GAME_TEST_MESH
-    //#define LS_GAME_TEST_MESH "testdata/rover/testmesh.dae"
-    #define LS_GAME_TEST_MESH "testdata/sibenik/sibenik.obj"
+#ifndef LS_TEST_USE_PBR
+    #define LS_TEST_USE_PBR 0
+#endif
+
+#ifndef LS_GAME_USE_ANIMS
+    #define LS_GAME_USE_ANIMS 0
+#endif
+
+#if LS_GAME_USE_ANIMS
+    #ifndef LS_GAME_TEST_MESH
+        #define LS_GAME_TEST_MESH "testdata/rover/testmesh.dae"
+    #else
+        #define LS_GAME_TEST_MESH "testdata/sibenik/sibenik.obj"
+    #endif /* LS_GAME_TEST_MESH */
+#else
+    #ifndef LS_GAME_TEST_MESH
+        #define LS_GAME_TEST_MESH "testdata/sibenik/sibenik.obj"
+    #endif /* LS_GAME_TEST_MESH */
 #endif
 
 
@@ -117,6 +132,8 @@ void main() {
 /*-------------------------------------
  * Mesh Fragment Shader
 -------------------------------------*/
+#if LS_TEST_USE_PBR
+
 constexpr char fsShaderData[] = u8R"***(
 //#version 300 es
 #version 330 core
@@ -165,61 +182,6 @@ layout(shared) uniform BatchProperties {
     PointLight point;
     SpotLight spot;
 } batchProperties;
-
-
-
-/*
-void main() {
-    vec3 pos   = fragVertPos.xyz;
-    vec3 uv    = fragVertUV.xyz;
-    vec3 norm  = fragVertNorm.xyz;
-    vec3 pixel = texture(DIFFUSE_TEXTURE, fragVertUV.xy).xyz;
-
-    pixel.r = pixel.r == 0.0 ? 1.0 : pixel.r;
-    pixel.g = pixel.g == 0.0 ? 1.0 : pixel.g;
-    pixel.b = pixel.b == 0.0 ? 1.0 : pixel.b;
-
-    float attenuation;
-    vec3 diffuse, specular;
-
-    // Light direction calculation
-    Light l         = batchProperties.light;
-    vec3  lightDir  = l.pos.xyz - pos;
-    float lightDist = length(lightDir);
-
-    lightDir = normalize(lightDir);
-
-    // Diffuse light calculation
-    {
-        float lightAngle = max(dot(lightDir, norm), 0.0);
-        float constant   = batchProperties.point.constant;
-        float linear     = batchProperties.point.linear;
-        float quadratic  = batchProperties.point.quadratic;
-
-        attenuation = 1.0 / (constant + (linear * lightDist) + (quadratic * lightDist * lightDist));
-        diffuse     = l.diffuse.xyz * (lightAngle * attenuation);
-    }
-
-    // Specular light calculation
-    {
-        SpotLight s         = batchProperties.spot;
-        float epsilon       = s.innerCutoff - s.outerCutoff;
-        float theta         = dot(lightDir, s.direction.xyz);
-        float spotIntensity = clamp((theta - s.outerCutoff) / epsilon, 0.0, 1.0);
-
-        specular = l.specular.xyz * (spotIntensity * attenuation);
-    }
-
-    // output composition
-    pixel = pixel * (diffuse + specular);
-    fragOutColor = vec4(min(pixel, vec3(1.0)), 1.0);
-}
-*/
-
-
-
-
-
 
 // Calculate the metallic component of a surface
 vec4 fresnel_schlick(float cosTheta, vec4 surfaceReflection)
@@ -337,6 +299,110 @@ void main()
 
 
 )***";
+
+#else
+
+constexpr char fsShaderData[] = u8R"***(
+//#version 300 es
+#version 330 core
+
+precision mediump float;
+
+uniform sampler2D DIFFUSE_TEXTURE;
+
+in vec4 fragVertPos;
+in vec4 fragVertUV;
+in vec4 fragVertNorm;
+
+out vec4 fragOutColor;
+
+struct Light
+{
+    vec4 pos;
+    vec4 ambient;
+    vec4 diffuse;
+    vec4 specular;
+};
+
+struct PointLight
+{
+    float constant;
+    float linear;
+    float quadratic;
+    float padding;
+};
+
+struct SpotLight
+{
+    float innerCutoff;
+    float outerCutoff;
+    vec4 direction;
+};
+
+layout(shared) uniform BatchProperties {
+    mat4 mvpMatrix;
+    mat4 vpMatrix;
+    mat4 modelMatrix;
+
+    vec4 camPos;
+
+    Light light;
+    PointLight point;
+    SpotLight spot;
+} batchProperties;
+
+
+
+void main() {
+    vec3 pos   = fragVertPos.xyz;
+    vec3 uv    = fragVertUV.xyz;
+    vec3 norm  = fragVertNorm.xyz;
+    vec3 pixel = texture(DIFFUSE_TEXTURE, fragVertUV.xy).xyz;
+
+    pixel.r = pixel.r == 0.0 ? 1.0 : pixel.r;
+    pixel.g = pixel.g == 0.0 ? 1.0 : pixel.g;
+    pixel.b = pixel.b == 0.0 ? 1.0 : pixel.b;
+
+    float attenuation;
+    vec3 diffuse, specular;
+
+    // Light direction calculation
+    Light l         = batchProperties.light;
+    vec3  lightDir  = batchProperties.camPos.xyz - pos;
+    float lightDist = length(lightDir);
+
+    lightDir = normalize(lightDir);
+
+    // Diffuse light calculation
+    {
+        float lightAngle = max(dot(lightDir, norm), 0.0);
+        float constant   = batchProperties.point.constant;
+        float linear     = batchProperties.point.linear;
+        float quadratic  = batchProperties.point.quadratic;
+
+        attenuation = 1.0 / (constant + (linear * lightDist) + (quadratic * lightDist * lightDist));
+        diffuse     = l.diffuse.xyz * (lightAngle * attenuation);
+    }
+
+    // Specular light calculation
+    {
+        SpotLight s         = batchProperties.spot;
+        float epsilon       = s.innerCutoff - s.outerCutoff;
+        float theta         = dot(lightDir, s.direction.xyz);
+        float spotIntensity = clamp((theta - s.outerCutoff) / epsilon, 0.0, 1.0);
+
+        specular = l.specular.xyz * (spotIntensity * attenuation);
+    }
+
+    // output composition
+    pixel = pixel * (diffuse + specular);
+    fragOutColor = vec4(min(pixel, vec3(1.0)), 1.0);
+}
+
+
+)***";
+
+#endif /* LS_TEST_USE_PBR */
 
 
 
