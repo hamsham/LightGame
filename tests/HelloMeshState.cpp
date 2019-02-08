@@ -283,7 +283,7 @@ void main()
     vec4        albedo           = pixel;
     const float metallic         = 0.4;
     const float roughness        = 0.35;
-    const float ambientIntensity = 0.5;
+    const float ambientIntensity = 0.275;
     const float diffuseIntensity = 50.0;
 
     // Metallic reflectance at a normal incidence
@@ -320,17 +320,17 @@ void main()
     vec4 outRGB = albedo * (ambient + lightDir0);
 
     // Tone mapping
-    //outRGB /= outRGB + vec4(1.0, 1.0, 1.0, 0.0);
+    outRGB /= outRGB + vec4(1.0, 1.0, 1.0, 0.0);
 
     // HDR Tone mapping
-    const float exposure = 4.0;
-    outRGB   = vec4(1.0) - exp(-outRGB * exposure);
-    outRGB.a = 1.0;
+    //const float exposure = 4.0;
+    //outRGB   = vec4(1.0) - exp(-outRGB * exposure);
+    //outRGB.a = 1.0;
 
     // Gamma correction
-    //const vec4 gamma = vce4(1.0 / 2.2f);
-    //outRGB[0] = clamp(pow(outRGB, gamma), vec4(0.0), vec4(1.0));
-    //outRGB[3] = 1.0;
+    //const vec3 gamma = vec3(1.0 / 2.2f);
+    //outRGB.rgb = clamp(pow(outRGB.rgb, gamma), vec3(0.0), vec3(1.0));
+    //outRGB.a = 1.0;
 
     fragOutColor = outRGB;
 }
@@ -924,7 +924,7 @@ void HelloMeshState::on_run() {
     render_scene_graph(testShader, meshShaderUboIndex);
 
 #ifdef LS_DRAW_BACKEND_GL
-    render_scene_graph(enbtShader, enbtShaderUboIndex);
+    //render_scene_graph(enbtShader, enbtShaderUboIndex);
 #endif
 }
 
