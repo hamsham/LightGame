@@ -49,8 +49,16 @@ add_library(SDL2 STATIC IMPORTED)
 set_target_properties(SDL2 PROPERTIES IMPORTED_LOCATION ${EXTERNAL_PROJECT_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}SDL2${CMAKE_STATIC_LIBRARY_SUFFIX})
 add_dependencies(SDL2 Sdl2)
 
-if (NOT APPLE)
+if (WIN32)
     set(SDL2_LIBRARIES SDL2 Threads::Threads)
+elseif(NOT APPLE)
+    find_library(DYNAMIC_LIBRARY dl REQUIRED)
+
+    if (DYNAMIC_LIBRARY-NOTFOUND)
+        message(FATAL_ERROR "-- Unable to find libdl for linking with SDL2.")
+    endif()
+
+    set(SDL2_LIBRARIES SDL2 Threads::Threads ${DYNAMIC_LIBRARY})
 else()
     set(CMAKE_FIND_FRAMEWORK LAST)
     find_library(COCOA_LIBRARY Cocoa REQUIRED)
