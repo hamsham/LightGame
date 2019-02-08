@@ -23,6 +23,13 @@ find_package(OpenGL REQUIRED)
 
 
 # -------------------------------------
+# 3rd-party libraries
+# -------------------------------------
+include(SDL2Config.cmake)
+
+
+
+# -------------------------------------
 # Include Paths
 # -------------------------------------
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -50,6 +57,7 @@ if (NOT MSVC)
         ${FREETYPE_LIBRARIES}
         ${ASSIMP_LIBRARIES}
         ${FREEIMAGE_LIBRARIES}
+        ${Boost_REGEX_LIBRARY}
     )
 else()
     set(LS_GAME_EXTERNAL_DEPS
@@ -58,6 +66,7 @@ else()
         ${FREETYPE_LIBRARIES}
         ${ASSIMP_LIBRARIES}
         ${FREEIMAGE_LIBRARIES}
+        ${Boost_REGEX_LIBRARY}
         pthread
     )
 endif()
