@@ -28,7 +28,7 @@ struct Event {
     /**
      * @brief pSource contains a pointer to the source of a event.
      */
-    Dispatcher* pSource;
+    Dispatcher* pSrc;
 
     /**
      * @brief A event's baseId should contain enough information about a
@@ -37,19 +37,19 @@ struct Event {
      * For example, a base ID could be something similar to "KEYBOARD_EVENT"
      * while the action ID is "KEY_BUTTON_PRESSED."
      */
-    uint32_t baseId;
+    uint64_t type;
 
     /**
      * @brief The action id should help subscribers determine what action was
      * performed by the event source.
      */
-    uint32_t actionId;
+    uint64_t info;
 
     /**
      * @brief pData contains a pointer to any data from within the source
      * dispatcher.
      */
-    void* pData;
+    void* pExtra;
 };
 
 } // end game namespace
