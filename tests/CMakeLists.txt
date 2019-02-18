@@ -147,8 +147,6 @@ configure_file(testdata/sibenik/sibenik.obj        testdata/sibenik/sibenik.obj 
 # -------------------------------------
 # Building and Linking Targets
 # -------------------------------------
-set(CMAKE_SKIP_RPATH ON)
-
 function(LS_GAME_ADD_TARGET trg srcs)
     add_executable(${trg} ${srcs})
     add_dependencies(${trg} ${LS_GAME_INTERNAL_DEPS})
