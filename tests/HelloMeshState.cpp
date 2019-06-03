@@ -31,7 +31,7 @@ using draw::ShaderAttribArray;
 
 
 #ifndef LS_TEST_USE_PBR
-    #define LS_TEST_USE_PBR 0
+    #define LS_TEST_USE_PBR 1
 #endif
 
 #ifndef LS_GAME_USE_ANIMS
@@ -282,12 +282,12 @@ void main()
     vec4 outRGB = albedo * (ambient + lightDir0);
 
     // Tone mapping
-    outRGB /= outRGB + vec4(1.0, 1.0, 1.0, 0.0);
+    //outRGB /= outRGB + vec4(1.0, 1.0, 1.0, 0.0);
 
     // HDR Tone mapping
-    //const float exposure = 4.0;
-    //outRGB   = vec4(1.0) - exp(-outRGB * exposure);
-    //outRGB.a = 1.0;
+    const float exposure = 4.0;
+    outRGB   = vec4(1.0) - exp(-outRGB * exposure);
+    outRGB.a = 1.0;
 
     // Gamma correction
     //const vec3 gamma = vec3(1.0 / 2.2f);
