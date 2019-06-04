@@ -130,7 +130,7 @@ static const unsigned testTexStride = sizeof(math::vec3);
 static const unsigned testNormStride = testTexStride + sizeof(math::vec2);
 static const unsigned testVertStride = testNormStride + sizeof(int32_t);
 
-static constexpr math::mat4 modelMatrix = {1.f};
+static const math::mat4 modelMatrix = {1.f};
 
 
 
