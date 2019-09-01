@@ -49,14 +49,3 @@ install(TARGETS ${OUTPUT_NAME}
     LIBRARY DESTINATION lib
 )
 install(DIRECTORY include/lightsky/game DESTINATION include/lightsky)
-
-
-
-# -------------------------------------
-# LS Game Testing Area
-# -------------------------------------
-option(LS_BUILD_GAME_TESTS "Build tests for the LightGame library." ON)
-
-if(LS_BUILD_GAME_TESTS)
-    add_subdirectory(tests)
-endif(LS_BUILD_GAME_TESTS)
