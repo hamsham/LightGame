@@ -10,10 +10,16 @@
 
 #include <cstdint>
 
-namespace ls {
-namespace game {
 
-/**----------------------------------------------------------------------------
+
+namespace ls
+{
+namespace game
+{
+
+
+
+/*-----------------------------------------------------------------------------
  * Forward declarations
 -----------------------------------------------------------------------------*/
 class Subscriber;
@@ -22,9 +28,10 @@ class Dispatcher;
 
 
 /**----------------------------------------------------------------------------
- * Basic event structure.
+ * @brief Basic event structure.
 -----------------------------------------------------------------------------*/
-struct Event {
+struct Event
+{
     /**
      * @brief pSource contains a pointer to the source of a event.
      */
@@ -51,6 +58,8 @@ struct Event {
      */
     void* pExtra;
 };
+
+
 
 } // end game namespace
 } // end ls namespace

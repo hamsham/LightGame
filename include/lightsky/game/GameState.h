@@ -12,18 +12,25 @@
 
 #include "lightsky/setup/Api.h"
 
-namespace ls {
-namespace game {
+
+
+namespace ls
+{
+namespace game
+{
+
+
 
 class GameSystem;
 
 
 
-/**----------------------------------------------------------------------------
-    A game_state_t is a type used in order to help manage interactions between
-    ls::game::system objects and different game state objects.
------------------------------------------------------------------------------*/
-enum class game_state_status_t {
+/**
+ * A game_state_t is a type used in order to help manage interactions between
+ * ls::game::system objects and different game state objects.
+*/
+enum class game_state_status_t
+{
     PAUSED = 0,
     RUNNING,
     STOPPING,
@@ -33,15 +40,16 @@ enum class game_state_status_t {
 
 
 
-/**----------------------------------------------------------------------------
-    @brief Game State Base Class
-
-    An Abstract base class that can be overridden to organize games onto stacks
-    within an lsSubsystem. gameState objects are pushed onto a "stack" managed
-    by the lsSubsystem. Game states are passed hardware events by subsystems
-    when they are running.
------------------------------------------------------------------------------*/
-class LS_API GameState {
+/**
+ * @brief Game State Base Class
+ *
+ * An Abstract base class that can be overridden to organize games onto stacks
+ * within an lsSubsystem. gameState objects are pushed onto a "stack" managed
+ * by the lsSubsystem. Game states are passed hardware events by subsystems
+ * when they are running.
+*/
+class LS_API GameState
+{
     friend class GameSystem;
 
   private:
@@ -106,7 +114,7 @@ class LS_API GameState {
      * method. This should be used as a last-resort.
      */
     virtual ~GameState() = 0;
-    
+
     /**
      * @brief Default Constructor
      */
@@ -241,89 +249,127 @@ class LS_API GameState {
     virtual void resume_state();
 };
 
+
+
 /*-------------------------------------
     Get the current state of *this object.
 -------------------------------------*/
-inline game_state_status_t GameState::get_state() const {
+inline game_state_status_t GameState::get_state() const
+{
     return currentState;
 }
+
+
 
 /*-------------------------------------
     Set the operational state of *this.
 -------------------------------------*/
-inline void GameState::set_state(game_state_status_t s) {
+inline void GameState::set_state(game_state_status_t s)
+{
     currentState = s;
 }
+
+
 
 /*-------------------------------------
     Get the parent subsystem that manages *this (const).
 -------------------------------------*/
-inline const GameSystem& GameState::get_parent_system() const {
+inline const GameSystem& GameState::get_parent_system() const
+{
     return *pSystem;
 }
+
+
 
 /*-------------------------------------
     Get the parent subsystem that manages *this.
 -------------------------------------*/
-inline GameSystem& GameState::get_parent_system() {
+inline GameSystem& GameState::get_parent_system()
+{
     return *pSystem;
 }
+
+
 
 /*-------------------------------------
     Check if the current state is running.
 -------------------------------------*/
-inline bool GameState::is_running() const {
+inline bool GameState::is_running() const
+{
     return currentState == game_state_status_t::RUNNING;
 }
+
+
 
 /*-------------------------------------
     Check if the current state is paused.
 -------------------------------------*/
-inline bool GameState::is_paused() const {
+inline bool GameState::is_paused() const
+{
     return currentState == game_state_status_t::PAUSED;
 }
+
+
 
 /*-------------------------------------
     Check if the current state is initializing.
 -------------------------------------*/
-inline bool GameState::is_starting() const {
+inline bool GameState::is_starting() const
+{
     return currentState == game_state_status_t::STARTING;
 }
+
+
 
 /*-------------------------------------
     Check if the current state is stopping.
 -------------------------------------*/
-inline bool GameState::is_stopping() const {
+inline bool GameState::is_stopping() const
+{
     return currentState == game_state_status_t::STOPPING;
 }
 
+
+
 /*-------------------------------------
     Check if the current state is stopped.
 -------------------------------------*/
-inline bool GameState::is_stopped() const {
+inline bool GameState::is_stopped() const
+{
     return currentState == game_state_status_t::STOPPED;
 }
 
+
+
 /*-------------------------------------
     Check if the current state is stopped.
 -------------------------------------*/
-inline void GameState::stop_state() {
+inline void GameState::stop_state()
+{
     currentState = game_state_status_t::STOPPING;
 }
 
-/*-------------------------------------
-    Check if the current state is stopped.
--------------------------------------*/
-inline void GameState::pause_state() {
-    currentState = game_state_status_t::PAUSED;
-}
+
 
 /*-------------------------------------
     Check if the current state is stopped.
 -------------------------------------*/
-inline void GameState::resume_state() {
+inline void GameState::pause_state()
+{
+    currentState = game_state_status_t::PAUSED;
+}
+
+
+
+/*-------------------------------------
+    Check if the current state is stopped.
+-------------------------------------*/
+inline void GameState::resume_state()
+{
     currentState = game_state_status_t::RUNNING;
 }
+
+
 
 } // end game namespace
 } // end ls namespace

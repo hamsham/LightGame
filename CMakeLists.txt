@@ -19,6 +19,16 @@ set(LS_GAME_SOURCES
     src/Subscriber.cpp
 )
 
+set(LS_GAME_HEADERS
+    include/lightsky/game/Dispatcher.h
+    include/lightsky/game/Event.h
+    include/lightsky/game/Game.h
+    include/lightsky/game/GameState.h
+    include/lightsky/game/GameSystem.h
+    include/lightsky/game/Manager.h
+    include/lightsky/game/Subscriber.h
+)
+
 
 
 # -------------------------------------
@@ -33,10 +43,10 @@ else()
     set(LS_LIB_TYPE STATIC)
 endif()
 
-add_library(${OUTPUT_NAME} ${LS_LIB_TYPE} ${LS_GAME_SOURCES})
+add_library(${OUTPUT_NAME} ${LS_LIB_TYPE} ${LS_GAME_SOURCES} ${LS_GAME_HEADERS})
 
 # Dependencies
-target_link_libraries(${OUTPUT_NAME} lssetup lsutils lsmath)
+target_link_libraries(${OUTPUT_NAME} lssetup lsutils)
 
 
 

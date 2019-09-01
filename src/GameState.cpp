@@ -7,35 +7,50 @@
 
 #include "lightsky/game/GameState.h"
 
-namespace ls {
-namespace game {
+
+
+namespace ls
+{
+namespace game
+{
+
+
 
 /*-------------------------------------
     Destructor
 -------------------------------------*/
-GameState::~GameState() {
+GameState::~GameState()
+{
 }
+
+
 
 /*-------------------------------------
     Constructor
 -------------------------------------*/
-GameState::GameState() {
+GameState::GameState()
+{
 }
+
+
 
 /*-------------------------------------
     Move Constructor
 -------------------------------------*/
 GameState::GameState(GameState&& gs) :
-    currentState {gs.currentState},
-pSystem {gs.pSystem}
+    currentState{gs.currentState},
+    pSystem{gs.pSystem}
 {
     gs.currentState = game_state_status_t::STOPPED;
 }
 
+
+
 /*-------------------------------------
     Move Operator
 -------------------------------------*/
-GameState& GameState::operator =(GameState&& gs) {
+GameState& GameState::operator=(GameState&& gs)
+{
 
     currentState = gs.currentState;
     gs.currentState = game_state_status_t::STOPPED;
@@ -45,37 +60,54 @@ GameState& GameState::operator =(GameState&& gs) {
     return *this;
 }
 
+
+
 /*-------------------------------------
     Parent Sub-System Assignment.
 -------------------------------------*/
-void GameState::set_parent_system(GameSystem& pSys) {
+void GameState::set_parent_system(GameSystem& pSys)
+{
     pSystem = &pSys;
 }
+
+
 
 /*-------------------------------------
     Start the current system's running state.
 -------------------------------------*/
-bool GameState::on_start() {
+bool GameState::on_start()
+{
     return true;
 }
+
+
 
 /*-------------------------------------
     Engage the current system's running state.
 -------------------------------------*/
-void GameState::on_run() {
+void GameState::on_run()
+{
 }
+
+
 
 /*-------------------------------------
     Pause the current system's running state.
 -------------------------------------*/
-void GameState::on_pause() {
+void GameState::on_pause()
+{
 }
+
+
 
 /*-------------------------------------
     Stop the current system's running state.
 -------------------------------------*/
-void GameState::on_stop() {
+void GameState::on_stop()
+{
 }
+
+
 
 } // end game namespace
 } // end ls namespace

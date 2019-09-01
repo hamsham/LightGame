@@ -15,12 +15,16 @@
 
 #include "lightsky/game/Event.h"
 
-namespace ls {
-namespace game {
+
+
+namespace ls
+{
+namespace game
+{
 
 
 
-/**----------------------------------------------------------------------------
+/**
  * @brief Event dispatcher object
  *
  * The dispatcher class contains a queue of events and a table of subscription
@@ -28,8 +32,9 @@ namespace game {
  * queue, then dispatched to all subscribers. Subscribers are automatically
  * dereferenced if this object goes out of their scope (i.e. if a call to
  * "delete" is made or an instance is destroyed).
------------------------------------------------------------------------------*/
-class LS_API Dispatcher {
+*/
+class LS_API Dispatcher
+{
     friend class Subscriber;
 
   private:
@@ -204,6 +209,8 @@ class LS_API Dispatcher {
      */
     unsigned get_num_subscribers() const;
 };
+
+
 
 } // end game namespace
 } // end ls namespace

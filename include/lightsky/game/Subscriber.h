@@ -12,12 +12,16 @@
 
 #include "lightsky/game/Event.h"
 
-namespace ls {
-namespace game {
+
+
+namespace ls
+{
+namespace game
+{
 
 
 
-/**----------------------------------------------------------------------------
+/**
  * @brief Event Subscription Object (abstract)
  *
  * The Subscription object is a simple event handler which will receive events
@@ -28,8 +32,9 @@ namespace game {
  *
  * Event subscribers must be derived and have the virtual "handleEvent()"
  * function overridden.
------------------------------------------------------------------------------*/
-class LS_API Subscriber {
+*/
+class LS_API Subscriber
+{
     friend class Dispatcher;
 
   private:
@@ -134,7 +139,7 @@ class LS_API Subscriber {
      * calls "dispatchEvents()." Pass NULL as a parameter in order to
      * sever the connection with the parent object.
      */
-    void set_dispatcher(Dispatcher * const pDispatcher = nullptr);
+    void set_dispatcher(Dispatcher* const pDispatcher = nullptr);
 
     /**
      * @brief Determine if *this is subscribed to a dispatcher.
@@ -147,6 +152,8 @@ class LS_API Subscriber {
      */
     bool is_subscribed(const Dispatcher& d) const;
 };
+
+
 
 } // end game namespace
 } // end ls namespace

@@ -8,8 +8,6 @@
 #ifndef __LS_GAME_H__
 #define __LS_GAME_H__
 
-#include "lightsky/game/Setup.h"
-
 #include "lightsky/game/Dispatcher.h"
 #include "lightsky/game/Event.h"
 #include "lightsky/game/GameState.h"

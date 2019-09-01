@@ -13,20 +13,30 @@
 
 #include "lightsky/setup/Api.h"
 
-namespace ls {
-namespace game {
 
+
+namespace ls
+{
+namespace game
+{
+
+
+
+/*-----------------------------------------------------------------------------
+ * Forward declarations
+-----------------------------------------------------------------------------*/
 class GameState;
 
 
 
-/**----------------------------------------------------------------------------
+/**
  * The system object commands all hardware events and passes them to any
  * gameState objects that it manages. Game state objects are freed from memory
  * when this object gets destroyed, therefore, all gameState objects managed by
  * a subSystem must be created using the "new" operator.
------------------------------------------------------------------------------*/
-class LS_API GameSystem {
+*/
+class LS_API GameSystem
+{
   private:
     /**
      * Stores the previous hardware time since the last update.
@@ -162,7 +172,7 @@ class LS_API GameSystem {
      * @param pState
      * A pointer to a gameState object allocated with "new."
      */
-    bool push_game_state(GameState * const pState);
+    bool push_game_state(GameState* const pState);
 
     /**
      * Pop the last game state from the list. If there are no states left
@@ -176,7 +186,7 @@ class LS_API GameSystem {
      * @param pState
      * A pointer to the desired game state.
      */
-    void pop_game_state(GameState * const pState);
+    void pop_game_state(GameState* const pState);
 
     /**
      * Search for a game state in the list and remove it if it exists.
@@ -218,7 +228,7 @@ class LS_API GameSystem {
      * out of bounds.
      */
     GameState* get_game_state(unsigned index);
-    
+
     /**
      * Retrieve the first gamestate in *this which matches a certain data type.
      *
@@ -226,7 +236,7 @@ class LS_API GameSystem {
      * certain data type. Null if the requested data type doesn't exist in
      * *this.
      */
-    template <typename gamestate_t>
+    template<typename gamestate_t>
     gamestate_t* get_game_state() const;
 
     /**
@@ -238,7 +248,7 @@ class LS_API GameSystem {
      * @return The index of the game state held within the game list.
      * UINT_MAX if the state was not found.
      */
-    unsigned get_game_state_index(GameState * const pState) const;
+    unsigned get_game_state_index(GameState* const pState) const;
 
     /**
      * Get the number of game states contained within *this.
@@ -277,79 +287,110 @@ class LS_API GameSystem {
     virtual bool is_runnable() const;
 };
 
+
+
 /*-------------------------------------
     Initialize the subsystem using LightSky's own display system
 -------------------------------------*/
-inline bool GameSystem::start() {
+inline bool GameSystem::start()
+{
     return gameList.size() == 0;
 }
+
+
 
 /*-------------------------------------
     SubSystem Running
 -------------------------------------*/
-inline void GameSystem::run() {
+inline void GameSystem::run()
+{
     update_tick_time();
     update_game_states();
 }
 
+
+
 /*-------------------------------------
     SubSystem Running
 -------------------------------------*/
-inline void GameSystem::pause() {
+inline void GameSystem::pause()
+{
     update_tick_time();
 }
+
+
 
 /*-------------------------------------
     SubSystem Termination
 -------------------------------------*/
-inline void GameSystem::stop() {
+inline void GameSystem::stop()
+{
     clear_game_states();
     prevTime = tickTime = 0;
 }
 
+
+
 /*-------------------------------------
     SubSystem State Retrieval
 -------------------------------------*/
-template <typename gamestate_t>
-gamestate_t* GameSystem::get_game_state() const {
-    for (GameState* const pState : gameList) {
+template<typename gamestate_t>
+gamestate_t* GameSystem::get_game_state() const
+{
+    for (GameState* const pState : gameList)
+    {
         gamestate_t* const pRequestType = dynamic_cast<gamestate_t*>(pState);
-        
-        if (pRequestType != nullptr) {
+
+        if (pRequestType != nullptr)
+        {
             return pRequestType;
         }
     }
-    
+
     return nullptr;
 }
+
+
 
 /*-------------------------------------
     Return The number of states managed by this system.
 -------------------------------------*/
-inline unsigned GameSystem::get_num_game_states() const {
+inline unsigned GameSystem::get_num_game_states() const
+{
     return gameList.size();
 }
+
+
 
 /*-------------------------------------
     Return The number of milliseconds since the last update.
 -------------------------------------*/
-inline uint64_t GameSystem::get_tick_time() const {
+inline uint64_t GameSystem::get_tick_time() const
+{
     return tickTime;
 }
+
+
 
 /*-------------------------------------
     Return the time of the last update.
 -------------------------------------*/
-inline uint64_t GameSystem::get_update_time() const {
+inline uint64_t GameSystem::get_update_time() const
+{
     return prevTime;
 }
+
+
 
 /*-------------------------------------
     Determine if *this is still running
 -------------------------------------*/
-inline bool GameSystem::is_runnable() const {
+inline bool GameSystem::is_runnable() const
+{
     return gameList.size() > 0;
 }
+
+
 
 } // end game namespace
 } // end ls namespace
