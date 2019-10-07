@@ -33,7 +33,7 @@ namespace game
  * Event subscribers must be derived and have the virtual "handleEvent()"
  * function overridden.
 */
-class LS_API Subscriber
+class Subscriber
 {
     friend class Dispatcher;
 

@@ -48,7 +48,7 @@ enum class game_state_status_t
  * by the lsSubsystem. Game states are passed hardware events by subsystems
  * when they are running.
 */
-class LS_API GameState
+class GameState
 {
     friend class GameSystem;
 

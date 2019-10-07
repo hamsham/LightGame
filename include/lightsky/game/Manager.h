@@ -33,7 +33,7 @@ namespace game
  * allocated with the 'new' operator.
  */
 template<typename hash_t, typename data_t>
-class LS_API Manager
+class Manager
 {
   public:
     /**

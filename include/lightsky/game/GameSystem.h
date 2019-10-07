@@ -35,7 +35,7 @@ class GameState;
  * when this object gets destroyed, therefore, all gameState objects managed by
  * a subSystem must be created using the "new" operator.
 */
-class LS_API GameSystem
+class GameSystem
 {
   private:
     /**
@@ -200,7 +200,7 @@ class LS_API GameSystem
      * @param index
      * An index of the desired game state.
      */
-    void pop_game_state(unsigned index);
+    void pop_game_state(size_t index);
 
     /**
      * @brief Remove all game states within *this.
@@ -216,7 +216,7 @@ class LS_API GameSystem
      * @return a pointer to the desired game state. Null if the index was
      * out of bounds.
      */
-    GameState const* get_game_state(unsigned index) const;
+    GameState const* get_game_state(size_t index) const;
 
     /**
      * Get a game state using an index.
@@ -227,7 +227,7 @@ class LS_API GameSystem
      * @return a pointer to the desired game state. Null if the index was
      * out of bounds.
      */
-    GameState* get_game_state(unsigned index);
+    GameState* get_game_state(size_t index);
 
     /**
      * Retrieve the first gamestate in *this which matches a certain data type.
@@ -248,14 +248,14 @@ class LS_API GameSystem
      * @return The index of the game state held within the game list.
      * UINT_MAX if the state was not found.
      */
-    unsigned get_game_state_index(GameState* const pState) const;
+    size_t get_game_state_index(GameState* const pState) const;
 
     /**
      * Get the number of game states contained within *this.
      *
      * @return The number of states managed by this system.
      */
-    unsigned get_num_game_states() const;
+    size_t get_num_game_states() const;
 
     /**
      * @brief Get the time, in milliseconds, which have passed since the
@@ -355,7 +355,7 @@ gamestate_t* GameSystem::get_game_state() const
 /*-------------------------------------
     Return The number of states managed by this system.
 -------------------------------------*/
-inline unsigned GameSystem::get_num_game_states() const
+inline size_t GameSystem::get_num_game_states() const
 {
     return gameList.size();
 }

@@ -33,7 +33,7 @@ namespace game
  * dereferenced if this object goes out of their scope (i.e. if a call to
  * "delete" is made or an instance is destroyed).
 */
-class LS_API Dispatcher
+class Dispatcher
 {
     friend class Subscriber;
 
@@ -199,7 +199,7 @@ class LS_API Dispatcher
      * @return an unsigned integral type, representing the number of events
      * that *this object can distribute to its subscribers.
      */
-    unsigned get_num_queued_events() const;
+    size_t get_num_queued_events() const;
 
     /**
      * Get the number of subscribers that are receiving events from *this.
@@ -207,7 +207,7 @@ class LS_API Dispatcher
      * @return an unsigned integral type, representing the number of
      * subscriber objects that are receiving events from *this.
      */
-    unsigned get_num_subscribers() const;
+    size_t get_num_subscribers() const;
 };
 
 

@@ -135,9 +135,9 @@ void Dispatcher::clear_subscribers()
 -------------------------------------*/
 void Dispatcher::dispatch_events()
 {
-    const unsigned sentinel = events.size();
+    const size_t sentinel = events.size();
 
-    for (unsigned i = 0; i < sentinel; ++i)
+    for (size_t i = 0; i < sentinel; ++i)
     {
         typename subscriberMap_t::iterator iter = subscribers.begin();
         while (iter != subscribers.end())
@@ -165,7 +165,7 @@ void Dispatcher::push_event(const Event& t)
 /*-------------------------------------
  * get the number of queued events
 -------------------------------------*/
-unsigned Dispatcher::get_num_queued_events() const
+size_t Dispatcher::get_num_queued_events() const
 {
     return events.size();
 }
@@ -175,7 +175,7 @@ unsigned Dispatcher::get_num_queued_events() const
 /*-------------------------------------
  * get the number of subscribers
 -------------------------------------*/
-unsigned Dispatcher::get_num_subscribers() const
+size_t Dispatcher::get_num_subscribers() const
 {
     return subscribers.size();
 }
