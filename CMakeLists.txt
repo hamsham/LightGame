@@ -46,7 +46,7 @@ endif()
 add_library(${OUTPUT_NAME} ${LS_LIB_TYPE} ${LS_GAME_SOURCES} ${LS_GAME_HEADERS})
 
 # Dependencies
-target_link_libraries(${OUTPUT_NAME} lssetup lsutils)
+target_link_libraries(${OUTPUT_NAME} LightSky::Utils LightSky::Setup)
 
 
 
@@ -54,8 +54,18 @@ target_link_libraries(${OUTPUT_NAME} lssetup lsutils)
 # Library Installation Setup
 # -------------------------------------
 install(TARGETS ${OUTPUT_NAME}
+    EXPORT LightGame
     RUNTIME DESTINATION bin
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
 )
 install(DIRECTORY include/lightsky/game DESTINATION include/lightsky)
+
+install(EXPORT LightGame
+    FILE LightGame.cmake
+    NAMESPACE LightSky::
+    DESTINATION lib/cmake/LightSky
+)
+
+export(EXPORT LightGame NAMESPACE LightSky::)
+add_library(LightSky::Game ALIAS lsgame)
