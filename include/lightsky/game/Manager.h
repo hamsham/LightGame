@@ -5,8 +5,8 @@
  * Created on May 25, 2014, 9:07 PM
  */
 
-#ifndef __LS_GAME_MANAGER_H__
-#define __LS_GAME_MANAGER_H__
+#ifndef LS_GAME_MANAGER_H
+#define LS_GAME_MANAGER_H
 
 #include <utility>
 #include <unordered_map>
@@ -415,4 +415,4 @@ Manager<hash_t, data_t>::get_data_map()
 } // end game namespace
 } // end ls namespace
 
-#endif  /* __LS_GAME_MANAGER_H__ */
+#endif  /* LS_GAME_MANAGER_H */

@@ -5,8 +5,8 @@
  * Created on June 13, 2014, 11:15 PM
  */
 
-#ifndef __LS_GAME_H__
-#define __LS_GAME_H__
+#ifndef LS_GAME_H
+#define LS_GAME_H
 
 #include "lightsky/game/Dispatcher.h"
 #include "lightsky/game/Event.h"
@@ -15,4 +15,4 @@
 #include "lightsky/game/Manager.h"
 #include "lightsky/game/Subscriber.h"
 
-#endif  /* __LS_GAME_H__ */
+#endif  /* LS_GAME_H */

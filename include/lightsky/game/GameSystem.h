@@ -5,8 +5,8 @@
  * Created on November 15, 2013, 9:53 PM
  */
 
-#ifndef __LS_GAME_GAME_SYSTEM_H__
-#define __LS_GAME_GAME_SYSTEM_H__
+#ifndef LS_GAME_GAME_SYSTEM_H
+#define LS_GAME_GAME_SYSTEM_H
 
 #include <vector>
 #include <cstdint> // uint64_t
@@ -395,4 +395,4 @@ inline bool GameSystem::is_runnable() const
 } // end game namespace
 } // end ls namespace
 
-#endif  /* __LS_GAME_GAME_SYSTEM_H__ */
+#endif  /* LS_GAME_GAME_SYSTEM_H */

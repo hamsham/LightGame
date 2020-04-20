@@ -5,8 +5,8 @@
  * Created on November 15, 2013, 8:45 PM
  */
 
-#ifndef __LS_GAME_GAME_STATE_H__
-#define __LS_GAME_GAME_STATE_H__
+#ifndef LS_GAME_GAME_STATE_H
+#define LS_GAME_GAME_STATE_H
 
 #include <cstdint>
 
@@ -374,4 +374,4 @@ inline void GameState::resume_state()
 } // end game namespace
 } // end ls namespace
 
-#endif  /* __LS_GAME_GAME_STATE_H__ */
+#endif  /* LS_GAME_GAME_STATE_H */
