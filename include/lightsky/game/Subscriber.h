@@ -23,6 +23,10 @@ namespace game
 
 
 
+class Dispatcher;
+
+
+
 /**
  * @brief Event Subscription Object (abstract)
  *
