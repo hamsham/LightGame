@@ -5,8 +5,8 @@
  * Created on November 20, 2014, 10:22 PM
  */
 
-#ifndef __LS_GAME_EVENT_H__
-#define __LS_GAME_EVENT_H__
+#ifndef LS_GAME_EVENT_H
+#define LS_GAME_EVENT_H
 
 #include <cstdint>
 
@@ -19,24 +19,11 @@ namespace game
 
 
 
-/*-----------------------------------------------------------------------------
- * Forward declarations
------------------------------------------------------------------------------*/
-class Subscriber;
-class Dispatcher;
-
-
-
 /**----------------------------------------------------------------------------
  * @brief Basic event structure.
 -----------------------------------------------------------------------------*/
-struct Event
+struct alignas(sizeof(uint64_t)) Event
 {
-    /**
-     * @brief pSource contains a pointer to the source of a event.
-     */
-    Dispatcher* pSrc;
-
     /**
      * @brief A event's baseId should contain enough information about a
      * event to identify where an event came from.
@@ -47,16 +34,20 @@ struct Event
     uint64_t type;
 
     /**
-     * @brief The action id should help subscribers determine what action was
+     * @brief The action id should help mSubscribers determine what action was
      * performed by the event source.
      */
     uint64_t info;
 
     /**
-     * @brief pData contains a pointer to any data from within the source
-     * dispatcher.
+     * @brief Extra event data 1.
      */
-    void* pExtra;
+    uint64_t extra1;
+
+    /**
+     * @brief Extra event data 2.
+     */
+    uint64_t extra2;
 };
 
 
@@ -64,4 +55,4 @@ struct Event
 } // end game namespace
 } // end ls namespace
 
-#endif  /* __LS_GAME_EVENT_H__ */
+#endif  /* LS_GAME_EVENT_H */

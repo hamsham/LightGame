@@ -5,11 +5,11 @@
  * Created on November 20, 2014, 10:27 PM
  */
 
-#ifndef __LS_GAME_DISPATCHER_H__
-#define __LS_GAME_DISPATCHER_H__
+#ifndef LS_GAME_DISPATCHER_H
+#define LS_GAME_DISPATCHER_H
 
 #include <vector>
-#include <unordered_map>
+#include <unordered_set>
 
 #include "lightsky/setup/Api.h"
 
@@ -38,22 +38,6 @@ class Dispatcher
     friend class Subscriber;
 
   private:
-    /**
-     * @brief eventList_t
-     *
-     * A typedef to the underlying storage type which will contain event
-     * objects to be dispatched to subscribers.
-     */
-    typedef std::vector<Event> eventList_t;
-
-    /**
-     * @brief subscriberMap_t
-     *
-     * A typedef to the underlying storage type which will map subscriber
-     * object ID's (in this cast, their location in memory) to the
-     * subscriber object.
-     */
-    typedef std::unordered_map<Subscriber*, Subscriber*> subscriberMap_t;
 
     /**
      * @brief events
@@ -61,7 +45,7 @@ class Dispatcher
      * An array of event objects that will be passed to *this object's
      * list of subscribers.
      */
-    eventList_t events;
+    std::vector<Event> mEvents;
 
     /**
      * @brief subscribers
@@ -71,14 +55,14 @@ class Dispatcher
      * subscriber itself. Subscribers are mapped in a table in order to
      * make element access much easier during insertion and deletion.
      */
-    subscriberMap_t subscribers;
+    std::unordered_set<Subscriber*> mSubscribers;
 
   public:
     /**
      * @brief Destructor
      *
-     * Calls "setDispatcher(NULL)" and severs the connection to the parent
-     * object. This effectively calls "clearSubscribers()."
+     * Notifies all subscribers that *this is going out of scope. Clears all
+     * internal resources.
      */
     virtual ~Dispatcher();
 
@@ -93,7 +77,7 @@ class Dispatcher
      * @brief Copy Constructor - DELETED
      *
      * The copy constructor has been deleted due to the fact that
-     * subscribers can only have one parent (for reduced memory usage).
+     * subscribers need to explicitly add a dispatcher.
      */
     Dispatcher(const Dispatcher& d) = delete;
 
@@ -112,16 +96,16 @@ class Dispatcher
     /**
      * @brief Copy Operator -- DELETED
      *
-     * The copy operator has been deleted due to the fact that subscribers
-     * can only have one parent (for reduced memory usage).
+     * The copy operator has been deleted due to the fact that
+     * subscribers need to explicitly add a dispatcher.
      */
     Dispatcher& operator=(const Dispatcher& d) = delete;
 
     /**
      * @brief Move Operator
      *
-     * The move operator moves all data from the input dispatch object into
-     * *this. All child subscribers are then reassigned to *this.
+     * The move constructor moves all data from the input dispatch object
+     * into *this. All child subscribers are then reassigned to *this.
      *
      * @param d
      * An-value reference to another dispatch object who's data will be
@@ -132,57 +116,25 @@ class Dispatcher
     Dispatcher& operator=(Dispatcher&& d);
 
     /**
-     * @brief Assign a subscriber object to receive events from *this.
-     *
-     * Once a subscriber has been assigned to *this, that connection will
-     * be retained until either *this or the subscriber has gone out of
-     * scope.
-     *
-     * @param s
-     * A reference to the subscriber object which is to handle events
-     * passed by *this.
-     */
-    void add_subscriber(Subscriber& s);
-
-    /**
-     * @brief Unassign a subscriber from being passed events by *this.
-     *
-     * @param s
-     * A reference to the subscriber object which is to be removed from
-     * *this objects event list.
-     */
-    void remove_subscriber(Subscriber& s);
-
-    /**
-     * @brief Determine if a subscriber is being passed events from *this.
-     *
-     * @param s
-     * A constant reference to a subscriber object.
-     *
-     * @return TRUE if *this is passing events to the input parameter,
-     * FALSE if otherwise.
-     */
-    bool has_subscriber(const Subscriber& s) const;
-
-    /**
-     * @brief Remove all subscribers from *this object's distribution list.
-     *
-     * Calling this method will sever the connection between *this and all
-     * subscribers referenced by *this.
-     */
-    void clear_subscribers();
-
-    /**
-     * @brief dispatch all events contained within *this objects event
-     * queue.
+     * @brief Dispatch all events contained within the internal event queue.
      *
      * All events contained within *this object's event queue are sent to
-     * each of the subscribers referenced by *this. Once the events are
-     * dispatched, the event queue is cleared.
+     * each subscriber referenced by *this. Once the events are dispatched,
+     * the event queue is cleared. to avoid possible circular event passing.
+     *
      * This method should be called frequently in order to avoid memory
      * leaks.
      */
-    void dispatch_events();
+    void dispatch();
+
+    /**
+     * @brief Bypass the internal event queue and immediately publish an event
+     * to all subscribers.
+     *
+     * @param e
+     * A single event to immediately dispatch.
+     */
+    void dispatch(const Event& e);
 
     /**
      * @brief Push an event into *this object's event queue.
@@ -191,28 +143,71 @@ class Dispatcher
      * A constant reference to an event object which will be added to the
      * event queue in *this.
      */
-    void push_event(const Event& e);
+    void push(const Event& e);
 
     /**
-     * @brief Retrieve the number of events that are queued in *this.
+     * @brief Retrieve the number of events queued within the event buffer.
      *
      * @return an unsigned integral type, representing the number of events
      * that *this object can distribute to its subscribers.
      */
-    size_t get_num_queued_events() const;
+    size_t num_queued_events() const;
 
     /**
-     * Get the number of subscribers that are receiving events from *this.
+     * Get the number of subscribers receiving events from *this.
      *
      * @return an unsigned integral type, representing the number of
      * subscriber objects that are receiving events from *this.
      */
-    size_t get_num_subscribers() const;
+    size_t num_subscribers() const;
 };
+
+
+
+/*-------------------------------------
+ * dispatch an immediate event
+-------------------------------------*/
+inline void Dispatcher::dispatch(const Event& e)
+{
+    for (Subscriber* s : mSubscribers)
+    {
+        s->notified(*this, e);
+    }
+}
+
+
+
+/*-------------------------------------
+ * Enqueue an event
+-------------------------------------*/
+inline void Dispatcher::push(const Event& e)
+{
+    mEvents.push_back(e);
+}
+
+
+
+/*-------------------------------------
+ * Number of enqueued events
+-------------------------------------*/
+inline size_t Dispatcher::num_queued_events() const
+{
+    return mEvents.size();
+}
+
+
+
+/*-------------------------------------
+ * Number of subscribers
+-------------------------------------*/
+inline size_t Dispatcher::num_subscribers() const
+{
+    return mSubscribers.size();
+}
 
 
 
 } // end game namespace
 } // end ls namespace
 
-#endif  /* __LS_GAME_DISPATCHER_H__ */
+#endif  /* LS_GAME_DISPATCHER_H */

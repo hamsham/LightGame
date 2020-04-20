@@ -5,6 +5,8 @@
  * Created on November 20, 2014, 10:27 PM
  */
 
+#include <utility> // std::move()
+
 #include "lightsky/game/Event.h"
 #include "lightsky/game/Subscriber.h"
 #include "lightsky/game/Dispatcher.h"
@@ -23,7 +25,11 @@ namespace game
 -------------------------------------*/
 Dispatcher::~Dispatcher()
 {
-    clear_subscribers();
+    for (Subscriber* s : mSubscribers)
+    {
+        s->mSubscriptions.erase(this);
+        s->disconnected(*this);
+    }
 }
 
 
@@ -32,10 +38,9 @@ Dispatcher::~Dispatcher()
  * Constructor
 -------------------------------------*/
 Dispatcher::Dispatcher() :
-    events{},
-    subscribers{}
-{
-}
+    mEvents{},
+    mSubscribers{}
+{}
 
 
 
@@ -43,15 +48,16 @@ Dispatcher::Dispatcher() :
  * Move Constructor
 -------------------------------------*/
 Dispatcher::Dispatcher(Dispatcher&& d) :
-    events{std::move(d.events)},
-    subscribers{std::move(d.subscribers)}
+    mEvents{std::move(d.mEvents)},
+    mSubscribers{std::move(d.mSubscribers)}
 {
-    typename subscriberMap_t::iterator iter = subscribers.begin();
-    while (iter != subscribers.end())
+    for (Subscriber* s : mSubscribers)
     {
-        Subscriber* const pSubscriber = iter->second;
-        pSubscriber->pParent = this;
-        ++iter;
+        s->mSubscriptions.erase(&d);
+        s->disconnected(d);
+
+        s->mSubscriptions.insert(this);
+        s->connected(*this);
     }
 }
 
@@ -62,122 +68,58 @@ Dispatcher::Dispatcher(Dispatcher&& d) :
 -------------------------------------*/
 Dispatcher& Dispatcher::operator=(Dispatcher&& d)
 {
-    events = std::move(d.events);
-    subscribers = std::move(d.subscribers);
+    std::unordered_set<Subscriber*> oldSubs = std::move(mSubscribers);
+    mSubscribers.clear();
 
-    typename subscriberMap_t::iterator iter = subscribers.begin();
-    while (iter != subscribers.end())
+    for (Subscriber* s : oldSubs)
     {
-        Subscriber* const pSubscriber = iter->second;
-        pSubscriber->pParent = this;
-        ++iter;
+        s->mSubscriptions.erase(this);
+        s->disconnected(*this);
     }
+
+    std::unordered_set<Subscriber*> newSubs = std::move(d.mSubscribers);
+
+    for (Subscriber* s : newSubs)
+    {
+        // always remove the subscriber before notifying it of the removal.
+        // This will allow it to attempt a reconnection.
+        s->mSubscriptions.erase(&d);
+        s->disconnected(d);
+
+        // in case any subscriber removes itself from *this upon creation of
+        // a connection, insert here
+        mSubscribers.insert(s);
+        s->mSubscriptions.insert(this);
+        s->connected(*this);
+    }
+
     return *this;
 }
 
 
 
 /*-------------------------------------
- * Assign a subscriber
+ * dispatch queued events to subscribers
 -------------------------------------*/
-void Dispatcher::add_subscriber(Subscriber& s)
+void Dispatcher::dispatch()
 {
-    Subscriber* const pSubscriber = &s;
-    pSubscriber->pParent = this;
-    subscribers[pSubscriber] = pSubscriber;
-}
-
-
-
-/*-------------------------------------
- * Remove a subscriber
--------------------------------------*/
-void Dispatcher::remove_subscriber(Subscriber& s)
-{
-    if (subscribers.erase(&s) != 0) // insurance
-    {
-        s.pParent = nullptr;
-    }
-}
-
-
-
-/*-------------------------------------
- * Check if dispatching to a subscriber
--------------------------------------*/
-bool Dispatcher::has_subscriber(const Subscriber& s) const
-{
-    return s.pParent == this;
-}
-
-
-
-/*-------------------------------------
- * remove all subscribers from the distribution list
--------------------------------------*/
-void Dispatcher::clear_subscribers()
-{
-    typename subscriberMap_t::iterator iter = subscribers.begin();
-
-    while (iter != subscribers.end())
-    {
-        Subscriber* const pSubscriber = iter->second;
-        pSubscriber->pParent = nullptr;
-        ++iter;
-    }
-    subscribers.clear();
-}
-
-
-
-/*-------------------------------------
- * dispatch events to subscribers
--------------------------------------*/
-void Dispatcher::dispatch_events()
-{
-    const size_t sentinel = events.size();
+    size_t sentinel = mEvents.size();
 
     for (size_t i = 0; i < sentinel; ++i)
     {
-        typename subscriberMap_t::iterator iter = subscribers.begin();
-        while (iter != subscribers.end())
+        for (Subscriber* s : mSubscribers)
         {
-            Subscriber* const pSubscriber = iter->second;
-            pSubscriber->handleEvent(events[i]);
-            ++iter;
+            s->notified(*this, mEvents[i]);
         }
     }
-    events.erase(events.begin(), events.begin() + sentinel);
-}
 
+    size_t newMsgIter = sentinel, oldMsgIter = 0;
+    while (newMsgIter != mEvents.size())
+    {
+        mEvents[oldMsgIter++] = mEvents[newMsgIter++];
+    }
 
-
-/*-------------------------------------
- * push an event to the event queue
--------------------------------------*/
-void Dispatcher::push_event(const Event& t)
-{
-    events.push_back(t);
-}
-
-
-
-/*-------------------------------------
- * get the number of queued events
--------------------------------------*/
-size_t Dispatcher::get_num_queued_events() const
-{
-    return events.size();
-}
-
-
-
-/*-------------------------------------
- * get the number of subscribers
--------------------------------------*/
-size_t Dispatcher::get_num_subscribers() const
-{
-    return subscribers.size();
+    mEvents.erase(mEvents.begin() + oldMsgIter, mEvents.end());
 }
 
 
