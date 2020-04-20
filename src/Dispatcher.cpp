@@ -124,5 +124,18 @@ void Dispatcher::dispatch()
 
 
 
+/*-------------------------------------
+ * dispatch an immediate event
+-------------------------------------*/
+void Dispatcher::dispatch(const Event& e)
+{
+    for (Subscriber* s : mSubscribers)
+    {
+        s->notified(*this, e);
+    }
+}
+
+
+
 } // end game namespace
 } // end ls namespace

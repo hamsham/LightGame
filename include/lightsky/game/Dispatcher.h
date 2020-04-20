@@ -24,6 +24,10 @@ namespace game
 
 
 
+class Subscriber;
+
+
+
 /**
  * @brief Event dispatcher object
  *
@@ -161,19 +165,6 @@ class Dispatcher
      */
     size_t num_subscribers() const;
 };
-
-
-
-/*-------------------------------------
- * dispatch an immediate event
--------------------------------------*/
-inline void Dispatcher::dispatch(const Event& e)
-{
-    for (Subscriber* s : mSubscribers)
-    {
-        s->notified(*this, e);
-    }
-}
 
 
 
