@@ -170,9 +170,9 @@ void Subscriber::unsubscribe()
         d->mSubscribers.erase(this);
     }
 
-    for (Dispatcher* d : mSubscriptions)
+    while (!mSubscriptions.empty())
     {
-        mSubscriptions.erase(d);
+        mSubscriptions.erase(mSubscriptions.begin());
     }
 }
 
