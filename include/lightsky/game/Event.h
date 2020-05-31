@@ -22,7 +22,7 @@ namespace game
 /**----------------------------------------------------------------------------
  * @brief Basic event structure.
 -----------------------------------------------------------------------------*/
-struct alignas(sizeof(uint64_t)) Event
+struct alignas(sizeof(int64_t)) Event
 {
     /**
      * @brief A event's baseId should contain enough information about a
@@ -31,23 +31,23 @@ struct alignas(sizeof(uint64_t)) Event
      * For example, a base ID could be something similar to "KEYBOARD_EVENT"
      * while the action ID is "KEY_BUTTON_PRESSED."
      */
-    uint64_t type;
+    int64_t type;
 
     /**
      * @brief The action id should help mSubscribers determine what action was
      * performed by the event source.
      */
-    uint64_t info;
+    int64_t info;
 
     /**
      * @brief Extra event data 1.
      */
-    uint64_t extra1;
+    int64_t extra1;
 
     /**
      * @brief Extra event data 2.
      */
-    uint64_t extra2;
+    int64_t extra2;
 };
 
 
