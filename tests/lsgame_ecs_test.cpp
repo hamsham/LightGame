@@ -71,7 +71,7 @@ class PrintComponent
     {
         for (const game::Entity& e : mEntities)
         {
-            cb(e);
+            cb(*this, e);
         }
     }
 
@@ -82,7 +82,7 @@ class PrintComponent
     {
         for (game::Entity e : mEntities)
         {
-            cb(e);
+            cb(*this, e);
         }
     }
 
@@ -93,7 +93,7 @@ class PrintComponent
         auto&& iter = mEntities.find(e);
         if (iter != mEntities.end())
         {
-            cb(*iter);
+            cb(*this, *iter);
         }
     }
 
@@ -104,11 +104,9 @@ class PrintComponent
         auto&& iter = mEntities.find(e);
         if (iter != mEntities.end())
         {
-            cb(*iter);
+            cb(*this, *iter);
         }
     }
-
-    virtual void update() noexcept = 0;
 };
 
 
@@ -120,20 +118,6 @@ class PrintStdoutComponent : public PrintComponent
         PrintComponent{}
     {
         std::cout << "constructed"<< std::endl;
-    }
-
-    virtual void update() noexcept override
-    {
-        if (!size())
-        {
-            std::cout << "\tNo entities to update." << std::endl;
-        }
-
-        unsigned count = 0;
-        this->iterate([&](game::Entity e)->void {
-            std::cout << "\tIterating over entity " << count << ": " << e.id << std::endl;
-            ++count;
-        });
     }
 };
 
@@ -147,25 +131,30 @@ class PrintStderrComponent : public PrintComponent
     {
         std::cerr << "constructed"<< std::endl;
     }
-
-    virtual void update() noexcept override
-    {
-        if (!size())
-        {
-            std::cerr << "\tNo entities to update." << std::endl;
-        }
-
-        unsigned count = 0;
-        this->iterate([&](game::Entity e)->void {
-            std::cerr << "\tIterating over entity " << count << ": " << e.id << std::endl;
-            ++count;
-        });
-    }
 };
 
 
 
 typedef game::ECSDatabase<PrintStdoutComponent, PrintStderrComponent> EntityDb;
+
+
+
+void update_components(EntityDb& db) noexcept
+{
+    unsigned count;
+
+    count = 0;
+    db.iterate<PrintStdoutComponent>([&](PrintComponent&, const game::Entity& e)->void {
+        std::cout << "\tIterating over entity " << count << ": " << e.id << std::endl;
+        ++count;
+    });
+
+    count = 0;
+    db.iterate<PrintStderrComponent>([&](PrintComponent&, const game::Entity& e)->void {
+        std::cerr << "\tIterating over entity " << count << ": " << e.id << std::endl;
+        ++count;
+    });
+}
 
 
 
@@ -188,14 +177,13 @@ int main()
     }
     std::cout << "Successfully added a component to an entity." << std::endl;
 
-    db.iterate<PrintStdoutComponent>([&](const game::Entity& e)
+    db.iterate<PrintStdoutComponent>([&](const PrintComponent&, const game::Entity& e)
     {
         std::cout << "Iterating over entity " << e.id << std::endl;
     });
 
     std::cout << "Updating components:" << std::endl;
-    db.update<PrintStdoutComponent>();
-    db.update<PrintStderrComponent>();
+    update_components(db);
 
     game::ComponentRemoveStatus removeStatus = db.remove<PrintStdoutComponent>(e0);
     if (removeStatus != game::ComponentRemoveStatus::REMOVE_OK)

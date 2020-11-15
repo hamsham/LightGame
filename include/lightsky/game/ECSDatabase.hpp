@@ -397,18 +397,6 @@ void ECSDatabase<ComponentTypes...>::iterate(const IterCallback& cb) noexcept
 
 
 
-/*-------------------------------------
- * Update a specific component.
--------------------------------------*/
-template <typename ...ComponentTypes>
-template <typename ComponentType>
-void ECSDatabase<ComponentTypes...>::update() noexcept
-{
-    mComponents.template first_of<Component<ComponentType>>().update();
-}
-
-
-
 
 } // end game namespace
 } // end ls namespace
