@@ -192,10 +192,6 @@ class ECSDatabase
     // own iterator
     template <typename ComponentType, typename IterCallback>
     void iterate(const IterCallback& cb) noexcept;
-
-    // invoke a specific update method
-    template <typename ComponentType>
-    void update() noexcept;
 };
 
 
