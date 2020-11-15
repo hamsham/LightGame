@@ -13,14 +13,19 @@ set(OUTPUT_NAME lsgame)
 include_directories(include)
 
 set(LS_GAME_SOURCES
+    src/Component.cpp
     src/Dispatcher.cpp
+    src/ECSDatabase.cpp
     src/GameState.cpp
     src/GameSystem.cpp
     src/Subscriber.cpp
 )
 
 set(LS_GAME_HEADERS
+    include/lightsky/game/Component.hpp
     include/lightsky/game/Dispatcher.h
+    include/lightsky/game/ECSDatabase.hpp
+    include/lightsky/game/Entity.hpp
     include/lightsky/game/Event.h
     include/lightsky/game/Game.h
     include/lightsky/game/GameState.h
@@ -69,3 +74,14 @@ install(EXPORT LightGame
 
 export(EXPORT LightGame NAMESPACE LightSky::)
 add_library(LightSky::Game ALIAS lsgame)
+
+
+
+# -------------------------------------
+# Unit Tests
+# -------------------------------------
+option(LS_BUILD_GAME_TESTS "Build tests for the LightGame library." ON)
+
+if(LS_BUILD_GAME_TESTS)
+    add_subdirectory(tests)
+endif()
