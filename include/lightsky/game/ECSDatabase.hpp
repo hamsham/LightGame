@@ -21,6 +21,102 @@ enum class ComponentRemoveStatus;
 
 
 
+/*-----------------------------------------------------------------------------
+ * Helper classes to manage partial template specialization in the ECS
+ * database.
+-----------------------------------------------------------------------------*/
+template <unsigned max, unsigned iter>
+struct ECSDatabaseHelper;
+
+template <unsigned max>
+struct ECSDatabaseHelper<max, max>;
+
+
+
+/*-------------------------------------
+ * Iteratable helper
+-------------------------------------*/
+template <unsigned max, unsigned iter>
+struct ECSDatabaseHelper
+{
+    template <typename ...ComponentTypes>
+    void destroy_entity_internal(utils::Tuple<Component<ComponentTypes>...>& tuple, const Entity& e) const noexcept
+    {
+        tuple.template element<iter>().erase(e);
+
+        constexpr ECSDatabaseHelper<max, iter+1> helper;
+        helper.template destroy_entity_internal<ComponentTypes...>(tuple, e);
+    }
+
+    template <typename ...ComponentTypes>
+    bool has_components_internal(const utils::Tuple<Component<ComponentTypes>...>& tuple, const Entity& e) const noexcept
+    {
+        constexpr ECSDatabaseHelper<max, iter+1> helper;
+        return tuple.template const_element<iter>().contains(e) || helper.template has_components_internal<ComponentTypes...>(tuple, e);
+    }
+
+    template <typename ...ComponentTypes>
+    size_t num_components_internal(const utils::Tuple<Component<ComponentTypes>...>& tuple, const Entity& e) const noexcept
+    {
+        constexpr ECSDatabaseHelper<max, iter+1> helper;
+        return (size_t)tuple.template element<iter>().contains(e) + helper.template num_components_internal<ComponentTypes...>(tuple, e);
+    }
+
+    template <typename ...ComponentTypes>
+    void clear_internal(utils::Tuple<Component<ComponentTypes>...>& tuple) const noexcept
+    {
+        tuple.template element<iter>().clear();
+
+        constexpr ECSDatabaseHelper<max, iter+1> helper;
+        helper.template clear_internal<ComponentTypes...>(tuple);
+    }
+};
+
+
+
+/*-------------------------------------
+ * Iteratable sentinel helper
+-------------------------------------*/
+template <unsigned max>
+struct ECSDatabaseHelper<max, max>
+{
+    template <typename ...ComponentTypes>
+    void destroy_entity_internal(utils::Tuple<Component<ComponentTypes>...>& tuple, const Entity& e) const noexcept
+    {
+        (void)tuple;
+        (void)e;
+    }
+
+    template <typename ...ComponentTypes>
+    bool has_components_internal(const utils::Tuple<Component<ComponentTypes>...>& tuple, const Entity& e) const noexcept
+    {
+        (void)tuple;
+        (void)e;
+        return false;
+    }
+
+    template <typename ...ComponentTypes>
+    size_t num_components_internal(const utils::Tuple<Component<ComponentTypes>...>& tuple, const Entity& e) const noexcept
+    {
+        (void)tuple;
+        (void)e;
+        return 0;
+    }
+
+    template <typename ...ComponentTypes>
+    void clear_internal(utils::Tuple<Component<ComponentTypes>...>& tuple) const noexcept
+    {
+        (void)tuple;
+    }
+};
+
+
+
+/*-----------------------------------------------------------------------------
+ * ECS database.
+ *
+ * This is the central manager of all entities and components
+-----------------------------------------------------------------------------*/
 template <typename ...ComponentTypes>
 class ECSDatabase
 {
@@ -43,30 +139,6 @@ class ECSDatabase
 
     size_type mNextEntityId;
 
-    template <unsigned componentIter>
-    void destroy_entity_internal(const Entity&) noexcept;
-
-    template <>
-    void destroy_entity_internal<sizeof...(ComponentTypes)>(const Entity& e) noexcept { (void)e; }
-
-    template <unsigned componentIter>
-    bool has_components_internal(const Entity&) const noexcept;
-
-    template <>
-    bool has_components_internal<sizeof...(ComponentTypes)>(const Entity&) const noexcept { return false; }
-
-    template <unsigned componentIter>
-    size_t num_compnents_internal(const Entity& e) noexcept;
-
-    template <>
-    size_t num_compnents_internal<sizeof...(ComponentTypes)>(const Entity& e) noexcept { (void)e; return 0; }
-
-    template <unsigned componentIter>
-    void clear_internal() noexcept;
-
-    template <>
-    void clear_internal<sizeof...(ComponentTypes)>() noexcept {}
-
   public:
     ~ECSDatabase() = default;
 
@@ -74,15 +146,15 @@ class ECSDatabase
 
     Entity create_entity() noexcept;
 
-    inline void destroy_entity(const Entity& e) noexcept { destroy_entity_internal<0>(e); mEntities.erase(e); }
+    void destroy_entity(const Entity& e) noexcept;
 
     template <typename ComponentType>
     bool has_component(const Entity&) const noexcept;
 
-    inline bool has_components(const Entity& e) const noexcept { return has_components_internal<0>(e); }
+    bool has_components(const Entity& e) const noexcept;
 
     // get the total number of components used by and entity
-    size_t num_compnents(const Entity& e) noexcept { return num_compnents_internal<0>(e); }
+    size_t num_components(const Entity& e) const noexcept;
 
     // get a reference to a component container
     template <typename ComponentType>
@@ -105,7 +177,7 @@ class ECSDatabase
     void clear() noexcept;
 
     // clear all components
-    void clear() noexcept { clear_internal<0>(); }
+    void clear() noexcept;
 
     // get the size of a component type
     template <typename ComponentType>
@@ -129,7 +201,7 @@ class ECSDatabase
 
 
 /*-------------------------------------
- *
+ * Constructor
 -------------------------------------*/
 template <typename ...ComponentTypes>
 ECSDatabase<ComponentTypes...>::ECSDatabase() noexcept :
@@ -141,7 +213,7 @@ ECSDatabase<ComponentTypes...>::ECSDatabase() noexcept :
 
 
 /*-------------------------------------
- *
+ * Spawn an entity with a unique ID
 -------------------------------------*/
 template <typename ...ComponentTypes>
 Entity ECSDatabase<ComponentTypes...>::create_entity() noexcept
@@ -168,20 +240,21 @@ Entity ECSDatabase<ComponentTypes...>::create_entity() noexcept
 
 
 /*-------------------------------------
- *
+ * Destroy an entity
 -------------------------------------*/
 template <typename ...ComponentTypes>
-template <unsigned componentIter>
-void ECSDatabase<ComponentTypes...>::destroy_entity_internal(const Entity& e) noexcept
+void ECSDatabase<ComponentTypes...>::destroy_entity(const Entity& e) noexcept
 {
-    mComponents.template element<componentIter>().erase(e);
-    destroy_entity_internal<componentIter+1>(e);
+    constexpr ECSDatabaseHelper<sizeof...(ComponentTypes), 0> helper;
+    helper.template destroy_entity_internal<ComponentTypes...>(mComponents, e);
+    mEntities.erase(e);
 }
 
 
 
+
 /*-------------------------------------
- *
+ * Check if an entity has a specific component
 -------------------------------------*/
 template <typename ...ComponentTypes>
 template <typename ComponentType>
@@ -193,25 +266,25 @@ bool ECSDatabase<ComponentTypes...>::has_component(const Entity& e) const noexce
 
 
 /*-------------------------------------
- *
+ * Check if an entity has any components
 -------------------------------------*/
 template <typename ...ComponentTypes>
-template <unsigned componentIter>
-bool ECSDatabase<ComponentTypes...>::has_components_internal(const Entity& e) const noexcept
+bool ECSDatabase<ComponentTypes...>::has_components(const Entity& e) const noexcept
 {
-    return mComponents.template const_element<componentIter>().contains(e) || has_components_internal<componentIter+1>(e);
+    constexpr ECSDatabaseHelper<sizeof...(ComponentTypes), 0> helper;
+    return helper.template has_components_internal<ComponentTypes...>(mComponents, e);
 }
 
 
 
 /*-------------------------------------
- * Get the total number of components used by and entity
+ * Get the number of components used by an entity
 -------------------------------------*/
 template <typename ...ComponentTypes>
-template <unsigned componentIter>
-size_t ECSDatabase<ComponentTypes...>::num_compnents_internal(const Entity& e) noexcept
+size_t ECSDatabase<ComponentTypes...>::num_components(const Entity& e) const noexcept
 {
-    return (size_t)mComponents.template element<componentIter>().contains(e) + num_compnents_internal<componentIter+1>(e);
+    constexpr ECSDatabaseHelper<sizeof...(ComponentTypes), 0> helper;
+    return helper.template num_components_internal<ComponentTypes...>(mComponents, e);
 }
 
 
@@ -280,11 +353,10 @@ void ECSDatabase<ComponentTypes...>::clear() noexcept
  * Clear all components
 -------------------------------------*/
 template <typename ...ComponentTypes>
-template <unsigned componentIter>
-void ECSDatabase<ComponentTypes...>::clear_internal() noexcept
+void ECSDatabase<ComponentTypes...>::clear() noexcept
 {
-    mComponents.template element<componentIter>().clear();
-    clear_internal<componentIter+1>();
+    constexpr ECSDatabaseHelper<sizeof...(ComponentTypes), 0> helper;
+    return helper.template clear_internal<ComponentTypes...>(mComponents);
 }
 
 

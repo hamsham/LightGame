@@ -14,6 +14,10 @@ class PrintComponent
   public:
     virtual ~PrintComponent() noexcept = default;
 
+    PrintComponent() :
+        mEntities{}
+    {}
+
     game::ComponentAddStatus insert(const game::Entity& e) noexcept
     {
         auto&& iter = mEntities.find(e);
@@ -112,6 +116,12 @@ class PrintComponent
 class PrintStdoutComponent : public PrintComponent
 {
   public:
+    PrintStdoutComponent() :
+        PrintComponent{}
+    {
+        std::cout << "constructed"<< std::endl;
+    }
+
     virtual void update() noexcept override
     {
         if (!size())
@@ -132,6 +142,12 @@ class PrintStdoutComponent : public PrintComponent
 class PrintStderrComponent : public PrintComponent
 {
   public:
+    PrintStderrComponent() :
+        PrintComponent{}
+    {
+        std::cerr << "constructed"<< std::endl;
+    }
+
     virtual void update() noexcept override
     {
         if (!size())
@@ -155,7 +171,7 @@ typedef game::ECSDatabase<PrintStdoutComponent, PrintStderrComponent> EntityDb;
 
 int main()
 {
-    EntityDb db;
+    EntityDb db = {};
     game::Entity e0 = db.create_entity();
     if (db.has_components(e0))
     {

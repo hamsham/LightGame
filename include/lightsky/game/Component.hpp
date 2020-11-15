@@ -44,6 +44,10 @@ class Component
   public:
     ~Component() noexcept = default;
 
+    Component() :
+        mComponentImpl{}
+    {}
+
     inline ComponentAddStatus insert(const Entity& e) noexcept
     {
         return mComponentImpl.insert(e);
