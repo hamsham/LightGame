@@ -59,7 +59,7 @@ struct ECSDatabaseHelper
     size_t num_components_internal(const utils::Tuple<Component<ComponentTypes>...>& tuple, const Entity& e) const noexcept
     {
         constexpr ECSDatabaseHelper<max, iter+1> helper;
-        return (size_t)tuple.template element<iter>().contains(e) + helper.template num_components_internal<ComponentTypes...>(tuple, e);
+        return (size_t)tuple.template const_element<iter>().contains(e) + helper.template num_components_internal<ComponentTypes...>(tuple, e);
     }
 
     template <typename ...ComponentTypes>
