@@ -3,7 +3,7 @@
 #define LS_GAME_ENTITY_HPP
 
 #include <cstdint> // uint32_t
-#include <cstdlib> // size_t
+#include <functional> // std::equal_to
 
 namespace ls
 {
@@ -32,6 +32,9 @@ namespace std
 template <>
 struct hash<ls::game::Entity>
 {
+    typedef ls::game::Entity argument_type;
+    typedef size_t result_type;
+
     constexpr size_t operator()(const ls::game::Entity& e) const noexcept
     {
         return (size_t)e.id;
