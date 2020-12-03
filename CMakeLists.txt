@@ -10,8 +10,6 @@ set(OUTPUT_NAME lsgame)
 # -------------------------------------
 # Source Paths
 # -------------------------------------
-include_directories(include)
-
 set(LS_GAME_SOURCES
     src/Component.cpp
     src/Dispatcher.cpp
@@ -49,6 +47,8 @@ else()
 endif()
 
 add_library(${OUTPUT_NAME} ${LS_LIB_TYPE} ${LS_GAME_SOURCES} ${LS_GAME_HEADERS})
+
+target_include_directories(${OUTPUT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
 
 # Dependencies
 target_link_libraries(${OUTPUT_NAME} LightSky::Utils LightSky::Setup)
