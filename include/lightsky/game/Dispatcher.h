@@ -155,7 +155,7 @@ class Dispatcher
      * @return an unsigned integral type, representing the number of events
      * that *this object can distribute to its subscribers.
      */
-    size_t num_queued_events() const;
+    std::size_t num_queued_events() const;
 
     /**
      * Get the number of subscribers receiving events from *this.
@@ -163,7 +163,7 @@ class Dispatcher
      * @return an unsigned integral type, representing the number of
      * subscriber objects that are receiving events from *this.
      */
-    size_t num_subscribers() const;
+    std::size_t num_subscribers() const;
 };
 
 
@@ -181,7 +181,7 @@ inline void Dispatcher::push(const Event& e)
 /*-------------------------------------
  * Number of enqueued events
 -------------------------------------*/
-inline size_t Dispatcher::num_queued_events() const
+inline std::size_t Dispatcher::num_queued_events() const
 {
     return mEvents.size();
 }
@@ -191,7 +191,7 @@ inline size_t Dispatcher::num_queued_events() const
 /*-------------------------------------
  * Number of subscribers
 -------------------------------------*/
-inline size_t Dispatcher::num_subscribers() const
+inline std::size_t Dispatcher::num_subscribers() const
 {
     return mSubscribers.size();
 }

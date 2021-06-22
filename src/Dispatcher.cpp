@@ -103,9 +103,9 @@ Dispatcher& Dispatcher::operator=(Dispatcher&& d)
 -------------------------------------*/
 void Dispatcher::dispatch()
 {
-    size_t sentinel = mEvents.size();
+    std::size_t sentinel = mEvents.size();
 
-    for (size_t i = 0; i < sentinel; ++i)
+    for (std::size_t i = 0; i < sentinel; ++i)
     {
         for (Subscriber* s : mSubscribers)
         {
@@ -113,7 +113,7 @@ void Dispatcher::dispatch()
         }
     }
 
-    size_t newMsgIter = sentinel, oldMsgIter = 0;
+    std::size_t newMsgIter = sentinel, oldMsgIter = 0;
     while (newMsgIter != mEvents.size())
     {
         mEvents[oldMsgIter++] = mEvents[newMsgIter++];
