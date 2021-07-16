@@ -101,7 +101,7 @@ void GameSystem::update_game_states()
         LS_LOG_ERR("No game states are available!");
     }
 
-    for (size_t i = 0; i < gameList.size(); ++i)
+    for (std::size_t i = 0; i < gameList.size(); ++i)
     {
         GameState* const pState = gameList[i];
 
@@ -179,7 +179,7 @@ void GameSystem::pop_game_state()
 -------------------------------------*/
 void GameSystem::pop_game_state(GameState* const pState)
 {
-    for (size_t i = 0; i < gameList.size(); ++i)
+    for (std::size_t i = 0; i < gameList.size(); ++i)
     {
         if (gameList[i] == pState)
         {
@@ -194,7 +194,7 @@ void GameSystem::pop_game_state(GameState* const pState)
 /*-------------------------------------
     SubSystem State Removal
 -------------------------------------*/
-void GameSystem::pop_game_state(size_t index)
+void GameSystem::pop_game_state(std::size_t index)
 {
     LS_DEBUG_ASSERT(index < gameList.size());
 
@@ -232,7 +232,7 @@ void GameSystem::clear_game_states()
 /*-------------------------------------
     SubSystem State Retrieval
 -------------------------------------*/
-GameState const* GameSystem::get_game_state(size_t index) const
+GameState const* GameSystem::get_game_state(std::size_t index) const
 {
     LS_DEBUG_ASSERT(index < gameList.size());
     return gameList[index];
@@ -243,7 +243,7 @@ GameState const* GameSystem::get_game_state(size_t index) const
 /*-------------------------------------
     SubSystem State Retrieval
 -------------------------------------*/
-GameState* GameSystem::get_game_state(size_t index)
+GameState* GameSystem::get_game_state(std::size_t index)
 {
     LS_DEBUG_ASSERT(index < gameList.size());
     return gameList[index];
@@ -254,9 +254,9 @@ GameState* GameSystem::get_game_state(size_t index)
 /*-------------------------------------
     SubSystem State Indexing
 -------------------------------------*/
-size_t GameSystem::get_game_state_index(GameState* const pState) const
+std::size_t GameSystem::get_game_state_index(GameState* const pState) const
 {
-    for (size_t i = 0; i < gameList.size(); ++i)
+    for (std::size_t i = 0; i < gameList.size(); ++i)
     {
         if (gameList[i] == pState)
         {
