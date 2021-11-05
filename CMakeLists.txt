@@ -37,20 +37,10 @@ set(LS_GAME_HEADERS
 # -------------------------------------
 # Library Setup
 # -------------------------------------
-option(BUILD_SHARED_LIBS "Build Shared Libraries" OFF)
+add_library(${OUTPUT_NAME} ${LS_GAME_SOURCES} ${LS_GAME_HEADERS})
 
-if (BUILD_SHARED_LIB)
-    add_definitions(-DLS_BUILD_SHARED -DLS_SHARED)
-    set(LS_LIB_TYPE SHARED)
-else()
-    set(LS_LIB_TYPE STATIC)
-endif()
-
-add_library(${OUTPUT_NAME} ${LS_LIB_TYPE} ${LS_GAME_SOURCES} ${LS_GAME_HEADERS})
-
+ls_configure_target(${OUTPUT_NAME})
 target_include_directories(${OUTPUT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
-
-# Dependencies
 target_link_libraries(${OUTPUT_NAME} LightSky::Utils LightSky::Setup)
 
 
