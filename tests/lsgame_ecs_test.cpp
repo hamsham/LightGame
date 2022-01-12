@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include "lightsky/setup/Macros.h" // LS_STRINGIFY
+
 #include "lightsky/game/ECSDatabase.hpp"
 
 namespace game = ls::game;
@@ -135,7 +137,37 @@ class PrintStderrComponent : public PrintComponent
 
 
 
-typedef game::ECSDatabase<PrintStdoutComponent, PrintStderrComponent> EntityDb;
+template <typename T>
+class PrintTypeComponent : public PrintComponent
+{
+  public:
+    PrintTypeComponent() :
+        PrintComponent{}
+    {
+        std::cerr << "constructed " << __func__ << ' ' << LS_STRINGIFY(decltype(T)) << std::endl;
+    }
+};
+
+
+
+typedef game::ECSDatabase<
+    PrintStdoutComponent,
+    PrintStderrComponent,
+    PrintTypeComponent<char>,
+    PrintTypeComponent<short>,
+    PrintTypeComponent<int>,
+    PrintTypeComponent<long>,
+    PrintTypeComponent<long long>,
+    PrintTypeComponent<unsigned char>,
+    PrintTypeComponent<unsigned short>,
+    PrintTypeComponent<unsigned int>,
+    PrintTypeComponent<unsigned long>,
+    PrintTypeComponent<unsigned long long>,
+    PrintTypeComponent<float>,
+    PrintTypeComponent<double>,
+    PrintTypeComponent<long double>,
+    PrintTypeComponent<std::string>
+> EntityDb;
 
 
 
