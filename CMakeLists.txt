@@ -68,6 +68,19 @@ add_library(LightSky::Game ALIAS lsgame)
 
 
 # -------------------------------------
+# Precompiled Headers
+# -------------------------------------
+if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.16.0")
+    target_precompile_headers(
+        lsgame
+        PUBLIC
+            ${LS_GAME_HEADERS}
+    )
+endif()
+
+
+
+# -------------------------------------
 # Unit Tests
 # -------------------------------------
 option(LS_BUILD_GAME_TESTS "Build tests for the LightGame library." ON)
