@@ -2,7 +2,7 @@
 # -------------------------------------
 # Project Setup
 # -------------------------------------
-project(ls_math_tests CXX)
+project(ls_game_tests CXX)
 
 
 
