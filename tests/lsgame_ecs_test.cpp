@@ -8,227 +8,126 @@ namespace game = ls::game;
 
 
 
-class PrintComponent
-{
-  private:
-    std::unordered_set<game::Entity> mEntities;
-
-  public:
-    virtual ~PrintComponent() noexcept = default;
-
-    PrintComponent() :
-        mEntities{}
-    {}
-
-    game::ComponentAddStatus insert(const game::Entity& e) noexcept
-    {
-        auto&& iter = mEntities.find(e);
-        if (iter == mEntities.end())
-        {
-            mEntities.insert(e);
-            return game::ComponentAddStatus::ADD_OK;
-        }
-
-        return game::ComponentAddStatus::ADD_ERR_ENTITY_EXISTS;
-    }
-
-    template <typename... Args>
-    game::ComponentAddStatus insert(const game::Entity& e, Args&&...) noexcept
-    {
-        (void)e;
-        return game::ComponentAddStatus::ADD_ERR_INVALID_ARGS;
-    }
-
-    game::ComponentRemoveStatus erase(const game::Entity& e) noexcept
-    {
-        auto&& iter = mEntities.find(e);
-        if (iter != mEntities.end())
-        {
-            mEntities.erase(e);
-            return game::ComponentRemoveStatus::REMOVE_OK;
-        }
-
-        return game::ComponentRemoveStatus::REMOVE_ERR_ENTITY_MISSING;
-    }
-
-    bool contains(const game::Entity& e) const noexcept
-    {
-        return mEntities.count(e) != 0;
-    }
-
-    size_t size() const noexcept
-    {
-        return mEntities.size();
-    }
-
-    void clear() noexcept
-    {
-        mEntities.clear();
-    }
-
-    // (Const) iterate over all entries in *this. Each component type should
-    // specify its own iterator.
-    template <typename IterCallback>
-    void iterate(const IterCallback& cb) const noexcept
-    {
-        for (const game::Entity& e : mEntities)
-        {
-            cb(*this, e);
-        }
-    }
-
-    // Iterate over all entries in *this. Each component type should specify
-    // its own iterator
-    template <typename IterCallback>
-    void iterate(const IterCallback& cb) noexcept
-    {
-        for (game::Entity e : mEntities)
-        {
-            cb(*this, e);
-        }
-    }
-
-    // Iterate and view and entity's data in *this
-    template <typename IterCallback>
-    void view(const game::Entity& e, const IterCallback& cb) const noexcept
-    {
-        auto&& iter = mEntities.find(e);
-        if (iter != mEntities.end())
-        {
-            cb(*this, *iter);
-        }
-    }
-
-    // Iterate and modify and entity's data in *this
-    template <typename IterCallback>
-    void modify(const game::Entity& e, const IterCallback& cb) noexcept
-    {
-        auto&& iter = mEntities.find(e);
-        if (iter != mEntities.end())
-        {
-            cb(*this, *iter);
-        }
-    }
-};
-
-
-
-class PrintStdoutComponent : public PrintComponent
+class PrintStdoutComponent final : public game::Component
 {
   public:
-    PrintStdoutComponent() :
-        PrintComponent{}
+    ~PrintStdoutComponent() {}
+
+    PrintStdoutComponent()
     {
         std::cout << "constructed"<< std::endl;
     }
+
+    virtual void update_entity(const game::Entity& e) noexcept
+    {
+        std::cout << "\tIterating over entity " << ": " << e.id << std::endl;
+    }
 };
 
+LS_GAME_REGISTER_COMPONENT(PrintStdoutComponent)
 
 
-class PrintStderrComponent : public PrintComponent
+
+class PrintErrComponent final : public game::Component
 {
   public:
-    PrintStderrComponent() :
-        PrintComponent{}
+    ~PrintErrComponent() {}
+
+    PrintErrComponent()
     {
         std::cerr << "constructed"<< std::endl;
     }
-};
 
-
-
-template <typename T>
-class PrintTypeComponent : public PrintComponent
-{
-  public:
-    PrintTypeComponent() :
-        PrintComponent{}
+    virtual void update_entity(const game::Entity& e) noexcept
     {
-        std::cerr << "constructed " << __func__ << ' ' << LS_STRINGIFY(decltype(T)) << std::endl;
+        std::cerr << "\tIterating over entity " << ": " << e.id << std::endl;
     }
 };
 
-
-
-typedef game::ECSDatabase<
-    PrintStdoutComponent,
-    PrintStderrComponent,
-    PrintTypeComponent<char>,
-    PrintTypeComponent<short>,
-    PrintTypeComponent<int>,
-    PrintTypeComponent<long>,
-    PrintTypeComponent<long long>,
-    PrintTypeComponent<unsigned char>,
-    PrintTypeComponent<unsigned short>,
-    PrintTypeComponent<unsigned int>,
-    PrintTypeComponent<unsigned long>,
-    PrintTypeComponent<unsigned long long>,
-    PrintTypeComponent<float>,
-    PrintTypeComponent<double>,
-    PrintTypeComponent<long double>,
-    PrintTypeComponent<std::string>
-> EntityDb;
+LS_GAME_REGISTER_COMPONENT(PrintErrComponent)
 
 
 
-void update_components(EntityDb& db) noexcept
+void update_components(game::ECSDatabase& db) noexcept
 {
-    unsigned count;
+    std::cout << "Updating components:" << std::endl;
+    db.component<PrintStdoutComponent>()->update();
+    db.component<PrintErrComponent>()->update();
+}
 
-    count = 0;
-    db.iterate<PrintStdoutComponent>([&](PrintComponent&, const game::Entity& e)->void {
-        std::cout << "\tIterating over entity " << count << ": " << e.id << std::endl;
-        ++count;
-    });
 
-    count = 0;
-    db.iterate<PrintStderrComponent>([&](PrintComponent&, const game::Entity& e)->void {
-        std::cerr << "\tIterating over entity " << count << ": " << e.id << std::endl;
-        ++count;
-    });
+
+bool construct_components(game::ECSDatabase& db) noexcept
+{
+    game::ComponentCreateStatus addStatus = db.construct_component<PrintStdoutComponent>();
+    if (addStatus != game::ComponentCreateStatus::REGISTER_OK)
+    {
+        std::cerr << "Unable to construct a STDOUT component." << std::endl;
+        return false;
+    }
+    std::cout << "Successfully registered a STDOUT component within the ECS Database." << std::endl;
+
+    addStatus = db.construct_component<PrintErrComponent>();
+    if (addStatus != game::ComponentCreateStatus::REGISTER_OK)
+    {
+        std::cerr << "Unable to construct a STDERR component." << std::endl;
+        return false;
+    }
+    std::cout << "Successfully registered a STDERR component within the ECS Database." << std::endl;
+
+    return true;
 }
 
 
 
 int main()
 {
-    EntityDb db = {};
+    game::ECSDatabase db = {};
     game::Entity e0 = db.create_entity();
-    if (db.has_components(e0))
+
+    if (db.num_components(e0) > 0)
     {
         std::cerr << "Unexpected components found for entity " << e0.id << std::endl;
         return -1;
     }
     std::cout << "Successfully initialized an entity." << std::endl;
 
-    game::ComponentAddStatus addStatus = db.add<PrintStdoutComponent>(e0);
-    if (addStatus != game::ComponentAddStatus::ADD_OK)
+    if (!construct_components(db))
     {
-        std::cerr << "Unable to add a print component to entity " << e0.id << std::endl;
+        std::cerr << "Unable to construct test components." << std::endl;
         return -2;
     }
-    std::cout << "Successfully added a component to an entity." << std::endl;
 
-    db.iterate<PrintStdoutComponent>([&](const PrintComponent&, const game::Entity& e)
+    game::ComponentAddStatus addStatus = db.component<PrintStdoutComponent>()->insert(e0);
+    if (addStatus != game::ComponentAddStatus::ADD_OK)
     {
-        std::cout << "Iterating over entity " << e.id << std::endl;
-    });
-
-    std::cout << "Updating components:" << std::endl;
-    update_components(db);
-
-    game::ComponentRemoveStatus removeStatus = db.remove<PrintStdoutComponent>(e0);
-    if (removeStatus != game::ComponentRemoveStatus::REMOVE_OK)
-    {
-        std::cerr << "Unable to remove the print component from entity " << e0.id << std::endl;
+        std::cerr << "Unable to add an entity to the STDOUT component." << std::endl;
         return -3;
     }
-    std::cout << "Successfully removed a component to an entity." << std::endl;
+    std::cout << "Successfully added an entity to the STDOUT component." << std::endl;
 
-    if (db.component<PrintStdoutComponent>().size() != 0)
+    addStatus = db.component<PrintErrComponent>()->insert(e0);
+    if (addStatus != game::ComponentAddStatus::ADD_OK)
+    {
+        std::cerr << "Unable to add an entity to the STDERR component." << std::endl;
+        return -3;
+    }
+    std::cout << "Successfully added an entity to the STDERR component." << std::endl;
+
+    update_components(db);
+
+    game::ComponentRemoveStatus removeStatus = db.component<PrintStdoutComponent>()->erase(e0);
+    if (removeStatus != game::ComponentRemoveStatus::REMOVE_OK)
+    {
+        std::cerr << "Unable to remove entity from the print component " << e0.id << std::endl;
+        return -4;
+    }
+    std::cout << "Successfully removed an entity from a component." << std::endl;
+
+    if (db.component<PrintStdoutComponent>()->size() != 0)
     {
         std::cerr << "Orphaned entities in the print component." << std::endl;
-        return -4;
+        return -5;
     }
 
     db.destroy_entity(e0);

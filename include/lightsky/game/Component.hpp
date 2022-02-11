@@ -3,7 +3,11 @@
 #define LS_GAME_COMPONENT_HPP
 
 #include <cstdlib> // size_t
-#include <utility> // std::forward
+#include <unordered_set>
+
+#include "lightsky/game/Entity.hpp"
+
+
 
 namespace ls
 {
@@ -12,11 +16,7 @@ namespace game
 
 
 
-struct Entity;
-
-
-
-enum class ComponentAddStatus
+enum class ComponentAddStatus : unsigned
 {
     ADD_ERR_NO_MEMORY,
     ADD_ERR_ENTITY_EXISTS,
@@ -25,7 +25,7 @@ enum class ComponentAddStatus
     ADD_OK
 };
 
-enum class ComponentRemoveStatus
+enum class ComponentRemoveStatus : unsigned
 {
     REMOVE_ERR_NO_MEMORY,
     REMOVE_ERR_ENTITY_MISSING,
@@ -35,86 +35,78 @@ enum class ComponentRemoveStatus
 
 
 
-template <typename ComponentType>
 class Component
 {
+    friend class ECSDatabase;
+
   private:
-    ComponentType mComponentImpl;
+    static std::size_t _increment_component_id() noexcept;
+
+    template <typename T>
+    static std::size_t registration_id() noexcept;
+
+  protected:
+    std::unordered_set<Entity> mEntities;
 
   public:
-    ~Component() noexcept = default;
+    virtual ~Component() noexcept = 0;
 
-    Component() :
-        mComponentImpl{}
-    {}
+    Component() noexcept;
 
-    inline ComponentAddStatus insert(const Entity& e) noexcept
-    {
-        return mComponentImpl.insert(e);
-    }
+    Component(const Component&) = delete;
 
-    template <typename ...Args>
-    inline ComponentAddStatus insert(const Entity& e, Args&&... args) noexcept
-    {
-        return mComponentImpl.insert(e, std::forward<Args>(args)...);
-    }
+    Component(Component&&) noexcept;
 
-    inline ComponentRemoveStatus erase(const Entity& e) noexcept
-    {
-        return mComponentImpl.erase(e);
-    }
+    Component& operator=(const Component&) = delete;
 
-    inline bool contains(const Entity& e) const noexcept
-    {
-        return mComponentImpl.contains(e);
-    }
+    Component& operator=(Component&&) noexcept;
 
-    inline size_t size() const noexcept
-    {
-        return mComponentImpl.size();
-    }
+    ComponentAddStatus insert(const Entity& e) noexcept;
 
-    inline void clear() noexcept
-    {
-        mComponentImpl.clear();
-    }
+    ComponentRemoveStatus erase(const Entity& e) noexcept;
 
-    // (Const) iterate over all entries in *this. Each component type should
-    // specify its own iterator.
-    template <typename IterCallback>
-    inline void iterate(const IterCallback& cb) const noexcept
-    {
-        mComponentImpl.template iterate<IterCallback>(cb);
-    }
+    bool contains(const Entity& e) const noexcept;
 
-    // Iterate over all entries in *this. Each component type should specify
-    // its own iterator
-    template <typename IterCallback>
-    inline void iterate(const IterCallback& cb) noexcept
-    {
-        mComponentImpl.template iterate<IterCallback>(cb);
-    }
+    size_t size() const noexcept;
 
-    // Iterate and view and entity's data in *this
-    template <typename IterCallback>
-    inline void view(const Entity& e, const IterCallback& cb) const noexcept
-    {
-        mComponentImpl.template view<IterCallback>(e, cb);
-    }
+    void clear() noexcept;
 
-    // Iterate and modify and entity's data in *this
-    template <typename IterCallback>
-    inline void modify(const Entity& e, const IterCallback& cb) noexcept
-    {
-        mComponentImpl.template modify<IterCallback>(e, cb);
-    }
+    virtual void update_entity(const Entity& e) noexcept = 0;
 
-    // internal component-wise update of all entities
-    inline void update() noexcept
-    {
-        mComponentImpl.update();
-    }
+    virtual void update() noexcept;
 };
+
+
+
+#ifndef LS_GAME_REGISTER_COMPONENT
+    #define LS_GAME_REGISTER_COMPONENT( ComponentType ) \
+        template <> std::size_t ls::game::Component::registration_id<ComponentType>() noexcept \
+        { \
+            static const std::size_t id{Component::_increment_component_id()}; \
+            return id; \
+        }
+#endif
+
+
+
+inline bool Component::contains(const Entity& e) const noexcept
+{
+    return mEntities.count(e) > 0;
+}
+
+
+
+inline size_t Component::size() const noexcept
+{
+    return mEntities.size();
+}
+
+
+
+inline void Component::clear() noexcept
+{
+    mEntities.clear();
+}
 
 
 

@@ -3,6 +3,7 @@
 #define LS_GAME_ENTITY_HPP
 
 #include <cstdint> // uint32_t
+#include <cstdlib>
 #include <functional> // std::equal_to
 
 namespace ls
@@ -10,7 +11,7 @@ namespace ls
 namespace game
 {
 
-typedef uint32_t EntityIdType;
+typedef size_t EntityIdType;
 
 
 
