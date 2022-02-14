@@ -41,9 +41,9 @@ enum class ComponentCreateStatus
 class ECSDatabase
 {
   public:
-    enum : size_t
+    enum : EntityIdType
     {
-        INVALID_ENTITY = ~(size_t)0
+        INVALID_ENTITY = ~(EntityIdType)0
     };
 
   private:
@@ -51,7 +51,7 @@ class ECSDatabase
 
     std::unordered_set<Entity> mEntities;
 
-    std::size_t mComponentCount;
+    std::size_t mMinEntityId;
 
   public:
     ~ECSDatabase() noexcept;
@@ -87,7 +87,7 @@ class ECSDatabase
 
     void destroy_entity(Entity& e) noexcept;
 
-    size_t num_components(Entity& e) noexcept;
+    size_t num_components(Entity& e) const noexcept;
 };
 
 
