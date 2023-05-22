@@ -43,7 +43,7 @@ set(LS_GAME_HEADERS
 # -------------------------------------
 add_library(${OUTPUT_NAME} ${LS_GAME_SOURCES} ${LS_GAME_HEADERS})
 
-ls_configure_target(${OUTPUT_NAME})
+ls_configure_cxx_target(${OUTPUT_NAME})
 target_include_directories(${OUTPUT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
 target_link_libraries(${OUTPUT_NAME} LightSky::Utils LightSky::Setup)
 

@@ -16,7 +16,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 function(LS_GAME_ADD_TARGET target sources)
     add_executable(${target} ${sources} ${ARGN})
     target_link_libraries(${target} LightSky::Game LightSky::Math LightSky::Utils LightSky::Setup)
-    ls_configure_target(${target})
+    ls_configure_cxx_target(${target})
 
 	# Precompiled Headers
 	if (LIGHTSKY_ENABLE_PCH)
